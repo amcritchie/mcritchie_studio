@@ -73,7 +73,8 @@ class TasksController < ApplicationController
   private
 
   def set_task
-    @task = Task.find_by!(slug: params[:slug])
+    @task = Task.find_by(slug: params[:slug])
+    return redirect_to tasks_path, alert: "Task not found" unless @task
   end
 
   def task_params
