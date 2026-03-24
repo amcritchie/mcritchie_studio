@@ -7,6 +7,17 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - **Port 3000** — `bin/rails server` (default)
 - Turf Monster runs on port 3001
 
+## Deployment
+
+- **Heroku app**: `mcritchie-studio`
+- **URL**: https://app.mcritchie.studio
+- **Heroku URL**: https://mcritchie-studio-039470649719.herokuapp.com/
+- **Database**: Heroku Postgres (essential-0)
+- **DNS**: Google Domains — `app` CNAME → Heroku DNS target
+- **Deploy**: `git push heroku main` (then `heroku run bin/rails db:migrate --app mcritchie-studio` if new migrations)
+- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto from addon)
+- **ACM**: Enabled (auto SSL via Let's Encrypt)
+
 ## Tech Stack
 
 - Ruby 3.1 / Rails 7.2 / PostgreSQL
@@ -60,6 +71,8 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 
 ### HTML (public monitoring, auth-gated mutations)
 - `/` — Dashboard (agents, task pipeline, activity feed)
+- `/docs` — Agent docs viewer (read-only, markdown rendered)
+- `/docs/*path` — Individual doc viewer
 - `/agents` — Agent grid
 - `/agents/:slug` — Agent detail (tasks, skills, activity)
 - `/tasks` — Filterable task list with stage tabs
@@ -101,6 +114,7 @@ Agent system documentation at `docs/agents/`:
 - `system/` — Architecture, bootstrap, comms protocol, coding standards, credentials
 - `agents/{alex,mack,mason,turf_monster}/` — Role and soul docs per agent
 - `shared/MEMORY.md` — Cross-agent shared memory
+- **Web viewer**: `/docs` — read-only browser for all agent docs, rendered via Redcarpet gem
 
 ## Workflow Preferences
 
