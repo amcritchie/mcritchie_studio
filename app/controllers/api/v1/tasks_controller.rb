@@ -14,50 +14,83 @@ module Api
       end
 
       def create
-        task = Task.create!(task_params)
-        render json: task, status: :created
+        task = Task.new(task_params)
+        rescue_and_log(target: task) do
+          task.save!
+          render json: task, status: :created
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def update
         task = Task.find_by!(slug: params[:slug])
-        task.update!(task_params)
-        render json: task
+        rescue_and_log(target: task) do
+          task.update!(task_params)
+          render json: task
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def queue
         task = Task.find_by!(slug: params[:slug])
-        task.queue!
-        render json: task
+        rescue_and_log(target: task) do
+          task.queue!
+          render json: task
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def start
         task = Task.find_by!(slug: params[:slug])
-        task.start!
-        render json: task
+        rescue_and_log(target: task) do
+          task.start!
+          render json: task
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def complete
         task = Task.find_by!(slug: params[:slug])
-        task.complete!(params[:result] || {})
-        render json: task
+        rescue_and_log(target: task) do
+          task.complete!(params[:result] || {})
+          render json: task
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def fail_task
         task = Task.find_by!(slug: params[:slug])
-        task.fail!(params[:error_message])
-        render json: task
+        rescue_and_log(target: task) do
+          task.fail!(params[:error_message])
+          render json: task
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def archive
         task = Task.find_by!(slug: params[:slug])
-        task.archive!
-        render json: task
+        rescue_and_log(target: task) do
+          task.archive!
+          render json: task
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def destroy
         task = Task.find_by!(slug: params[:slug])
-        task.destroy!
-        head :no_content
+        rescue_and_log(target: task) do
+          task.destroy!
+          head :no_content
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       private

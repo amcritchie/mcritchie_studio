@@ -93,11 +93,16 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 
 ## Error Handling
 
-- `ErrorLog.capture!(exception, target:, parent:)` — DB only, no external services
-- **Two-layer error handling architecture:**
-  - **Layer 1 (automatic)**: `rescue_from StandardError` in `ApplicationController` and `Api::V1::BaseController` catches any unhandled error, logs via `ErrorLog.capture!` (no context), returns friendly response. `RecordNotFound` → 404, no logging. Re-raises in dev/test so Rails error pages still show.
-  - **Layer 2 (opt-in)**: `rescue_and_log(target:, parent:)` wraps action body for richer error context. Sets `@_error_logged` flag to prevent double-logging. Pair with outer `rescue` block for response control.
-- API: `RecordNotFound` → 404 (no log), `RecordInvalid` → 422 (logged), `StandardError` → 500 (logged)
+Every write action MUST use `rescue_and_log` with target/parent context. See top-level `CLAUDE.md` for full pattern docs.
+
+- **Layer 1 (automatic)**: `rescue_from StandardError` in `ApplicationController` and `Api::V1::BaseController`. Logs via `create_error_log(exception)` (no context). `RecordNotFound` → 404, no logging. Re-raises in dev/test.
+- **Layer 2 (required for writes)**: `rescue_and_log(target:, parent:)` wraps write actions. Logs via `create_error_log`, attaches target/parent via ActiveRecord setters. Sets `@_error_logged` flag. Pair with outer `rescue StandardError => e`.
+- **Central method**: `create_error_log(exception)` → `ErrorLog.capture!(exception)` → returns record for context attachment
+- API: `RecordNotFound` → 404 (no log), `RecordInvalid` → 422 (logged via `create_error_log`), `StandardError` → 500 (logged)
+- HTML TasksController: all 8 write actions wrapped with `target: @task`
+- API TasksController: all 8 write actions wrapped with `target: task`
+- API AgentsController#update, ActivitiesController#create, UsagesController#create: all wrapped
+- RegistrationsController#create: wrapped with `target: @user`
 
 ## Seeds
 

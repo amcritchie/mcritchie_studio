@@ -13,8 +13,12 @@ module Api
 
       def update
         agent = Agent.find_by!(slug: params[:slug])
-        agent.update!(agent_params)
-        render json: agent
+        rescue_and_log(target: agent) do
+          agent.update!(agent_params)
+          render json: agent
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       private

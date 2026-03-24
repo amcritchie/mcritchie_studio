@@ -19,12 +19,13 @@ class TasksController < ApplicationController
 
   def create
     @task = Task.new(task_params)
-    if @task.save
+    rescue_and_log(target: @task) do
+      @task.save!
       redirect_to task_path(@task.slug), notice: "Task created."
-    else
-      @agents = Agent.active.order(:name)
-      render :new, status: :unprocessable_entity
     end
+  rescue StandardError => e
+    @agents = Agent.active.order(:name)
+    render :new, status: :unprocessable_entity
   end
 
   def edit
@@ -32,42 +33,67 @@ class TasksController < ApplicationController
   end
 
   def update
-    if @task.update(task_params)
+    rescue_and_log(target: @task) do
+      @task.update!(task_params)
       redirect_to task_path(@task.slug), notice: "Task updated."
-    else
-      @agents = Agent.active.order(:name)
-      render :edit, status: :unprocessable_entity
     end
+  rescue StandardError => e
+    @agents = Agent.active.order(:name)
+    render :edit, status: :unprocessable_entity
   end
 
   def queue
-    @task.queue!
-    redirect_to task_path(@task.slug), notice: "Task queued."
+    rescue_and_log(target: @task) do
+      @task.queue!
+      redirect_to task_path(@task.slug), notice: "Task queued."
+    end
+  rescue StandardError => e
+    redirect_to task_path(@task.slug), alert: e.message
   end
 
   def start
-    @task.start!
-    redirect_to task_path(@task.slug), notice: "Task started."
+    rescue_and_log(target: @task) do
+      @task.start!
+      redirect_to task_path(@task.slug), notice: "Task started."
+    end
+  rescue StandardError => e
+    redirect_to task_path(@task.slug), alert: e.message
   end
 
   def complete
-    @task.complete!
-    redirect_to task_path(@task.slug), notice: "Task completed."
+    rescue_and_log(target: @task) do
+      @task.complete!
+      redirect_to task_path(@task.slug), notice: "Task completed."
+    end
+  rescue StandardError => e
+    redirect_to task_path(@task.slug), alert: e.message
   end
 
   def fail_task
-    @task.fail!(params[:error_message])
-    redirect_to task_path(@task.slug), notice: "Task marked as failed."
+    rescue_and_log(target: @task) do
+      @task.fail!(params[:error_message])
+      redirect_to task_path(@task.slug), notice: "Task marked as failed."
+    end
+  rescue StandardError => e
+    redirect_to task_path(@task.slug), alert: e.message
   end
 
   def archive
-    @task.archive!
-    redirect_to task_path(@task.slug), notice: "Task archived."
+    rescue_and_log(target: @task) do
+      @task.archive!
+      redirect_to task_path(@task.slug), notice: "Task archived."
+    end
+  rescue StandardError => e
+    redirect_to task_path(@task.slug), alert: e.message
   end
 
   def destroy
-    @task.destroy!
-    redirect_to tasks_path, notice: "Task deleted."
+    rescue_and_log(target: @task) do
+      @task.destroy!
+      redirect_to tasks_path, notice: "Task deleted."
+    end
+  rescue StandardError => e
+    redirect_to tasks_path, alert: e.message
   end
 
   private

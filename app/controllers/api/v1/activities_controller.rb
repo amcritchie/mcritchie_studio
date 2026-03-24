@@ -9,8 +9,13 @@ module Api
       end
 
       def create
-        activity = Activity.create!(activity_params)
-        render json: activity, status: :created
+        activity = Activity.new(activity_params)
+        rescue_and_log(target: activity) do
+          activity.save!
+          render json: activity, status: :created
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       private

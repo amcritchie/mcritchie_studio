@@ -8,8 +8,13 @@ module Api
       end
 
       def create
-        usage = Usage.create!(usage_params)
-        render json: usage, status: :created
+        usage = Usage.new(usage_params)
+        rescue_and_log(target: usage) do
+          usage.save!
+          render json: usage, status: :created
+        end
+      rescue StandardError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       private

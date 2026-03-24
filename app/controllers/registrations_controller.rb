@@ -7,12 +7,13 @@ class RegistrationsController < ApplicationController
 
   def create
     @user = User.new(user_params)
-    if @user.save
+    rescue_and_log(target: @user) do
+      @user.save!
       session[:user_id] = @user.id
       redirect_to root_path, notice: "Welcome to McRitchie Studio, #{@user.display_name}!"
-    else
-      render :new, status: :unprocessable_entity
     end
+  rescue StandardError => e
+    render :new, status: :unprocessable_entity
   end
 
   private

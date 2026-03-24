@@ -11,8 +11,14 @@ module Api
         render json: { error: "Not found" }, status: :not_found
       end
 
-      def unprocessable(exception)
+      # Central error logging method — all API error logging flows through here.
+      # Returns the ErrorLog record so callers can attach target/parent context.
+      def create_error_log(exception)
         ErrorLog.capture!(exception)
+      end
+
+      def unprocessable(exception)
+        create_error_log(exception)
         render json: { error: exception.message }, status: :unprocessable_entity
       end
 
@@ -23,7 +29,16 @@ module Api
       rescue ActiveRecord::RecordNotFound => e
         raise e
       rescue StandardError => e
-        ErrorLog.capture!(e, target: target, parent: parent)
+        error_log = create_error_log(e)
+        if target
+          error_log.target = target
+          error_log.target_name = target.slug
+        end
+        if parent
+          error_log.parent = parent
+          error_log.parent_name = parent.slug
+        end
+        error_log.save!
         @_error_logged = true
         raise e
       end
@@ -31,7 +46,7 @@ module Api
       # Layer 1: Catch-all for unexpected errors — log + JSON 500.
       # Skips logging if rescue_and_log already captured it.
       def handle_unexpected_error(exception)
-        ErrorLog.capture!(exception) unless @_error_logged
+        create_error_log(exception) unless @_error_logged
         raise exception if Rails.env.development? || Rails.env.test?
 
         render json: { error: "Internal server error" }, status: :internal_server_error
