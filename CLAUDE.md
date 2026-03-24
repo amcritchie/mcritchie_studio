@@ -64,7 +64,7 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - **Sluggable concern** — `before_save :set_slug` via `name_slug` method. Used by User, Agent, Skill, Usage.
 - **Task slug** — Immutable random hex generated once on create via `before_validation`. Does NOT use Sluggable.
 - **Activity slug** — Set via `after_create` as `"activity-#{id}"` (needs id).
-- **ErrorLog.capture!** — `ErrorLog.capture!(exception, target:, parent:)` with cleaned backtrace.
+- **ErrorLog.capture!** — `ErrorLog.capture!(exception)` with cleaned backtrace. Target/parent set via ActiveRecord setters after creation.
 - **Cost** — Stored as `decimal(10,4)` for sub-cent API pricing precision.
 
 ## Routes
@@ -80,7 +80,8 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - `/tasks/:slug` — Task detail with transition buttons
 - `/activities` — Activity feed
 - `/usages` — Usage table
-- `/error_logs` — Error log index/show
+- `/error_logs` — Error log index (search with ILIKE, Esc to clear, 500ms loading animation)
+- `/error_logs/:slug` — Error log detail (backtrace, target/parent with copy-to-clipboard console commands, JSON)
 - `/login`, `/signup`, `/logout` — Auth
 
 ### JSON API (`/api/v1/`)
@@ -90,6 +91,16 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - `GET/PATCH /api/v1/agents/:slug` — Read/update agent
 - `GET/POST /api/v1/activities` — List/create activities
 - `GET/POST /api/v1/usages` — List/create usage records
+
+## New Controller Checklist
+
+See top-level `CLAUDE.md` for the full checklist. Quick summary:
+
+1. Identify write actions (create, update, destroy, state transitions)
+2. Wrap each with `rescue_and_log(target:, parent:)` + bang methods inside
+3. Add outer `rescue StandardError => e` for response control
+4. Ensure model has `to_param` returning `slug` if it appears in URLs
+5. Read-only actions are covered by Layer 1 automatically
 
 ## Error Handling
 
