@@ -35,12 +35,13 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :agents, only: [:index, :show, :update], param: :slug
-      resources :tasks, only: [:index, :show, :create, :update], param: :slug do
+      resources :tasks, only: [:index, :show, :create, :update, :destroy], param: :slug do
         member do
           post :queue
           post :start
           post :complete
           post :fail_task
+          post :archive
         end
       end
       resources :activities, only: [:index, :create]

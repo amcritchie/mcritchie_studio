@@ -48,10 +48,22 @@ module Api
         render json: task
       end
 
+      def archive
+        task = Task.find_by!(slug: params[:slug])
+        task.archive!
+        render json: task
+      end
+
+      def destroy
+        task = Task.find_by!(slug: params[:slug])
+        task.destroy!
+        head :no_content
+      end
+
       private
 
       def task_params
-        params.permit(:title, :description, :priority, :agent_slug, required_skills: [], metadata: {})
+        params.permit(:title, :description, :priority, :stage, :agent_slug, required_skills: [], metadata: {})
       end
     end
   end

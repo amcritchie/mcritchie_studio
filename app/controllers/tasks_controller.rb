@@ -1,11 +1,12 @@
 class TasksController < ApplicationController
   skip_before_action :require_authentication, only: [:index, :show]
-  before_action :set_task, only: [:show, :edit, :update, :queue, :start, :complete, :fail_task, :archive]
+  before_action :set_task, only: [:show, :edit, :update, :destroy, :queue, :start, :complete, :fail_task, :archive]
 
   def index
-    @tasks = Task.recent
-    @tasks = @tasks.by_stage(params[:stage]) if params[:stage].present?
-    @tasks = @tasks.where(agent_slug: params[:agent]) if params[:agent].present?
+    tasks = Task.recent
+    tasks = tasks.where(agent_slug: params[:agent]) if params[:agent].present?
+    @tasks_by_stage = tasks.group_by(&:stage)
+    @agents = Agent.order(:name)
   end
 
   def show
@@ -62,6 +63,11 @@ class TasksController < ApplicationController
   def archive
     @task.archive!
     redirect_to task_path(@task.slug), notice: "Task archived."
+  end
+
+  def destroy
+    @task.destroy!
+    redirect_to tasks_path, notice: "Task deleted."
   end
 
   private
