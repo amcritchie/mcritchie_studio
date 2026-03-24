@@ -64,5 +64,3 @@ group :test do
 end
 gem "dotenv-rails", groups: [:development, :test]
 gem "redcarpet"
-gem "erb", "~> 2.2"
-gem "cgi", "~> 0.3.1"
