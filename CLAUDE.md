@@ -43,6 +43,10 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - **Usage** — agent_slug FK, period_date, period_type, model, tokens_in/out, api_calls, cost (decimal 10,4), tasks_completed/failed, metadata (jsonb), slug.
 - **ErrorLog** — message, inspect, backtrace (JSON), polymorphic target/parent, target_name, parent_name, slug.
 
+## Database Standards
+
+- Every table gets `timestamps` (`created_at`, `updated_at`) — no exceptions
+
 ## Key Patterns
 
 - **Slug-based FKs** — All foreign keys use slug strings (e.g. `agent_slug`), not integer IDs. Associations: `foreign_key: :agent_slug, primary_key: :slug`.
