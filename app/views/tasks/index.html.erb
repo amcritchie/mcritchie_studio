@@ -1,0 +1,55 @@
+<section>
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-white">Tasks</h2>
+    <% if logged_in? %>
+      <%= link_to "New Task", new_task_path, class: "px-4 py-2 bg-mint hover:bg-mint-600 text-navy text-sm font-bold rounded-lg transition" %>
+    <% end %>
+  </div>
+
+  <!-- Stage Tabs -->
+  <div class="flex flex-wrap gap-2 mb-6">
+    <%= link_to "All", tasks_path, class: "px-3 py-1.5 rounded-lg text-sm font-medium transition #{params[:stage].blank? ? 'bg-violet text-white' : 'bg-navy-400 text-gray-400 hover:text-white border border-navy-300/20'}" %>
+    <% %w[new queued in_progress done failed archived].each do |stage| %>
+      <%= link_to stage.humanize, tasks_path(stage: stage), class: "px-3 py-1.5 rounded-lg text-sm font-medium transition #{params[:stage] == stage ? 'bg-violet text-white' : 'bg-navy-400 text-gray-400 hover:text-white border border-navy-300/20'}" %>
+    <% end %>
+  </div>
+
+  <!-- Task List -->
+  <% if @tasks.any? %>
+    <div class="space-y-2">
+      <% @tasks.each do |task| %>
+        <%= link_to task_path(task.slug), class: "block bg-navy-400 rounded-xl border border-navy-300/20 p-4 hover:border-violet/30 hover:shadow-lg transition" do %>
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3">
+                <h3 class="text-white font-semibold text-sm truncate"><%= task.title %></h3>
+                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium shrink-0
+                  <%= case task.stage
+                      when 'new' then 'bg-blue-900/30 text-blue-300 border border-blue-700/50'
+                      when 'queued' then 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50'
+                      when 'in_progress' then 'bg-mint-900/30 text-mint-300 border border-mint-700/50'
+                      when 'done' then 'bg-green-900/30 text-green-300 border border-green-700/50'
+                      when 'failed' then 'bg-red-900/30 text-red-300 border border-red-700/50'
+                      else 'bg-gray-900/30 text-gray-300 border border-gray-700/50'
+                      end %>"><%= task.stage.humanize %></span>
+                <% if task.priority > 0 %>
+                  <span class="text-xs text-yellow-400">P<%= task.priority %></span>
+                <% end %>
+              </div>
+              <div class="flex items-center gap-3 mt-1">
+                <% if task.agent_slug.present? %>
+                  <span class="text-xs text-gray-500">Agent: <%= task.agent_slug %></span>
+                <% end %>
+                <span class="text-xs text-gray-600"><%= time_ago_in_words(task.created_at) %> ago</span>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-navy-400 rounded-xl border border-navy-300/20 p-8 text-center">
+      <p class="text-gray-400 text-lg">No tasks found.</p>
+    </div>
+  <% end %>
+</section>

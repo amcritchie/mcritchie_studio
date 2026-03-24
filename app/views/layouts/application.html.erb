@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html class="dark">
+  <head>
+    <title><%= content_for(:title) || "McRitchie Studio" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          fontFamily: {
+            sans: ['Montserrat', 'system-ui', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          extend: {
+            colors: {
+              mint: {
+                DEFAULT: '#06D6A0',
+                50: '#e6faf4', 100: '#b3f0de', 200: '#80e6c8', 300: '#4ddcb2',
+                400: '#1ad29c', 500: '#06D6A0', 600: '#05b888', 700: '#049a70',
+                800: '#037c58', 900: '#025e40',
+              },
+              navy: {
+                DEFAULT: '#1A1535',
+                50: '#e8e7ed', 100: '#b8b5c8', 200: '#8883a3', 300: '#58517e',
+                400: '#3a3359', 500: '#1A1535', 600: '#16122e', 700: '#120f27',
+                800: '#0e0c20', 900: '#0a0919',
+              },
+              violet: {
+                DEFAULT: '#8E82FE',
+                50: '#f0eeff', 100: '#d1ccfe', 200: '#b2aafe', 300: '#9388fe',
+                400: '#8E82FE', 500: '#7a6efe', 600: '#6558e5', 700: '#5042cc',
+                800: '#3b2cb3', 900: '#26169a',
+              },
+            },
+          },
+        },
+      }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+      @keyframes progress-countdown {
+        from { width: 100%; }
+        to { width: 0%; }
+      }
+    </style>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-navy text-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <header class="mb-8 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+          <%= link_to root_path, class: "inline-flex items-center gap-3 group" do %>
+            <div class="w-10 h-10 rounded-full bg-mint/20 flex items-center justify-center">
+              <span class="text-mint font-bold text-lg">M</span>
+            </div>
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">McRitchie <span class="text-mint">Studio</span></h1>
+          <% end %>
+          <nav class="flex items-center gap-4">
+            <%= link_to "Dashboard", root_path, class: "text-gray-400 hover:text-mint text-sm font-medium transition" %>
+            <%= link_to "Agents", agents_path, class: "text-gray-400 hover:text-mint text-sm font-medium transition" %>
+            <%= link_to "Tasks", tasks_path, class: "text-gray-400 hover:text-violet text-sm font-medium transition" %>
+            <%= link_to "Activity", activities_path, class: "text-gray-400 hover:text-violet text-sm font-medium transition" %>
+            <%= link_to "Errors", error_logs_path, class: "text-gray-400 hover:text-red-400 text-sm font-medium transition" %>
+          </nav>
+        </div>
+
+        <% if logged_in? %>
+          <div class="flex items-center gap-4">
+            <span class="text-white font-semibold text-sm"><%= current_user.display_name %></span>
+            <%= link_to "Log out", logout_path, class: "text-gray-400 hover:text-white text-sm font-medium transition" %>
+          </div>
+        <% else %>
+          <div class="flex items-center gap-4">
+            <%= link_to "Log in", login_path, class: "text-white hover:text-mint text-sm font-semibold transition" %>
+            <%= link_to "Sign up", signup_path, class: "px-4 py-2 bg-mint hover:bg-mint-600 text-navy text-sm font-bold rounded-lg transition" %>
+          </div>
+        <% end %>
+      </header>
+
+      <% if flash[:notice] %>
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+             x-transition:leave="transition ease-in duration-300"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="mb-4 p-3 bg-mint-900/30 border border-mint-700 rounded-lg text-mint-300 relative overflow-hidden">
+          <%= flash[:notice] %>
+          <div class="absolute bottom-0 left-0 h-0.5 bg-mint-600" style="animation: progress-countdown 5s linear forwards"></div>
+        </div>
+      <% end %>
+
+      <% if flash[:alert] %>
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+             x-transition:leave="transition ease-in duration-300"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 relative overflow-hidden">
+          <%= flash[:alert] %>
+          <div class="absolute bottom-0 left-0 h-0.5 bg-red-600" style="animation: progress-countdown 5s linear forwards"></div>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,66 @@
+<section>
+  <!-- Agent Cards -->
+  <div class="mb-8">
+    <h2 class="text-xl font-bold text-white mb-4">Agents</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <% @agents.each do |agent| %>
+        <%= link_to agent_path(agent.slug), class: "block bg-navy-400 rounded-xl border border-navy-300/20 p-5 hover:border-mint/30 hover:shadow-lg hover:shadow-mint/5 transition" do %>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-full bg-violet/20 flex items-center justify-center">
+              <span class="text-violet font-bold"><%= agent.name.first.upcase %></span>
+            </div>
+            <div>
+              <h3 class="text-white font-bold text-sm"><%= agent.name %></h3>
+              <p class="text-gray-500 text-xs"><%= agent.title %></p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full <%= agent.status == 'active' ? 'bg-mint' : 'bg-gray-600' %>"></span>
+            <span class="text-xs text-gray-400"><%= agent.status.capitalize %></span>
+          </div>
+          <% if agent.description.present? %>
+            <p class="text-gray-500 text-xs mt-2 line-clamp-2"><%= agent.description %></p>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Task Pipeline -->
+  <div class="mb-8">
+    <h2 class="text-xl font-bold text-white mb-4">Task Pipeline</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <% %w[new queued in_progress done failed archived].each do |stage| %>
+        <%= link_to tasks_path(stage: stage), class: "block bg-navy-400 rounded-xl border border-navy-300/20 p-4 text-center hover:border-violet/30 transition" do %>
+          <p class="text-2xl font-bold text-white"><%= @task_counts[stage] || 0 %></p>
+          <p class="text-xs text-gray-400 mt-1"><%= stage.humanize %></p>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div>
+    <h2 class="text-xl font-bold text-white mb-4">Recent Activity</h2>
+    <% if @recent_activities.empty? %>
+      <div class="bg-navy-400 rounded-xl border border-navy-300/20 p-6 text-center">
+        <p class="text-gray-500">No activity yet.</p>
+      </div>
+    <% else %>
+      <div class="space-y-2">
+        <% @recent_activities.each do |activity| %>
+          <div class="bg-navy-400 rounded-xl border border-navy-300/20 p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center px-2 py-0.5 bg-violet-900/30 border border-violet-700/50 rounded text-xs text-violet-300"><%= activity.activity_type %></span>
+              <span class="text-sm text-gray-300"><%= activity.description %></span>
+              <% if activity.agent_slug.present? %>
+                <span class="text-xs text-gray-500">by <%= activity.agent_slug %></span>
+              <% end %>
+            </div>
+            <span class="text-xs text-gray-600"><%= time_ago_in_words(activity.created_at) %> ago</span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</section>

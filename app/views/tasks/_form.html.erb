@@ -1,0 +1,36 @@
+<div class="bg-navy-400 rounded-xl border border-navy-300/20 p-6">
+  <% if task.errors.any? %>
+    <div class="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
+      <% task.errors.full_messages.each do |msg| %>
+        <p><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= form_with model: task, url: task.persisted? ? task_path(task.slug) : tasks_path do |f| %>
+    <div class="mb-5">
+      <label class="block text-sm text-gray-400 mb-2 font-medium">Title</label>
+      <%= f.text_field :title, class: "w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-mint focus:outline-none", placeholder: "Task title" %>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-sm text-gray-400 mb-2 font-medium">Description</label>
+      <%= f.text_area :description, rows: 4, class: "w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-mint focus:outline-none", placeholder: "What needs to be done?" %>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-gray-400 mb-2 font-medium">Priority</label>
+        <%= f.select :priority, [["Normal (0)", 0], ["High (1)", 1], ["Critical (2)", 2]], {}, class: "w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-mint focus:outline-none" %>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-2 font-medium">Assign to Agent</label>
+        <%= f.select :agent_slug, @agents.map { |a| [a.name, a.slug] }, { include_blank: "Unassigned" }, class: "w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-mint focus:outline-none" %>
+      </div>
+    </div>
+
+    <button type="submit" class="px-8 py-3 bg-mint hover:bg-mint-600 text-navy font-bold rounded-xl shadow hover:shadow-lg hover:shadow-mint/20 transition">
+      <%= task.persisted? ? "Update Task" : "Create Task" %>
+    </button>
+  <% end %>
+</div>

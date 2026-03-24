@@ -1,0 +1,93 @@
+<section>
+  <div class="mb-6">
+    <%= link_to "&larr; All Agents".html_safe, agents_path, class: "text-gray-400 hover:text-white text-sm transition" %>
+  </div>
+
+  <!-- Agent Header -->
+  <div class="bg-navy-400 rounded-xl border border-navy-300/20 p-6 mb-6">
+    <div class="flex items-center gap-4 mb-4">
+      <div class="w-16 h-16 rounded-full bg-violet/20 flex items-center justify-center">
+        <span class="text-violet font-bold text-2xl"><%= @agent.name.first.upcase %></span>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-white"><%= @agent.name %></h2>
+        <p class="text-gray-400"><%= @agent.title %></p>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="inline-block w-2 h-2 rounded-full <%= @agent.status == 'active' ? 'bg-mint' : 'bg-gray-600' %>"></span>
+          <span class="text-xs text-gray-400"><%= @agent.status.capitalize %></span>
+          <span class="text-xs text-gray-600">|</span>
+          <span class="text-xs text-gray-500"><%= @agent.agent_type %></span>
+        </div>
+      </div>
+    </div>
+    <% if @agent.description.present? %>
+      <p class="text-gray-300 text-sm"><%= @agent.description %></p>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Skills -->
+    <div>
+      <h3 class="text-lg font-bold text-white mb-3">Skills</h3>
+      <% if @skills.any? %>
+        <div class="space-y-2">
+          <% @skills.each do |skill| %>
+            <div class="bg-navy-400 rounded-lg border border-navy-300/20 p-3">
+              <p class="text-white text-sm font-medium"><%= skill.name %></p>
+              <p class="text-gray-500 text-xs"><%= skill.category %></p>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-gray-500 text-sm">No skills assigned.</p>
+      <% end %>
+    </div>
+
+    <!-- Tasks -->
+    <div>
+      <h3 class="text-lg font-bold text-white mb-3">Recent Tasks</h3>
+      <% if @tasks.any? %>
+        <div class="space-y-2">
+          <% @tasks.each do |task| %>
+            <%= link_to task_path(task.slug), class: "block bg-navy-400 rounded-lg border border-navy-300/20 p-3 hover:border-violet/30 transition" do %>
+              <p class="text-white text-sm font-medium truncate"><%= task.title %></p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="inline-flex px-1.5 py-0.5 rounded text-xs font-medium
+                  <%= case task.stage
+                      when 'new' then 'bg-blue-900/30 text-blue-300'
+                      when 'queued' then 'bg-yellow-900/30 text-yellow-300'
+                      when 'in_progress' then 'bg-mint-900/30 text-mint-300'
+                      when 'done' then 'bg-green-900/30 text-green-300'
+                      when 'failed' then 'bg-red-900/30 text-red-300'
+                      else 'bg-gray-900/30 text-gray-300'
+                      end %>"><%= task.stage.humanize %></span>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-gray-500 text-sm">No tasks yet.</p>
+      <% end %>
+    </div>
+
+    <!-- Activity -->
+    <div>
+      <h3 class="text-lg font-bold text-white mb-3">Recent Activity</h3>
+      <% if @activities.any? %>
+        <div class="space-y-2">
+          <% @activities.each do |activity| %>
+            <div class="bg-navy-400 rounded-lg border border-navy-300/20 p-3">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex px-1.5 py-0.5 bg-violet-900/30 border border-violet-700/50 rounded text-xs text-violet-300"><%= activity.activity_type %></span>
+                <span class="text-xs text-gray-500"><%= time_ago_in_words(activity.created_at) %> ago</span>
+              </div>
+              <p class="text-gray-300 text-sm mt-1"><%= activity.description %></p>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-gray-500 text-sm">No activity yet.</p>
+      <% end %>
+    </div>
+  </div>
+</section>

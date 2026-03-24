@@ -1,0 +1,10 @@
+<section>
+  <div class="mb-6">
+    <%= link_to "&larr; All Tasks".html_safe, tasks_path, class: "text-gray-400 hover:text-white text-sm transition" %>
+  </div>
+
+  <div class="max-w-2xl">
+    <h2 class="text-2xl font-bold text-white mb-6">New Task</h2>
+    <%= render "form", task: @task %>
+  </div>
+</section>

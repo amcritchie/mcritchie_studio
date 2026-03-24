@@ -1,0 +1,32 @@
+<section>
+  <h2 class="text-2xl font-bold text-white mb-6">Agents</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <% @agents.each do |agent| %>
+      <%= link_to agent_path(agent.slug), class: "block bg-navy-400 rounded-xl border border-navy-300/20 p-6 hover:border-mint/30 hover:shadow-lg hover:shadow-mint/5 transition" do %>
+        <div class="flex items-center gap-4 mb-4">
+          <div class="w-14 h-14 rounded-full bg-violet/20 flex items-center justify-center">
+            <span class="text-violet font-bold text-xl"><%= agent.name.first.upcase %></span>
+          </div>
+          <div>
+            <h3 class="text-white font-bold text-lg"><%= agent.name %></h3>
+            <p class="text-gray-400 text-sm"><%= agent.title %></p>
+          </div>
+          <div class="ml-auto flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full <%= agent.status == 'active' ? 'bg-mint' : 'bg-gray-600' %>"></span>
+            <span class="text-xs text-gray-400"><%= agent.status.capitalize %></span>
+          </div>
+        </div>
+        <% if agent.description.present? %>
+          <p class="text-gray-400 text-sm mb-4"><%= agent.description %></p>
+        <% end %>
+        <div class="flex items-center gap-4 text-xs text-gray-500">
+          <span><%= agent.agent_type %></span>
+          <span><%= agent.tasks.count %> tasks</span>
+          <% if agent.last_active_at %>
+            <span>Active <%= time_ago_in_words(agent.last_active_at) %> ago</span>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</section>
