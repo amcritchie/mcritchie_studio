@@ -2,6 +2,11 @@
 
 Central task management and orchestration hub for the McRitchie AI agent system (Alex, Mack, Mason, Turf Monster).
 
+## Dev Server
+
+- **Port 3000** — `bin/rails server` (default)
+- Turf Monster runs on port 3001
+
 ## Tech Stack
 
 - Ruby 3.1 / Rails 7.2 / PostgreSQL
@@ -13,12 +18,18 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 
 ## Branding
 
-- **Primary**: `#06D6A0` Mint — success, active states, CTAs
+- **Primary**: `#8E82FE` Violet — CTAs, buttons, links, hovers, form focus
 - **Background**: `#1A1535` Deep Navy — body bg, card bg
-- **Accent**: `#8E82FE` Violet — links, badges, highlights
+- **Success accent**: `#06D6A0` Mint — flash notices, success toasts, active status dots, "Start" button, in_progress badges
 - **Text**: `#FFFFFF` White — headings, primary text
 - **Font**: Montserrat (weights 400-900)
-- Tailwind custom colors: `mint`, `navy`, `violet` with full shade scales
+- **Logo**: SVG icon (`app/assets/images/logo-icon.svg`) + "McRitchie **Studio**" (Studio in violet)
+- Tailwind custom colors:
+  - `violet` (5-step: 100 `#EAE8FF`, 300 `#C5C0FE`, 500 `#8E82FE`, 700 `#6558E0`, 900 `#3D2FB5`)
+  - `mint` (full scale, accent only)
+  - `navy` (full scale, backgrounds)
+  - Neutrals: `mist`, `lavender`, `slate`, `charcoal`, `midnight`
+  - Accents: `ember`, `gold`, `magenta`
 - Stage badges: blue=new, yellow=queued, mint=in_progress, green=done, red=failed, gray=archived
 
 ## Models

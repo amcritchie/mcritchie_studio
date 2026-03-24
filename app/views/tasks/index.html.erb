@@ -20,7 +20,7 @@
       </button>
 
       <% if logged_in? %>
-        <%= link_to "New Task", new_task_path, class: "px-4 py-2 bg-mint hover:bg-mint-600 text-navy text-sm font-bold rounded-lg transition" %>
+        <%= link_to "New Task", new_task_path, class: "px-4 py-2 bg-violet hover:bg-violet-700 text-white text-sm font-bold rounded-lg transition" %>
       <% end %>
     </div>
   </div>
@@ -59,7 +59,7 @@
              @dragenter.prevent="dropTarget = '<%= stage %>'"
              @dragleave.self="dropTarget = null"
              @drop.prevent="dropCard('<%= stage %>')"
-             :class="dropTarget === '<%= stage %>' ? 'border-mint bg-mint-900/20' : 'border-navy-300/20'">
+             :class="dropTarget === '<%= stage %>' ? 'border-violet bg-violet-900/20' : 'border-navy-300/20'">
 
           <% (@tasks_by_stage[stage] || []).each do |task| %>
             <div id="card-<%= task.slug %>"
@@ -75,7 +75,7 @@
 
               <div class="flex items-center justify-between mb-1.5">
                 <a href="<%= task_path(task.slug) %>"
-                   class="text-white font-semibold text-sm truncate flex-1 hover:text-mint transition"
+                   class="text-white font-semibold text-sm truncate flex-1 hover:text-violet transition"
                    @click.stop>
                   <%= task.title %>
                 </a>

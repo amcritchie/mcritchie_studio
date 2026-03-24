@@ -16,7 +16,7 @@
             <span class="inline-flex items-center px-2 py-0.5 bg-violet-900/30 border border-violet-700/50 rounded text-xs text-violet-300 shrink-0"><%= activity.activity_type %></span>
             <span class="text-sm text-gray-300 truncate"><%= activity.description %></span>
             <% if activity.agent_slug.present? %>
-              <%= link_to activity.agent_slug, agent_path(activity.agent_slug), class: "text-xs text-mint hover:text-mint-300 shrink-0" %>
+              <%= link_to activity.agent_slug, agent_path(activity.agent_slug), class: "text-xs text-violet hover:text-violet-300 shrink-0" %>
             <% end %>
             <% if activity.task_slug.present? %>
               <%= link_to activity.task_slug, task_path(activity.task_slug), class: "text-xs text-violet hover:text-violet-300 shrink-0" %>

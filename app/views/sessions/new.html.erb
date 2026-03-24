@@ -1,10 +1,8 @@
 <div class="min-h-[70vh] flex items-center justify-center">
   <div class="w-full max-w-md">
     <div class="text-center mb-8">
-      <div class="w-20 h-20 rounded-full bg-mint/20 flex items-center justify-center mx-auto mb-4">
-        <span class="text-mint font-bold text-3xl">M</span>
-      </div>
-      <h1 class="text-3xl font-extrabold text-white tracking-tight">McRitchie <span class="text-mint">Studio</span></h1>
+      <%= image_tag "logo-icon.svg", class: "w-20 h-20 mx-auto mb-4" %>
+      <h1 class="text-3xl font-extrabold text-white tracking-tight">McRitchie <span class="text-violet">Studio</span></h1>
       <p class="text-gray-400 mt-2">Log in to manage</p>
     </div>
 
@@ -13,18 +11,18 @@
         <div class="mb-5">
           <label for="email" class="block text-sm text-gray-400 mb-2 font-medium">Email</label>
           <input type="email" name="email" id="email" value="<%= params[:email] %>" autofocus
-            class="w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-mint focus:outline-none"
+            class="w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-violet focus:outline-none"
             placeholder="you@example.com">
         </div>
 
         <div class="mb-6">
           <label for="password" class="block text-sm text-gray-400 mb-2 font-medium">Password</label>
           <input type="password" name="password" id="password"
-            class="w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-mint focus:outline-none"
+            class="w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-violet focus:outline-none"
             placeholder="Your password">
         </div>
 
-        <button type="submit" class="w-full px-8 py-3 bg-mint hover:bg-mint-600 text-navy font-bold rounded-xl shadow hover:shadow-lg hover:shadow-mint/20 transition">
+        <button type="submit" class="w-full px-8 py-3 bg-violet hover:bg-violet-700 text-white font-bold rounded-xl shadow hover:shadow-lg hover:shadow-violet/20 transition">
           Log In
         </button>
       <% end %>

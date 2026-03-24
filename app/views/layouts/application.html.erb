@@ -38,10 +38,17 @@
               },
               violet: {
                 DEFAULT: '#8E82FE',
-                50: '#f0eeff', 100: '#d1ccfe', 200: '#b2aafe', 300: '#9388fe',
-                400: '#8E82FE', 500: '#7a6efe', 600: '#6558e5', 700: '#5042cc',
-                800: '#3b2cb3', 900: '#26169a',
+                100: '#EAE8FF', 300: '#C5C0FE', 500: '#8E82FE',
+                700: '#6558E0', 900: '#3D2FB5',
               },
+              mist: '#F7F6FF',
+              lavender: '#E8E6F0',
+              slate: '#6B6580',
+              charcoal: '#2D2648',
+              midnight: '#120F28',
+              ember: '#FF8C69',
+              gold: '#FFD166',
+              magenta: '#F72585',
             },
           },
         },
@@ -65,14 +72,12 @@
       <header class="mb-8 flex items-center justify-between">
         <div class="flex items-center gap-6">
           <%= link_to root_path, class: "inline-flex items-center gap-3 group" do %>
-            <div class="w-10 h-10 rounded-full bg-mint/20 flex items-center justify-center">
-              <span class="text-mint font-bold text-lg">M</span>
-            </div>
-            <h1 class="text-2xl font-extrabold text-white tracking-tight">McRitchie <span class="text-mint">Studio</span></h1>
+            <%= image_tag "logo-icon.svg", class: "w-8 h-8" %>
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">McRitchie <span class="text-violet">Studio</span></h1>
           <% end %>
           <nav class="flex items-center gap-4">
-            <%= link_to "Dashboard", root_path, class: "text-gray-400 hover:text-mint text-sm font-medium transition" %>
-            <%= link_to "Agents", agents_path, class: "text-gray-400 hover:text-mint text-sm font-medium transition" %>
+            <%= link_to "Dashboard", root_path, class: "text-gray-400 hover:text-violet text-sm font-medium transition" %>
+            <%= link_to "Agents", agents_path, class: "text-gray-400 hover:text-violet text-sm font-medium transition" %>
             <%= link_to "Tasks", tasks_path, class: "text-gray-400 hover:text-violet text-sm font-medium transition" %>
             <%= link_to "Activity", activities_path, class: "text-gray-400 hover:text-violet text-sm font-medium transition" %>
             <%= link_to "Errors", error_logs_path, class: "text-gray-400 hover:text-red-400 text-sm font-medium transition" %>
@@ -86,8 +91,8 @@
           </div>
         <% else %>
           <div class="flex items-center gap-4">
-            <%= link_to "Log in", login_path, class: "text-white hover:text-mint text-sm font-semibold transition" %>
-            <%= link_to "Sign up", signup_path, class: "px-4 py-2 bg-mint hover:bg-mint-600 text-navy text-sm font-bold rounded-lg transition" %>
+            <%= link_to "Log in", login_path, class: "text-white hover:text-violet text-sm font-semibold transition" %>
+            <%= link_to "Sign up", signup_path, class: "px-4 py-2 bg-violet hover:bg-violet-700 text-white text-sm font-bold rounded-lg transition" %>
           </div>
         <% end %>
       </header>
