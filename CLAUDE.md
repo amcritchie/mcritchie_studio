@@ -94,9 +94,10 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 ## Error Handling
 
 - `ErrorLog.capture!(exception, target:, parent:)` — DB only, no external services
-- `rescue_and_log(target:, parent:)` — ApplicationController helper
-- `RecordNotFound` = expected (no log), `RecordInvalid`/`RuntimeError` = log
-- API controllers rescue `RecordNotFound` → 404, `RecordInvalid` → 422
+- **Two-layer error handling architecture:**
+  - **Layer 1 (automatic)**: `rescue_from StandardError` in `ApplicationController` and `Api::V1::BaseController` catches any unhandled error, logs via `ErrorLog.capture!` (no context), returns friendly response. `RecordNotFound` → 404, no logging. Re-raises in dev/test so Rails error pages still show.
+  - **Layer 2 (opt-in)**: `rescue_and_log(target:, parent:)` wraps action body for richer error context. Sets `@_error_logged` flag to prevent double-logging. Pair with outer `rescue` block for response control.
+- API: `RecordNotFound` → 404 (no log), `RecordInvalid` → 422 (logged), `StandardError` → 500 (logged)
 
 ## Seeds
 
