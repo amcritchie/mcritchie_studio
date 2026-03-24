@@ -31,6 +31,9 @@ Rails.application.routes.draw do
   resources :usages, only: [:index]
   resources :error_logs, only: [:index, :show]
 
+  get "docs", to: "docs#index"
+  get "docs/*path", to: "docs#show", as: :doc
+
   # JSON API
   namespace :api do
     namespace :v1 do
