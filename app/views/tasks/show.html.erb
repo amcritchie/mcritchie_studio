@@ -6,20 +6,22 @@
     <% end %>
   </div>
 
-  <div class="bg-navy-400 rounded-xl border border-navy-300/20 p-6 mb-6">
+  <div class="card p-6 mb-6">
     <div class="flex items-start justify-between mb-4">
       <div>
         <h2 class="text-2xl font-bold text-white"><%= @task.title %></h2>
         <div class="flex items-center gap-3 mt-2">
-          <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium
-            <%= case @task.stage
-                when 'new' then 'bg-blue-900/30 text-blue-300 border border-blue-700/50'
-                when 'queued' then 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50'
-                when 'in_progress' then 'bg-mint-900/30 text-mint-300 border border-mint-700/50'
-                when 'done' then 'bg-green-900/30 text-green-300 border border-green-700/50'
-                when 'failed' then 'bg-red-900/30 text-red-300 border border-red-700/50'
-                else 'bg-gray-900/30 text-gray-300 border border-gray-700/50'
-                end %>"><%= @task.stage.humanize %></span>
+          <%
+            stage_scheme = case @task.stage
+              when 'new' then 'info'
+              when 'queued' then 'warning'
+              when 'in_progress' then 'success'
+              when 'done' then 'success'
+              when 'failed' then 'danger'
+              else 'neutral'
+              end
+          %>
+          <%= render "components/badge", text: @task.stage.humanize, scheme: stage_scheme %>
           <% if @task.priority > 0 %>
             <span class="text-xs text-yellow-400 font-medium">Priority <%= @task.priority %></span>
           <% end %>
@@ -40,24 +42,24 @@
     <!-- Timestamps -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
       <div class="bg-navy-600 rounded-lg p-3">
-        <p class="text-xs text-gray-500 uppercase tracking-wider">Created</p>
+        <p class="label-upper">Created</p>
         <p class="text-white text-sm"><%= @task.created_at.strftime("%b %d, %H:%M") %></p>
       </div>
       <% if @task.queued_at %>
         <div class="bg-navy-600 rounded-lg p-3">
-          <p class="text-xs text-gray-500 uppercase tracking-wider">Queued</p>
+          <p class="label-upper">Queued</p>
           <p class="text-white text-sm"><%= @task.queued_at.strftime("%b %d, %H:%M") %></p>
         </div>
       <% end %>
       <% if @task.started_at %>
         <div class="bg-navy-600 rounded-lg p-3">
-          <p class="text-xs text-gray-500 uppercase tracking-wider">Started</p>
+          <p class="label-upper">Started</p>
           <p class="text-white text-sm"><%= @task.started_at.strftime("%b %d, %H:%M") %></p>
         </div>
       <% end %>
       <% if @task.completed_at %>
         <div class="bg-navy-600 rounded-lg p-3">
-          <p class="text-xs text-gray-500 uppercase tracking-wider">Completed</p>
+          <p class="label-upper">Completed</p>
           <p class="text-white text-sm"><%= @task.completed_at.strftime("%b %d, %H:%M") %></p>
         </div>
       <% end %>

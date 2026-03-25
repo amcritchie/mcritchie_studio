@@ -11,9 +11,9 @@
   <% if @activities.any? %>
     <div class="space-y-2">
       <% @activities.each do |activity| %>
-        <div class="bg-navy-400 rounded-xl border border-navy-300/20 p-4 flex items-center justify-between">
+        <div class="card p-4 flex items-center justify-between">
           <div class="flex items-center gap-3 flex-1 min-w-0">
-            <span class="inline-flex items-center px-2 py-0.5 bg-violet-900/30 border border-violet-700/50 rounded text-xs text-violet-300 shrink-0"><%= activity.activity_type %></span>
+            <%= render "components/badge", text: activity.activity_type, scheme: "violet" %>
             <span class="text-sm text-gray-300 truncate"><%= activity.description %></span>
             <% if activity.agent_slug.present? %>
               <%= link_to activity.agent_slug, agent_path(activity.agent_slug), class: "text-xs text-violet hover:text-violet-300 shrink-0" %>
@@ -27,8 +27,6 @@
       <% end %>
     </div>
   <% else %>
-    <div class="bg-navy-400 rounded-xl border border-navy-300/20 p-8 text-center">
-      <p class="text-gray-400 text-lg">No activity recorded yet.</p>
-    </div>
+    <%= render "components/empty_state", message: "No activity recorded yet." %>
   <% end %>
 </section>

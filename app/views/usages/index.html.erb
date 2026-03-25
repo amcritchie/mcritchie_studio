@@ -33,8 +33,6 @@
       </table>
     </div>
   <% else %>
-    <div class="bg-navy-400 rounded-xl border border-navy-300/20 p-8 text-center">
-      <p class="text-gray-400 text-lg">No usage data yet.</p>
-    </div>
+    <%= render "components/empty_state", message: "No usage data yet." %>
   <% end %>
 </section>

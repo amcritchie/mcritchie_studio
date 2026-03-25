@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-primary: #8E82FE;
+  --color-primary-hover: #6558E0;
+  --color-surface: #3a3359;
+  --color-success: #06D6A0;
+  --color-danger: #EF4444;
+}
+
+@layer components {
+  .card {
+    @apply bg-navy-400 rounded-xl border border-navy-300/20;
+  }
+  .card-hover {
+    @apply bg-navy-400 rounded-xl border border-navy-300/20 hover:border-violet-700/50 hover:shadow-lg hover:shadow-violet-900/10 transition;
+  }
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border;
+  }
+  .input-field {
+    @apply w-full bg-navy-600 border border-navy-300/30 rounded-lg px-4 py-3 text-white focus:border-violet focus:outline-none;
+  }
+  .empty-state {
+    @apply bg-navy-400 rounded-xl border border-navy-300/20 p-8 text-center;
+  }
+  .json-debug {
+    @apply bg-navy-800 rounded-xl border border-navy-300/20 p-4 overflow-x-auto;
+  }
+  .label-upper {
+    @apply text-xs text-gray-500 uppercase tracking-wider;
+  }
+}
+
 @keyframes progress-countdown {
   from { width: 100%; }
   to { width: 0%; }
