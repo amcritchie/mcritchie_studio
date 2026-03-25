@@ -5,16 +5,7 @@ Rails.application.routes.draw do
 
   root "dashboard#index"
 
-  # Auth
-  get  "login",  to: "sessions#new"
-  post "login",  to: "sessions#create"
-  get  "logout", to: "sessions#destroy"
-
-  get  "signup", to: "registrations#new"
-  post "signup", to: "registrations#create"
-
-  get "auth/:provider/callback", to: "omniauth_callbacks#create"
-  get "auth/failure", to: "omniauth_callbacks#failure"
+  Studio.routes(self)
 
   # HTML
   resources :agents, only: [:index, :show], param: :slug
@@ -29,7 +20,6 @@ Rails.application.routes.draw do
   end
   resources :activities, only: [:index]
   resources :usages, only: [:index]
-  resources :error_logs, only: [:index, :show]
 
   get "docs", to: "docs#index"
   get "docs/*path", to: "docs#show", as: :doc

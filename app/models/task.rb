@@ -8,6 +8,10 @@ class Task < ApplicationRecord
 
   before_validation :generate_slug, on: :create
 
+  def to_param
+    slug
+  end
+
   scope :by_stage, ->(stage) { where(stage: stage) }
   scope :active, -> { where(stage: %w[new queued in_progress]) }
   scope :recent, -> { order(created_at: :desc) }

@@ -26,6 +26,27 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - Montserrat font (Google Fonts CDN)
 - ERB views, import maps, no JS frameworks
 - bcrypt password auth + Google OAuth (OmniAuth)
+- **Studio engine gem** — `gem "studio", git: "https://github.com/amcritchie/studio.git"`
+
+## Studio Engine
+
+Shared code lives in the [studio engine](https://github.com/amcritchie/studio). This app includes it via `config/initializers/studio.rb`:
+
+```ruby
+Studio.configure do |config|
+  config.app_name = "McRitchie Studio"
+  config.welcome_message = ->(user) { "Welcome to McRitchie Studio, #{user.display_name}!" }
+  config.registration_params = [:name, :email, :password, :password_confirmation]
+end
+```
+
+**From the engine:** `Studio::ErrorHandling` concern (in ApplicationController), `ErrorLog` model, `Sluggable` concern, auth controllers (sessions, registrations, omniauth_callbacks, error_logs), error log views, generic login/signup views (overridden by app-branded versions).
+
+**Overridden locally:** `sessions/new.html.erb` and `registrations/new.html.erb` (violet-branded with logo).
+
+**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`.
+
+**Updating:** After changes to the studio repo, run `bundle update studio` here.
 
 ## Branding
 
@@ -61,10 +82,10 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 ## Key Patterns
 
 - **Slug-based FKs** — All foreign keys use slug strings (e.g. `agent_slug`), not integer IDs. Associations: `foreign_key: :agent_slug, primary_key: :slug`.
-- **Sluggable concern** — `before_save :set_slug` via `name_slug` method. Used by User, Agent, Skill, Usage.
+- **Sluggable concern** (from studio engine) — `before_save :set_slug` via `name_slug` method. Used by User, Agent, Skill, Usage.
 - **Task slug** — Immutable random hex generated once on create via `before_validation`. Does NOT use Sluggable.
 - **Activity slug** — Set via `after_create` as `"activity-#{id}"` (needs id).
-- **ErrorLog.capture!** — `ErrorLog.capture!(exception)` with cleaned backtrace. Target/parent set via ActiveRecord setters after creation.
+- **ErrorLog** (from studio engine) — `ErrorLog.capture!(exception)` with cleaned backtrace. Target/parent set via ActiveRecord setters after creation.
 - **Cost** — Stored as `decimal(10,4)` for sub-cent API pricing precision.
 
 ## Routes
@@ -106,9 +127,10 @@ See top-level `CLAUDE.md` for the full checklist. Quick summary:
 
 Every write action MUST use `rescue_and_log` with target/parent context. See top-level `CLAUDE.md` for full pattern docs.
 
-- **Layer 1 (automatic)**: `rescue_from StandardError` in `ApplicationController` and `Api::V1::BaseController`. Logs via `create_error_log(exception)` (no context). `RecordNotFound` → 404, no logging. Re-raises in dev/test.
+- **Layer 1 (automatic)**: `rescue_from StandardError` via `Studio::ErrorHandling` concern (included in `ApplicationController`) and `Api::V1::BaseController`. Logs via `create_error_log(exception)` (no context). `RecordNotFound` → 404, no logging. Re-raises in dev/test.
 - **Layer 2 (required for writes)**: `rescue_and_log(target:, parent:)` wraps write actions. Logs via `create_error_log`, attaches target/parent via ActiveRecord setters. Sets `@_error_logged` flag. Pair with outer `rescue StandardError => e`.
 - **Central method**: `create_error_log(exception)` → `ErrorLog.capture!(exception)` → returns record for context attachment
+- **Auth + error log controllers**: Provided by studio engine. Do not recreate locally.
 - API: `RecordNotFound` → 404 (no log), `RecordInvalid` → 422 (logged via `create_error_log`), `StandardError` → 500 (logged)
 - HTML TasksController: all 8 write actions wrapped with `target: @task`
 - API TasksController: all 8 write actions wrapped with `target: task`
