@@ -4,4 +4,5 @@ Studio.configure do |config|
   config.welcome_message = ->(user) { "Welcome to McRitchie Studio, #{user.display_name}!" }
   config.registration_params = [:name, :email, :password, :password_confirmation]
   config.configure_sso_user = ->(user) { user.role = "viewer" }
+  config.sso_logo = "/studio-logo.svg"
 end
