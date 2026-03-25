@@ -35,8 +35,10 @@ Shared code lives in the [studio engine](https://github.com/amcritchie/studio). 
 ```ruby
 Studio.configure do |config|
   config.app_name = "McRitchie Studio"
+  config.session_key = :studio_user_id
   config.welcome_message = ->(user) { "Welcome to McRitchie Studio, #{user.display_name}!" }
   config.registration_params = [:name, :email, :password, :password_confirmation]
+  config.configure_sso_user = ->(user) { user.role = "viewer" }
 end
 ```
 
@@ -44,9 +46,9 @@ end
 
 **Overridden locally:** `sessions/new.html.erb` and `registrations/new.html.erb` (violet-branded with logo).
 
-**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`.
+**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/sso_continue`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`.
 
-**SSO:** Shared `_studio_session` cookie across `*.mcritchie.studio`. Login here → auto-logged-in at `turf.mcritchie.studio`. Auto-provisioned SSO users get `role = "viewer"` via `configure_sso_user`. Requires shared `SECRET_KEY_BASE` in `.env` (dev) and Heroku config (prod).
+**Sessions:** Independent per-app sessions via `session[:studio_user_id]`. Shared `_studio_session` cookie still spans `*.mcritchie.studio` but only `sso_*` awareness fields are shared. Login page shows "Continue as [name]" button when user is logged into Turf Monster. Logout only clears this app's session, not the other. SSO-created users get `role = "viewer"` via `configure_sso_user`. Requires shared `SECRET_KEY_BASE` in `.env` (dev) and Heroku config (prod).
 
 **Updating:** After changes to the studio repo, run `bundle update studio` here.
 
