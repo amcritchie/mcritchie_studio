@@ -36,6 +36,7 @@ Shared code lives in the [studio engine](https://github.com/amcritchie/studio). 
 Studio.configure do |config|
   config.app_name = "McRitchie Studio"
   config.session_key = :studio_user_id
+  config.sso_logo = "/studio-logo.svg"
   config.welcome_message = ->(user) { "Welcome to McRitchie Studio, #{user.display_name}!" }
   config.registration_params = [:name, :email, :password, :password_confirmation]
   config.configure_sso_user = ->(user) { user.role = "viewer" }
@@ -46,9 +47,9 @@ end
 
 **Overridden locally:** `sessions/new.html.erb` and `registrations/new.html.erb` (violet-branded with logo).
 
-**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/sso_continue`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`.
+**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/sso_continue`, `/sso_login`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`.
 
-**Sessions:** Independent per-app sessions via `session[:studio_user_id]`. Shared `_studio_session` cookie still spans `*.mcritchie.studio` but only `sso_*` awareness fields are shared. Login page shows "Continue as [name]" button when user is logged into Turf Monster. Logout only clears this app's session, not the other. SSO-created users get `role = "viewer"` via `configure_sso_user`. Requires shared `SECRET_KEY_BASE` in `.env` (dev) and Heroku config (prod).
+**SSO Hub Role:** This app is the central auth hub. On login, `set_app_session` stores `sso_*` fields (including `sso_logo`) in the shared session. Nav bar has a "Turf Monster" CTA button linking to `/sso_login` on the satellite app for one-click SSO. Login page does NOT show "Continue as" (one-way flow — hub only sends, never receives). SSO-created users on satellite apps get `role = "viewer"` via `configure_sso_user`. Requires shared `SECRET_KEY_BASE`.
 
 **Updating:** After changes to the studio repo, run `bundle update studio` here.
 
