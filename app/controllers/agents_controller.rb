@@ -2,7 +2,7 @@ class AgentsController < ApplicationController
   skip_before_action :require_authentication
 
   def index
-    @agents = Agent.all.order(:name)
+    @agents = Agent.includes(:tasks).order(:name)
   end
 
   def show

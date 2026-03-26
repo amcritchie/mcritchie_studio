@@ -16,27 +16,44 @@ class Task < ApplicationRecord
   scope :active, -> { where(stage: %w[new queued in_progress]) }
   scope :recent, -> { order(created_at: :desc) }
 
+  TRANSITIONS = {
+    "new"         => %w[queued],
+    "queued"      => %w[in_progress failed],
+    "in_progress" => %w[done failed],
+    "done"        => %w[archived],
+    "failed"      => %w[archived queued],
+    "archived"    => %w[]
+  }.freeze
+
   def queue!
-    update!(stage: "queued", queued_at: Time.current)
+    transition_to!("queued", queued_at: Time.current)
   end
 
   def start!
-    update!(stage: "in_progress", started_at: Time.current)
+    transition_to!("in_progress", started_at: Time.current)
   end
 
   def complete!(result_data = {})
-    update!(stage: "done", completed_at: Time.current, result: result_data)
+    transition_to!("done", completed_at: Time.current, result: result_data)
   end
 
   def fail!(message = nil)
-    update!(stage: "failed", failed_at: Time.current, error_message: message)
+    transition_to!("failed", failed_at: Time.current, error_message: message)
   end
 
   def archive!
-    update!(stage: "archived", archived_at: Time.current)
+    transition_to!("archived", archived_at: Time.current)
   end
 
   private
+
+  def transition_to!(new_stage, **attrs)
+    allowed = TRANSITIONS.fetch(stage, [])
+    unless allowed.include?(new_stage)
+      raise "Cannot transition from #{stage} to #{new_stage} (allowed: #{allowed.join(', ')})"
+    end
+    update!(stage: new_stage, **attrs)
+  end
 
   def generate_slug
     self.slug ||= "task-#{SecureRandom.hex(6)}"

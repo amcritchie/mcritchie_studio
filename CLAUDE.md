@@ -21,7 +21,7 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 ## Tech Stack
 
 - Ruby 3.1 / Rails 7.2 / PostgreSQL
-- Tailwind CSS via CDN (no build step)
+- Tailwind CSS via `tailwindcss-rails` gem (compiled with `@apply` support, not CDN)
 - Alpine.js via CDN for interactivity
 - Montserrat font (Google Fonts CDN)
 - ERB views, import maps, no JS frameworks
@@ -73,7 +73,7 @@ end
 
 - **User** — name, email, password_digest, provider, uid, role (admin/viewer), slug. `has_secure_password`, `from_omniauth`.
 - **Agent** — name, slug (unique), status (active/paused/inactive), agent_type, title, description, config (jsonb), metadata (jsonb), last_active_at. Has many tasks/activities/usages/skills.
-- **Task** — title, slug (unique, random hex, immutable), description, stage (new/queued/in_progress/done/failed/archived), priority (0-2), agent_slug FK, required_skills (jsonb), result (jsonb), error_message, timestamps per stage. Does NOT use Sluggable.
+- **Task** — title, slug (unique, random hex, immutable), description, stage (new/queued/in_progress/done/failed/archived), priority (0-2), agent_slug FK, required_skills (jsonb), result (jsonb), error_message, timestamps per stage. Does NOT use Sluggable. **State transitions enforced server-side** via `TRANSITIONS` map and `transition_to!` private method — invalid transitions raise RuntimeError.
 - **Skill** — name, slug (unique), category, description, config (jsonb). Has many agents through skill_assignments.
 - **SkillAssignment** — agent_slug FK, skill_slug FK, proficiency. Join table, no slug.
 - **Activity** — agent_slug FK, activity_type, description, task_slug FK, metadata (jsonb), slug (set via after_create).
@@ -89,6 +89,7 @@ end
 - **Slug-based FKs** — All foreign keys use slug strings (e.g. `agent_slug`), not integer IDs. Associations: `foreign_key: :agent_slug, primary_key: :slug`.
 - **Sluggable concern** (from studio engine) — `before_save :set_slug` via `name_slug` method. Used by User, Agent, Skill, Usage.
 - **Task slug** — Immutable random hex generated once on create via `before_validation`. Does NOT use Sluggable.
+- **Task transitions** — Enforced server-side. Valid transitions: new→queued, queued→in_progress/failed, in_progress→done/failed, done→archived, failed→archived/queued. Invalid transitions raise RuntimeError. API `task_params` does NOT permit `:stage` — stage changes must go through dedicated transition endpoints (`queue`, `start`, `complete`, `fail_task`, `archive`).
 - **Activity slug** — Set via `after_create` as `"activity-#{id}"` (needs id).
 - **ErrorLog** (from studio engine) — `ErrorLog.capture!(exception)` with cleaned backtrace. Target/parent set via ActiveRecord setters after creation.
 - **Cost** — Stored as `decimal(10,4)` for sub-cent API pricing precision.

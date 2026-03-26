@@ -96,7 +96,7 @@ module Api
       private
 
       def task_params
-        params.permit(:title, :description, :priority, :stage, :agent_slug, required_skills: [], metadata: {})
+        params.permit(:title, :description, :priority, :agent_slug, required_skills: [], metadata: {})
       end
     end
   end
