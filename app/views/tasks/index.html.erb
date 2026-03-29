@@ -3,10 +3,10 @@
 <section x-data="kanbanBoard()" class="min-h-screen">
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-white">Tasks</h2>
+    <h2 class="text-2xl font-bold text-heading">Tasks</h2>
     <div class="flex items-center gap-3">
       <select x-model="agentFilter"
-              class="bg-navy-400 border border-navy-300/20 text-gray-300 text-sm rounded-lg px-3 py-2 focus:border-violet focus:outline-none">
+              class="bg-surface border border-subtle text-body text-sm rounded-lg px-3 py-2 focus:border-violet focus:outline-none">
         <option value="">All Agents</option>
         <% @agents.each do |agent| %>
           <option value="<%= agent.slug %>"><%= agent.name %></option>
@@ -14,7 +14,7 @@
       </select>
 
       <button @click="showArchived = !showArchived"
-              :class="showArchived ? 'bg-violet text-white' : 'bg-navy-400 text-gray-400 border border-navy-300/20 hover:text-white'"
+              :class="showArchived ? 'bg-violet text-white' : 'bg-surface text-secondary border border-subtle hover:text-heading'"
               class="px-3 py-2 rounded-lg text-sm font-medium transition">
         Archived
       </button>
@@ -33,7 +33,7 @@
         <!-- Column Header -->
         <div class="flex items-center justify-between mb-3 px-1">
           <div class="flex items-center gap-2">
-            <h3 class="text-sm font-bold text-white uppercase tracking-wider">
+            <h3 class="text-sm font-bold text-heading uppercase tracking-wider">
               <%= stage.humanize %>
             </h3>
             <span class="stage-count inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold
@@ -54,12 +54,12 @@
         <!-- Drop Zone -->
         <div id="dropzone-<%= stage %>"
              data-stage="<%= stage %>"
-             class="kanban-dropzone rounded-xl border-2 border-dashed min-h-[calc(100vh-220px)] p-2 space-y-2 transition-colors duration-150 border-navy-300/20"
+             class="kanban-dropzone rounded-xl border-2 border-dashed min-h-[calc(100vh-220px)] p-2 space-y-2 transition-colors duration-150 border-subtle"
              @dragover.prevent="dropTarget = '<%= stage %>'"
              @dragenter.prevent="dropTarget = '<%= stage %>'"
              @dragleave.self="dropTarget = null"
              @drop.prevent="dropCard('<%= stage %>')"
-             :class="dropTarget === '<%= stage %>' ? 'border-violet bg-violet-900/20' : 'border-navy-300/20'">
+             :class="dropTarget === '<%= stage %>' ? 'border-violet bg-violet-900/20' : 'border-subtle'">
 
           <% (@tasks_by_stage[stage] || []).each do |task| %>
             <div id="card-<%= task.slug %>"
@@ -70,26 +70,26 @@
                  x-show="matchesFilter('<%= task.agent_slug %>')"
                  @dragstart="startDrag($event, '<%= task.slug %>', '<%= stage %>')"
                  @dragend="endDrag()"
-                 class="kanban-card bg-navy-400 rounded-lg border border-navy-300/20 p-3 cursor-grab active:cursor-grabbing hover:border-violet/30 transition group"
+                 class="kanban-card bg-surface rounded-lg border border-subtle p-3 cursor-grab active:cursor-grabbing hover:border-violet/30 transition group"
                  :class="draggedSlug === '<%= task.slug %>' ? 'opacity-40' : ''">
 
               <div class="flex items-center justify-between mb-1.5">
                 <a href="<%= task_path(task.slug) %>"
-                   class="text-white font-semibold text-sm truncate flex-1 hover:text-violet transition"
+                   class="text-heading font-semibold text-sm truncate flex-1 hover:text-violet transition"
                    @click.stop>
                   <%= task.title %>
                 </a>
                 <div class="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   <% if task.stage != 'archived' %>
                     <button @click.stop="archiveTask('<%= task.slug %>')"
-                            class="text-gray-500 hover:text-yellow-400 transition p-0.5" title="Archive">
+                            class="text-muted hover:text-yellow-400 transition p-0.5" title="Archive">
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
                       </svg>
                     </button>
                   <% end %>
                   <button @click.stop="deleteTask('<%= task.slug %>')"
-                          class="text-gray-500 hover:text-red-400 transition p-0.5" title="Delete">
+                          class="text-muted hover:text-red-400 transition p-0.5" title="Delete">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
@@ -108,7 +108,7 @@
                     <div class="w-4 h-4 rounded-full bg-violet/20 flex items-center justify-center">
                       <span class="text-violet text-[9px] font-bold"><%= task.agent_slug.first.upcase %></span>
                     </div>
-                    <span class="text-xs text-gray-500"><%= task.agent_slug %></span>
+                    <span class="text-xs text-muted"><%= task.agent_slug %></span>
                   </div>
                 <% end %>
               </div>
@@ -117,12 +117,12 @@
                 <p class="text-xs text-red-400/80 truncate mt-1"><%= task.error_message %></p>
               <% end %>
 
-              <p class="text-[10px] text-gray-600 mt-1"><%= time_ago_in_words(task.created_at) %> ago</p>
+              <p class="text-[10px] text-muted mt-1"><%= time_ago_in_words(task.created_at) %> ago</p>
             </div>
           <% end %>
 
           <!-- Empty State -->
-          <div class="kanban-empty flex items-center justify-center h-24 text-gray-600 text-sm"
+          <div class="kanban-empty flex items-center justify-center h-24 text-muted text-sm"
                <% if (@tasks_by_stage[stage] || []).any? %>style="display: none"<% end %>>
             Drop tasks here
           </div>

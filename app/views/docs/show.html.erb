@@ -1,32 +1,32 @@
 <style>
-  .prose-dark h1 { font-size: 1.75rem; font-weight: 800; color: white; margin-bottom: 0.75rem; }
-  .prose-dark h2 { font-size: 1.35rem; font-weight: 700; color: white; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(58, 51, 89, 0.5); padding-bottom: 0.4rem; }
-  .prose-dark h3 { font-size: 1.1rem; font-weight: 600; color: #E8E6F0; margin-top: 1.25rem; margin-bottom: 0.4rem; }
-  .prose-dark p { color: #d1d5db; line-height: 1.7; margin-bottom: 0.75rem; }
-  .prose-dark ul, .prose-dark ol { color: #d1d5db; margin-left: 1.25rem; margin-bottom: 0.75rem; }
-  .prose-dark ul { list-style-type: disc; }
-  .prose-dark ol { list-style-type: decimal; }
-  .prose-dark li { margin-bottom: 0.25rem; line-height: 1.6; }
-  .prose-dark a { color: #8E82FE; text-decoration: underline; }
-  .prose-dark a:hover { color: #C5C0FE; }
-  .prose-dark strong { color: white; }
-  .prose-dark code { background: rgba(58, 51, 89, 0.6); color: #C5C0FE; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.85em; }
-  .prose-dark pre { background: rgba(18, 15, 40, 0.8); border: 1px solid rgba(58, 51, 89, 0.5); border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin-bottom: 1rem; }
-  .prose-dark pre code { background: none; padding: 0; color: #d1d5db; font-size: 0.85em; }
-  .prose-dark table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-  .prose-dark th { text-align: left; color: white; font-weight: 600; padding: 0.5rem; border-bottom: 2px solid rgba(58, 51, 89, 0.5); }
-  .prose-dark td { padding: 0.5rem; border-bottom: 1px solid rgba(58, 51, 89, 0.3); color: #d1d5db; }
-  .prose-dark blockquote { border-left: 3px solid #8E82FE; padding-left: 1rem; color: #9ca3af; margin-bottom: 0.75rem; }
-  .prose-dark hr { border-color: rgba(58, 51, 89, 0.5); margin: 1.5rem 0; }
+  .prose-themed h1 { font-size: 1.75rem; font-weight: 800; color: var(--color-text); margin-bottom: 0.75rem; }
+  .prose-themed h2 { font-size: 1.35rem; font-weight: 700; color: var(--color-text); margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.4rem; }
+  .prose-themed h3 { font-size: 1.1rem; font-weight: 600; color: var(--color-text-body); margin-top: 1.25rem; margin-bottom: 0.4rem; }
+  .prose-themed p { color: var(--color-text-body); line-height: 1.7; margin-bottom: 0.75rem; }
+  .prose-themed ul, .prose-themed ol { color: var(--color-text-body); margin-left: 1.25rem; margin-bottom: 0.75rem; }
+  .prose-themed ul { list-style-type: disc; }
+  .prose-themed ol { list-style-type: decimal; }
+  .prose-themed li { margin-bottom: 0.25rem; line-height: 1.6; }
+  .prose-themed a { color: #8E82FE; text-decoration: underline; }
+  .prose-themed a:hover { color: #C5C0FE; }
+  .prose-themed strong { color: var(--color-text); }
+  .prose-themed code { background: var(--color-surface-alt); color: #C5C0FE; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.85em; }
+  .prose-themed pre { background: var(--color-inset); border: 1px solid var(--color-border); border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin-bottom: 1rem; }
+  .prose-themed pre code { background: none; padding: 0; color: var(--color-text-body); font-size: 0.85em; }
+  .prose-themed table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+  .prose-themed th { text-align: left; color: var(--color-text); font-weight: 600; padding: 0.5rem; border-bottom: 2px solid var(--color-border); }
+  .prose-themed td { padding: 0.5rem; border-bottom: 1px solid var(--color-border); color: var(--color-text-body); }
+  .prose-themed blockquote { border-left: 3px solid #8E82FE; padding-left: 1rem; color: var(--color-text-secondary); margin-bottom: 0.75rem; }
+  .prose-themed hr { border-color: var(--color-border); margin: 1.5rem 0; }
 </style>
 
 <div class="mb-6">
-  <%= link_to "← Back to Docs", docs_path, class: "text-violet hover:text-violet-300 text-sm font-medium transition" %>
+  <%= link_to "\u2190 Back to Docs", docs_path, class: "text-violet hover:text-violet-300 text-sm font-medium transition" %>
 </div>
 
-<div class="bg-navy-400 rounded-xl border border-navy-300/20 p-6 sm:p-8">
-  <p class="text-gray-500 text-xs font-mono mb-4"><%= @path %>.md</p>
-  <div class="prose-dark">
+<div class="card p-6 sm:p-8">
+  <p class="text-muted text-xs font-mono mb-4"><%= @path %>.md</p>
+  <div class="prose-themed">
     <%= @content %>
   </div>
 </div>

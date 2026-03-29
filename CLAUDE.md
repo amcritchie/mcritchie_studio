@@ -53,20 +53,16 @@ end
 
 **Updating:** After changes to the studio repo, run `bundle update studio` here.
 
-## Branding
+## Branding & Theme
 
-- **Primary**: `#8E82FE` Violet — CTAs, buttons, links, hovers, form focus
-- **Background**: `#1A1535` Deep Navy — body bg, card bg
-- **Success accent**: `#06D6A0` Mint — flash notices, success toasts, active status dots, "Start" button, in_progress badges
-- **Text**: `#FFFFFF` White — headings, primary text
+- **Theme**: Dark/light mode toggle via CSS custom properties (see top-level `CLAUDE.md` for token reference)
+- **Primary**: `#8E82FE` Violet — CTAs, buttons, links, hovers, form focus (static, works on both themes)
+- **Success accent**: `#06D6A0` Mint — flash notices, success toasts, active status dots (static)
 - **Font**: Montserrat (weights 400-900)
 - **Logo**: SVG icon (`app/assets/images/logo-icon.svg`) + "McRitchie **Studio**" (Studio in violet)
-- Tailwind custom colors:
-  - `violet` (5-step: 100 `#EAE8FF`, 300 `#C5C0FE`, 500 `#8E82FE`, 700 `#6558E0`, 900 `#3D2FB5`)
-  - `mint` (full scale, accent only)
-  - `navy` (full scale, backgrounds)
-  - Neutrals: `mist`, `lavender`, `slate`, `charcoal`, `midnight`
-  - Accents: `ember`, `gold`, `magenta`
+- **Surfaces**: Use `bg-page`, `bg-surface`, `bg-surface-alt`, `bg-inset` — never hardcode `bg-navy-*`
+- **Text**: Use `text-heading`, `text-body`, `text-secondary`, `text-muted` — never hardcode `text-white` for headings or `text-gray-*` for body text
+- **Borders**: Use `border-subtle`, `border-strong` — never hardcode `border-navy-*`
 - Stage badges: blue=new, yellow=queued, mint=in_progress, green=done, red=failed, gray=archived
 
 ## Models

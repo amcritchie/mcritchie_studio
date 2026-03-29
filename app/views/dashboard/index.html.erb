@@ -1,7 +1,7 @@
 <section>
   <!-- Agent Cards -->
   <div class="mb-8">
-    <h2 class="text-xl font-bold text-white mb-4">Agents</h2>
+    <h2 class="text-xl font-bold text-heading mb-4">Agents</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <% @agents.each do |agent| %>
         <%= link_to agent_path(agent.slug), class: "block card p-5 hover:border-violet/30 hover:shadow-lg hover:shadow-violet/5 transition" do %>
@@ -10,16 +10,16 @@
               <span class="text-violet font-bold"><%= agent.name.first.upcase %></span>
             </div>
             <div>
-              <h3 class="text-white font-bold text-sm"><%= agent.name %></h3>
-              <p class="text-gray-500 text-xs"><%= agent.title %></p>
+              <h3 class="text-heading font-bold text-sm"><%= agent.name %></h3>
+              <p class="text-muted text-xs"><%= agent.title %></p>
             </div>
           </div>
           <div class="flex items-center gap-2">
             <span class="inline-block w-2 h-2 rounded-full <%= agent.status == 'active' ? 'bg-mint' : 'bg-gray-600' %>"></span>
-            <span class="text-xs text-gray-400"><%= agent.status.capitalize %></span>
+            <span class="text-xs text-secondary"><%= agent.status.capitalize %></span>
           </div>
           <% if agent.description.present? %>
-            <p class="text-gray-500 text-xs mt-2 line-clamp-2"><%= agent.description %></p>
+            <p class="text-muted text-xs mt-2 line-clamp-2"><%= agent.description %></p>
           <% end %>
         <% end %>
       <% end %>
@@ -28,12 +28,12 @@
 
   <!-- Task Pipeline -->
   <div class="mb-8">
-    <h2 class="text-xl font-bold text-white mb-4">Task Pipeline</h2>
+    <h2 class="text-xl font-bold text-heading mb-4">Task Pipeline</h2>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       <% %w[new queued in_progress done failed archived].each do |stage| %>
         <%= link_to tasks_path(stage: stage), class: "block card p-4 text-center hover:border-violet/30 transition" do %>
-          <p class="text-2xl font-bold text-white"><%= @task_counts[stage] || 0 %></p>
-          <p class="text-xs text-gray-400 mt-1"><%= stage.humanize %></p>
+          <p class="text-2xl font-bold text-heading"><%= @task_counts[stage] || 0 %></p>
+          <p class="text-xs text-secondary mt-1"><%= stage.humanize %></p>
         <% end %>
       <% end %>
     </div>
@@ -41,7 +41,7 @@
 
   <!-- Recent Activity -->
   <div>
-    <h2 class="text-xl font-bold text-white mb-4">Recent Activity</h2>
+    <h2 class="text-xl font-bold text-heading mb-4">Recent Activity</h2>
     <% if @recent_activities.empty? %>
       <%= render "components/empty_state", message: "No activity yet." %>
     <% else %>
@@ -50,12 +50,12 @@
           <div class="card p-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
               <%= render "components/badge", text: activity.activity_type, scheme: "violet" %>
-              <span class="text-sm text-gray-300"><%= activity.description %></span>
+              <span class="text-sm text-body"><%= activity.description %></span>
               <% if activity.agent_slug.present? %>
-                <span class="text-xs text-gray-500">by <%= activity.agent_slug %></span>
+                <span class="text-xs text-muted">by <%= activity.agent_slug %></span>
               <% end %>
             </div>
-            <span class="text-xs text-gray-600"><%= time_ago_in_words(activity.created_at) %> ago</span>
+            <span class="text-xs text-muted"><%= time_ago_in_words(activity.created_at) %> ago</span>
           </div>
         <% end %>
       </div>
