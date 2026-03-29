@@ -157,6 +157,17 @@ Agent system documentation at `docs/agents/`:
 - `shared/MEMORY.md` — Cross-agent shared memory
 - **Web viewer**: `/docs` — read-only browser for all agent docs, rendered via Redcarpet gem
 
+## Testing
+
+### Playwright E2E Tests
+- `npm test` — runs all Playwright tests (13 smoke tests)
+- `npm run test:headed` — runs with visible browser
+- `npm run test:ui` — opens Playwright UI mode
+- **Config**: `playwright.config.js` — Chromium only, port 3000, auto-starts test Rails server
+- **Seed**: `e2e/seed.rb` — 1 admin user (alex@test.com / pass), 2 agents, 2 skills, 3 tasks, 2 activities. Idempotent via delete_all.
+- **Helper**: `e2e/helpers.js` — `login(page, email, password)`
+- **Spec file**: `e2e/smoke.spec.js` — page loads, auth, nav links, theme toggle
+
 ## Workflow Preferences
 
 - **Debugging**: STOP on bugs — show the issue and ask before fixing
