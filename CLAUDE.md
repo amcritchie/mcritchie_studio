@@ -103,6 +103,7 @@ end
 - `/tasks/:slug` — Task detail with transition buttons
 - `/activities` — Activity feed
 - `/usages` — Usage table
+- `/admin/theme` — Theme styleguide (logos, colors, typography, buttons, components, dark/light preview)
 - `/error_logs` — Error log index (search with ILIKE, Esc to clear, 500ms loading animation)
 - `/error_logs/:slug` — Error log detail (backtrace, target/parent with copy-to-clipboard console commands, JSON)
 - `/login`, `/signup`, `/logout` — Auth
