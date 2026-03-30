@@ -7,8 +7,6 @@ Rails.application.routes.draw do
 
   Studio.routes(self)
 
-  get "admin/theme", to: "admin#theme", as: :admin_theme
-
   # HTML
   resources :agents, only: [:index, :show], param: :slug
   resources :tasks, param: :slug do
