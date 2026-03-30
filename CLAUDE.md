@@ -40,6 +40,7 @@ Studio.configure do |config|
   config.welcome_message = ->(user) { "Welcome to McRitchie Studio, #{user.display_name}!" }
   config.registration_params = [:name, :email, :password, :password_confirmation]
   config.configure_sso_user = ->(user) { user.role = "viewer" }
+  config.theme_logos = %w[logo-icon.svg icon.svg icon.png studio-logo.svg favicon.png]
 end
 ```
 
@@ -47,7 +48,7 @@ end
 
 **Overridden locally:** `sessions/new.html.erb` and `registrations/new.html.erb` (violet-branded with logo).
 
-**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/sso_continue`, `/sso_login`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`, `/admin/theme/edit`, `/admin/theme/update`, `/admin/theme/regenerate`.
+**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/sso_continue`, `/sso_login`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`, `/admin/theme` (GET + PATCH), `/admin/theme/regenerate`.
 
 **SSO Hub Role:** This app is the central auth hub. On login, `set_app_session` stores `sso_*` fields (including `sso_logo`) in the shared session. Nav bar has a "Turf Monster" CTA button linking to `/sso_login` on the satellite app for one-click SSO. Login page does NOT show "Continue as" (one-way flow — hub only sends, never receives). SSO-created users on satellite apps get `role = "viewer"` via `configure_sso_user`. Requires shared `SECRET_KEY_BASE`.
 
@@ -57,7 +58,7 @@ end
 
 - **Theme**: Dynamic — engine-generated CSS custom properties from 7 role colors (see top-level `CLAUDE.md` for full theme docs)
 - **Theme config**: Uses all Studio defaults (violet primary `#8E82FE`). No `theme_*` overrides in `studio.rb`.
-- **Admin editor**: `/admin/theme/edit` — color pickers, live preview, cache control
+- **Admin theme page**: `/admin/theme` — color editor + styleguide (from engine)
 - **Primary**: `#8E82FE` Violet — CTAs, buttons, links, hovers, form focus. Views use `text-primary`, `bg-primary`, `bg-primary-700` etc. (dynamic Tailwind palette from CSS vars, not hardcoded violet).
 - **Success accent**: `#4BAF50` Green (default) — flash notices, success toasts, active status dots
 - **Font**: Montserrat (weights 400-900)
@@ -108,7 +109,7 @@ end
 - `/tasks/:slug` — Task detail with transition buttons
 - `/activities` — Activity feed
 - `/usages` — Usage table
-- `/admin/theme` — Theme styleguide (logos, colors, typography, buttons, components, dark/light preview)
+- `/admin/theme` — Theme editor + styleguide (engine-provided: color editor, logos, tokens, typography, buttons, components)
 - `/error_logs` — Error log index (search with ILIKE, Esc to clear, 500ms loading animation)
 - `/error_logs/:slug` — Error log detail (backtrace, target/parent with copy-to-clipboard console commands, JSON)
 - `/login`, `/signup`, `/logout` — Auth
