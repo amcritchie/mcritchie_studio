@@ -8,7 +8,7 @@
   <h3 class="text-lg font-semibold text-heading mb-3">System</h3>
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
     <% @system_docs.each do |doc| %>
-      <%= link_to doc_path(doc[:path]), class: "block card p-4 hover:border-violet/40 transition" do %>
+      <%= link_to doc_path(doc[:path]), class: "block card p-4 hover:border-primary/40 transition" do %>
         <span class="text-heading font-medium text-sm"><%= doc[:name].titleize %></span>
       <% end %>
     <% end %>
@@ -24,7 +24,7 @@
         <h4 class="text-heading font-semibold text-sm mb-3 capitalize"><%= agent[:name].tr("_", " ") %></h4>
         <div class="flex flex-col gap-2">
           <% agent[:docs].each do |doc| %>
-            <%= link_to doc[:name].titleize, doc_path(doc[:path]), class: "text-violet hover:text-violet-300 text-sm font-medium transition" %>
+            <%= link_to doc[:name].titleize, doc_path(doc[:path]), class: "text-primary hover:text-primary-300 text-sm font-medium transition" %>
           <% end %>
         </div>
       </div>
@@ -38,7 +38,7 @@
     <h3 class="text-lg font-semibold text-heading mb-3">Shared</h3>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
       <% @shared_docs.each do |doc| %>
-        <%= link_to doc_path(doc[:path]), class: "block card p-4 hover:border-violet/40 transition" do %>
+        <%= link_to doc_path(doc[:path]), class: "block card p-4 hover:border-primary/40 transition" do %>
           <span class="text-heading font-medium text-sm"><%= doc[:name].titleize %></span>
         <% end %>
       <% end %>

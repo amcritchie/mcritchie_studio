@@ -16,10 +16,10 @@
             <%= render "components/badge", text: activity.activity_type, scheme: "violet" %>
             <span class="text-sm text-body truncate"><%= activity.description %></span>
             <% if activity.agent_slug.present? %>
-              <%= link_to activity.agent_slug, agent_path(activity.agent_slug), class: "text-xs text-violet hover:text-violet-300 shrink-0" %>
+              <%= link_to activity.agent_slug, agent_path(activity.agent_slug), class: "text-xs text-primary hover:text-primary-300 shrink-0" %>
             <% end %>
             <% if activity.task_slug.present? %>
-              <%= link_to activity.task_slug, task_path(activity.task_slug), class: "text-xs text-violet hover:text-violet-300 shrink-0" %>
+              <%= link_to activity.task_slug, task_path(activity.task_slug), class: "text-xs text-primary hover:text-primary-300 shrink-0" %>
             <% end %>
           </div>
           <span class="text-xs text-muted shrink-0 ml-3"><%= time_ago_in_words(activity.created_at) %> ago</span>

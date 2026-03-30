@@ -6,8 +6,8 @@
   <!-- Agent Header -->
   <div class="card p-6 mb-6">
     <div class="flex items-center gap-4 mb-4">
-      <div class="w-16 h-16 rounded-full bg-violet/20 flex items-center justify-center">
-        <span class="text-violet font-bold text-2xl"><%= @agent.name.first.upcase %></span>
+      <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+        <span class="text-primary font-bold text-2xl"><%= @agent.name.first.upcase %></span>
       </div>
       <div>
         <h2 class="text-2xl font-bold text-heading"><%= @agent.name %></h2>
@@ -49,7 +49,7 @@
       <% if @tasks.any? %>
         <div class="space-y-2">
           <% @tasks.each do |task| %>
-            <%= link_to task_path(task.slug), class: "block card p-3 hover:border-violet/30 transition" do %>
+            <%= link_to task_path(task.slug), class: "block card p-3 hover:border-primary/30 transition" do %>
               <p class="text-heading text-sm font-medium truncate"><%= task.title %></p>
               <div class="flex items-center gap-2 mt-1">
                 <%

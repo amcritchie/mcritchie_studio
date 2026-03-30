@@ -26,7 +26,7 @@
             <span class="text-xs text-yellow-400 font-medium">Priority <%= @task.priority %></span>
           <% end %>
           <% if @task.agent_slug.present? %>
-            <%= link_to @task.agent_slug, agent_path(@task.agent_slug), class: "text-xs text-violet hover:text-violet-300" %>
+            <%= link_to @task.agent_slug, agent_path(@task.agent_slug), class: "text-xs text-primary hover:text-primary-300" %>
           <% end %>
         </div>
       </div>

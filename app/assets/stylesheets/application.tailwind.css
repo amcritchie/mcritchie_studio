@@ -9,13 +9,13 @@
     @apply bg-surface rounded-xl border border-subtle;
   }
   .card-hover {
-    @apply bg-surface rounded-xl border border-subtle hover:border-violet-700/50 hover:shadow-lg hover:shadow-violet-900/10 transition;
+    @apply bg-surface rounded-xl border border-subtle hover:border-primary-700/50 hover:shadow-lg hover:shadow-primary-900/10 transition;
   }
   .badge {
     @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border;
   }
   .input-field {
-    @apply w-full bg-surface-alt border border-strong rounded-lg px-4 py-3 text-heading focus:border-violet focus:outline-none;
+    @apply w-full bg-surface-alt border border-strong rounded-lg px-4 py-3 text-heading focus:border-primary focus:outline-none;
   }
   .empty-state {
     @apply bg-surface rounded-xl border border-subtle p-8 text-center;

@@ -2,10 +2,10 @@
   <h2 class="text-2xl font-bold text-heading mb-6">Agents</h2>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <% @agents.each do |agent| %>
-      <%= link_to agent_path(agent.slug), class: "block card p-6 hover:border-violet/30 hover:shadow-lg hover:shadow-violet/5 transition" do %>
+      <%= link_to agent_path(agent.slug), class: "block card p-6 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition" do %>
         <div class="flex items-center gap-4 mb-4">
-          <div class="w-14 h-14 rounded-full bg-violet/20 flex items-center justify-center">
-            <span class="text-violet font-bold text-xl"><%= agent.name.first.upcase %></span>
+          <div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+            <span class="text-primary font-bold text-xl"><%= agent.name.first.upcase %></span>
           </div>
           <div>
             <h3 class="text-heading font-bold text-lg"><%= agent.name %></h3>

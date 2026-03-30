@@ -6,7 +6,7 @@
     <h2 class="text-2xl font-bold text-heading">Tasks</h2>
     <div class="flex items-center gap-3">
       <select x-model="agentFilter"
-              class="bg-surface border border-subtle text-body text-sm rounded-lg px-3 py-2 focus:border-violet focus:outline-none">
+              class="bg-surface border border-subtle text-body text-sm rounded-lg px-3 py-2 focus:border-primary focus:outline-none">
         <option value="">All Agents</option>
         <% @agents.each do |agent| %>
           <option value="<%= agent.slug %>"><%= agent.name %></option>
@@ -14,7 +14,7 @@
       </select>
 
       <button @click="showArchived = !showArchived"
-              :class="showArchived ? 'bg-violet text-white' : 'bg-surface text-secondary border border-subtle hover:text-heading'"
+              :class="showArchived ? 'bg-primary text-white' : 'bg-surface text-secondary border border-subtle hover:text-heading'"
               class="px-3 py-2 rounded-lg text-sm font-medium transition">
         Archived
       </button>
@@ -59,7 +59,7 @@
              @dragenter.prevent="dropTarget = '<%= stage %>'"
              @dragleave.self="dropTarget = null"
              @drop.prevent="dropCard('<%= stage %>')"
-             :class="dropTarget === '<%= stage %>' ? 'border-violet bg-violet-900/20' : 'border-subtle'">
+             :class="dropTarget === '<%= stage %>' ? 'border-primary bg-primary-900/20' : 'border-subtle'">
 
           <% (@tasks_by_stage[stage] || []).each do |task| %>
             <div id="card-<%= task.slug %>"
@@ -70,12 +70,12 @@
                  x-show="matchesFilter('<%= task.agent_slug %>')"
                  @dragstart="startDrag($event, '<%= task.slug %>', '<%= stage %>')"
                  @dragend="endDrag()"
-                 class="kanban-card bg-surface rounded-lg border border-subtle p-3 cursor-grab active:cursor-grabbing hover:border-violet/30 transition group"
+                 class="kanban-card bg-surface rounded-lg border border-subtle p-3 cursor-grab active:cursor-grabbing hover:border-primary/30 transition group"
                  :class="draggedSlug === '<%= task.slug %>' ? 'opacity-40' : ''">
 
               <div class="flex items-center justify-between mb-1.5">
                 <a href="<%= task_path(task.slug) %>"
-                   class="text-heading font-semibold text-sm truncate flex-1 hover:text-violet transition"
+                   class="text-heading font-semibold text-sm truncate flex-1 hover:text-primary transition"
                    @click.stop>
                   <%= task.title %>
                 </a>
@@ -105,8 +105,8 @@
                 <% end %>
                 <% if task.agent_slug.present? %>
                   <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded-full bg-violet/20 flex items-center justify-center">
-                      <span class="text-violet text-[9px] font-bold"><%= task.agent_slug.first.upcase %></span>
+                    <div class="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span class="text-primary text-[9px] font-bold"><%= task.agent_slug.first.upcase %></span>
                     </div>
                     <span class="text-xs text-muted"><%= task.agent_slug %></span>
                   </div>

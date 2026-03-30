@@ -11,14 +11,14 @@
         <div class="flex items-center gap-6">
           <%= link_to root_path, class: "inline-flex items-center gap-3 group" do %>
             <%= image_tag "logo-icon.svg", class: "w-8 h-8" %>
-            <h1 class="text-2xl font-extrabold text-heading tracking-tight">McRitchie <span class="text-violet">Studio</span></h1>
+            <h1 class="text-2xl font-extrabold text-heading tracking-tight">McRitchie <span class="text-primary">Studio</span></h1>
           <% end %>
           <nav class="flex items-center gap-4">
-            <%= link_to "Dashboard", root_path, class: "text-secondary hover:text-violet text-sm font-medium transition" %>
-            <%= link_to "Agents", agents_path, class: "text-secondary hover:text-violet text-sm font-medium transition" %>
-            <%= link_to "Tasks", tasks_path, class: "text-secondary hover:text-violet text-sm font-medium transition" %>
-            <%= link_to "Activity", activities_path, class: "text-secondary hover:text-violet text-sm font-medium transition" %>
-            <%= link_to "Docs", docs_path, class: "text-secondary hover:text-violet text-sm font-medium transition" %>
+            <%= link_to "Dashboard", root_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
+            <%= link_to "Agents", agents_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
+            <%= link_to "Tasks", tasks_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
+            <%= link_to "Activity", activities_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
+            <%= link_to "Docs", docs_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
             <%= render "components/admin_dropdown" %>
             <% turf_url = Rails.env.production? ? "https://turf.mcritchie.studio" : "http://localhost:3001" %>
             <%= link_to turf_url + (logged_in? ? "/sso_login" : ""), class: "inline-flex items-center gap-2.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-emerald-500/20 transition", target: "_blank" do %>
@@ -34,7 +34,7 @@
             <span class="text-heading font-semibold text-sm"><%= current_user.display_name %></span>
             <%= link_to "Log out", logout_path, class: "text-secondary hover:text-heading text-sm font-medium transition" %>
           <% else %>
-            <%= link_to "Log in", login_path, class: "text-heading hover:text-violet text-sm font-semibold transition" %>
+            <%= link_to "Log in", login_path, class: "text-heading hover:text-primary text-sm font-semibold transition" %>
             <%= link_to "Sign up", signup_path, class: "btn btn-primary btn-sm" %>
           <% end %>
         </div>

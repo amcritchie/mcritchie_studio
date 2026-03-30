@@ -4,10 +4,10 @@
     <h2 class="text-xl font-bold text-heading mb-4">Agents</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <% @agents.each do |agent| %>
-        <%= link_to agent_path(agent.slug), class: "block card p-5 hover:border-violet/30 hover:shadow-lg hover:shadow-violet/5 transition" do %>
+        <%= link_to agent_path(agent.slug), class: "block card p-5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition" do %>
           <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-full bg-violet/20 flex items-center justify-center">
-              <span class="text-violet font-bold"><%= agent.name.first.upcase %></span>
+            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <span class="text-primary font-bold"><%= agent.name.first.upcase %></span>
             </div>
             <div>
               <h3 class="text-heading font-bold text-sm"><%= agent.name %></h3>
@@ -31,7 +31,7 @@
     <h2 class="text-xl font-bold text-heading mb-4">Task Pipeline</h2>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       <% %w[new queued in_progress done failed archived].each do |stage| %>
-        <%= link_to tasks_path(stage: stage), class: "block card p-4 text-center hover:border-violet/30 transition" do %>
+        <%= link_to tasks_path(stage: stage), class: "block card p-4 text-center hover:border-primary/30 transition" do %>
           <p class="text-2xl font-bold text-heading"><%= @task_counts[stage] || 0 %></p>
           <p class="text-xs text-secondary mt-1"><%= stage.humanize %></p>
         <% end %>

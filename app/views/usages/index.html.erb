@@ -19,14 +19,14 @@
         <tbody>
           <% @usages.each do |usage| %>
             <tr class="border-b border-subtle/50 hover:bg-surface/50">
-              <td class="py-3 px-3 text-violet"><%= usage.agent_slug %></td>
+              <td class="py-3 px-3 text-primary"><%= usage.agent_slug %></td>
               <td class="py-3 px-3 text-body"><%= usage.period_date %></td>
               <td class="py-3 px-3 text-secondary"><%= usage.period_type %></td>
               <td class="py-3 px-3 text-secondary font-mono text-xs"><%= usage.model %></td>
               <td class="py-3 px-3 text-body text-right"><%= number_with_delimiter(usage.tokens_in) %></td>
               <td class="py-3 px-3 text-body text-right"><%= number_with_delimiter(usage.tokens_out) %></td>
               <td class="py-3 px-3 text-body text-right"><%= usage.api_calls %></td>
-              <td class="py-3 px-3 text-violet text-right font-mono">$<%= sprintf('%.4f', usage.cost) %></td>
+              <td class="py-3 px-3 text-primary text-right font-mono">$<%= sprintf('%.4f', usage.cost) %></td>
             </tr>
           <% end %>
         </tbody>
