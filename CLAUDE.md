@@ -63,7 +63,9 @@ end
 - **Surfaces**: Use `bg-page`, `bg-surface`, `bg-surface-alt`, `bg-inset` — never hardcode `bg-navy-*`
 - **Text**: Use `text-heading`, `text-body`, `text-secondary`, `text-muted` — never hardcode `text-white` for headings or `text-gray-*` for body text
 - **Borders**: Use `border-subtle`, `border-strong` — never hardcode `border-navy-*`
+- **CSS var naming**: `--color-cta` / `--color-cta-hover` (not `--color-primary`) to avoid Tailwind naming conflicts
 - Stage badges: blue=new, yellow=queued, mint=in_progress, green=done, red=failed, gray=archived
+- **Button system**: `.btn` base + `.btn-primary` (violet), `.btn-secondary` (mint), `.btn-outline`, `.btn-danger` (red), `.btn-google` (white). Size: `.btn-sm`, `.btn-lg`. See top-level `CLAUDE.md` for full reference.
 
 ## Models
 
