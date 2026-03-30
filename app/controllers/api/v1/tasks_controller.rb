@@ -4,7 +4,8 @@ module Api
       def index
         tasks = Task.recent
         tasks = tasks.by_stage(params[:stage]) if params[:stage].present?
-        tasks = tasks.where(agent_slug: params[:agent_slug]) if params[:agent_slug].present?
+        agent_filter = params[:agent_slug].presence || params[:agent].presence
+        tasks = tasks.where(agent_slug: agent_filter) if agent_filter
         render json: tasks
       end
 

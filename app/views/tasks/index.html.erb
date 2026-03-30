@@ -165,11 +165,11 @@ function kanbanBoard() {
     },
 
     transitions: {
-      new:         { queued: 'queue', in_progress: 'start', archived: 'archive' },
-      queued:      { in_progress: 'start', archived: 'archive' },
-      in_progress: { done: 'complete', failed: 'fail_task', archived: 'archive' },
+      new:         { queued: 'queue' },
+      queued:      { in_progress: 'start', failed: 'fail_task' },
+      in_progress: { done: 'complete', failed: 'fail_task' },
       done:        { archived: 'archive' },
-      failed:      { archived: 'archive' }
+      failed:      { archived: 'archive', queued: 'queue' }
     },
 
     matchesFilter(agent) {

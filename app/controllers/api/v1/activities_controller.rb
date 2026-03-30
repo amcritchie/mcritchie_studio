@@ -3,8 +3,10 @@ module Api
     class ActivitiesController < BaseController
       def index
         activities = Activity.recent
-        activities = activities.where(agent_slug: params[:agent_slug]) if params[:agent_slug].present?
-        activities = activities.by_type(params[:activity_type]) if params[:activity_type].present?
+        agent_filter = params[:agent_slug].presence || params[:agent].presence
+        activities = activities.where(agent_slug: agent_filter) if agent_filter
+        type_filter = params[:activity_type].presence || params[:type].presence
+        activities = activities.by_type(type_filter) if type_filter
         render json: activities.limit(100)
       end
 

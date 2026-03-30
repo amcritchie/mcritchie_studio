@@ -4,7 +4,8 @@ class TasksController < ApplicationController
 
   def index
     tasks = Task.recent
-    tasks = tasks.where(agent_slug: params[:agent]) if params[:agent].present?
+    agent_filter = params[:agent_slug].presence || params[:agent].presence
+    tasks = tasks.where(agent_slug: agent_filter) if agent_filter
     @tasks_by_stage = tasks.group_by(&:stage)
     @agents = Agent.order(:name)
   end

@@ -14,10 +14,6 @@ class Agent < ApplicationRecord
   scope :paused, -> { where(status: "paused") }
   scope :inactive, -> { where(status: "inactive") }
 
-  def touch_active!
-    update_column(:last_active_at, Time.current)
-  end
-
   def name_slug
     name.parameterize
   end
