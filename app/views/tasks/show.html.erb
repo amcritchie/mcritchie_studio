@@ -2,7 +2,7 @@
   <div class="mb-6 flex items-center justify-between">
     <%= link_to "&larr; All Tasks".html_safe, tasks_path, class: "text-secondary hover:text-heading text-sm transition" %>
     <% if logged_in? %>
-      <%= link_to "Edit", edit_task_path(@task.slug), class: "px-3 py-1.5 bg-surface text-body hover:text-heading text-sm rounded-lg border border-subtle transition" %>
+      <%= link_to "Edit", edit_task_path(@task.slug), class: "btn btn-outline btn-sm" %>
     <% end %>
   </div>
 
@@ -78,15 +78,15 @@
     <div class="flex flex-wrap gap-2">
       <% case @task.stage %>
       <% when "new" %>
-        <%= button_to "Queue", queue_task_path(@task.slug), class: "px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-bold rounded-lg transition" %>
+        <%= button_to "Queue", queue_task_path(@task.slug), class: "btn bg-yellow-600 hover:bg-yellow-500 text-white" %>
       <% when "queued" %>
-        <%= button_to "Start", start_task_path(@task.slug), class: "px-4 py-2 bg-mint hover:bg-mint-600 text-navy text-sm font-bold rounded-lg transition" %>
+        <%= button_to "Start", start_task_path(@task.slug), class: "btn btn-secondary" %>
       <% when "in_progress" %>
-        <%= button_to "Complete", complete_task_path(@task.slug), class: "px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-bold rounded-lg transition" %>
-        <%= button_to "Fail", fail_task_task_path(@task.slug), class: "px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg transition" %>
+        <%= button_to "Complete", complete_task_path(@task.slug), class: "btn bg-green-600 hover:bg-green-500 text-white" %>
+        <%= button_to "Fail", fail_task_task_path(@task.slug), class: "btn btn-danger" %>
       <% end %>
       <% unless @task.stage == "archived" %>
-        <%= button_to "Archive", archive_task_path(@task.slug), class: "px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm font-bold rounded-lg transition" %>
+        <%= button_to "Archive", archive_task_path(@task.slug), class: "btn bg-gray-600 hover:bg-gray-500 text-white" %>
       <% end %>
     </div>
   <% end %>

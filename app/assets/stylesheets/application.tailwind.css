@@ -15,8 +15,8 @@
   --color-border: rgba(88,81,126,0.2);
   --color-border-strong: rgba(88,81,126,0.4);
   --color-shadow: transparent;
-  --color-primary: #8E82FE;
-  --color-primary-hover: #6558E0;
+  --color-cta: #8E82FE;
+  --color-cta-hover: #6558E0;
   --color-success: #06D6A0;
   --color-danger: #EF4444;
 }
@@ -57,6 +57,32 @@ html:not(.dark) {
   }
   .label-upper {
     @apply text-xs text-muted uppercase tracking-wider;
+  }
+
+  /* ── Button System ── */
+  .btn {
+    @apply inline-flex items-center justify-center font-bold rounded-lg transition px-6 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-violet hover:bg-violet-700 text-white;
+  }
+  .btn-secondary {
+    @apply bg-mint hover:bg-mint-600 text-navy;
+  }
+  .btn-outline {
+    @apply border border-strong text-secondary hover:text-heading hover:border-violet bg-transparent;
+  }
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white;
+  }
+  .btn-google {
+    @apply bg-white hover:bg-gray-100 text-gray-800 shadow hover:shadow-lg;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  .btn-lg {
+    @apply px-8 py-3 text-base rounded-xl shadow;
   }
 
   /* Theme transition (applied during toggle) */
