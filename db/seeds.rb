@@ -23,7 +23,8 @@ agents_data = [
     status: "active",
     agent_type: "orchestrator",
     title: "Lead Orchestrator",
-    description: "Coordinates all agents, manages task assignment, and oversees system operations. The central brain of McRitchie Studio."
+    description: "Coordinates all agents, manages task assignment, and oversees system operations. The central brain of McRitchie Studio.",
+    avatar: "/agents/alex.png"
   },
   {
     name: "Mack",
@@ -31,7 +32,8 @@ agents_data = [
     status: "active",
     agent_type: "worker",
     title: "General Worker",
-    description: "Versatile worker agent handling data scraping, processing, and general-purpose tasks. Reliable and efficient."
+    description: "Versatile worker agent handling data scraping, processing, and general-purpose tasks. Reliable and efficient.",
+    avatar: "/agents/mack.png"
   },
   {
     name: "Mason",
@@ -39,7 +41,8 @@ agents_data = [
     status: "active",
     agent_type: "specialist",
     title: "Infrastructure Specialist",
-    description: "Handles infrastructure, deployments, monitoring, and system maintenance. Keeps everything running smoothly."
+    description: "Handles infrastructure, deployments, monitoring, and system maintenance. Keeps everything running smoothly.",
+    avatar: "/agents/mason.png"
   },
   {
     name: "Turf Monster",
@@ -47,7 +50,8 @@ agents_data = [
     status: "active",
     agent_type: "specialist",
     title: "Sports Domain Specialist",
-    description: "Specializes in sports data, pick'em games, and the Turf Monster app. Expert in World Cup props and player stats."
+    description: "Specializes in sports data, pick'em games, and the Turf Monster app. Expert in World Cup props and player stats.",
+    avatar: "/agents/turf-monster.png"
   }
 ]
 
@@ -58,7 +62,9 @@ agents = agents_data.map do |data|
     a.agent_type = data[:agent_type]
     a.title = data[:title]
     a.description = data[:description]
+    a.avatar = data[:avatar]
   end
+  agent.update!(avatar: data[:avatar]) if agent.avatar != data[:avatar]
   puts "Agent: #{agent.name} (#{agent.agent_type})"
   agent
 end
