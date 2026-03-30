@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_24_031043) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_29_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -109,6 +109,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_24_031043) do
     t.index ["priority"], name: "index_tasks_on_priority"
     t.index ["slug"], name: "index_tasks_on_slug", unique: true
     t.index ["stage"], name: "index_tasks_on_stage"
+  end
+
+  create_table "theme_settings", force: :cascade do |t|
+    t.string "app_name", null: false
+    t.string "primary"
+    t.string "accent1"
+    t.string "accent2"
+    t.string "warning"
+    t.string "danger"
+    t.string "dark"
+    t.string "light"
+    t.string "slug"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["app_name"], name: "index_theme_settings_on_app_name", unique: true
   end
 
   create_table "usages", force: :cascade do |t|
