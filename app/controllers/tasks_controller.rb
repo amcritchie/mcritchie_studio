@@ -7,7 +7,7 @@ class TasksController < ApplicationController
     agent_filter = params[:agent_slug].presence || params[:agent].presence
     tasks = tasks.where(agent_slug: agent_filter) if agent_filter
     @tasks_by_stage = tasks.group_by(&:stage)
-    @agents = Agent.order(:name)
+    @agents = Agent.order(:position)
   end
 
   def show
@@ -15,7 +15,7 @@ class TasksController < ApplicationController
 
   def new
     @task = Task.new
-    @agents = Agent.active.order(:name)
+    @agents = Agent.active.order(:position)
   end
 
   def create
@@ -25,12 +25,12 @@ class TasksController < ApplicationController
       redirect_to task_path(@task.slug), notice: "Task created."
     end
   rescue StandardError => e
-    @agents = Agent.active.order(:name)
+    @agents = Agent.active.order(:position)
     render :new, status: :unprocessable_entity
   end
 
   def edit
-    @agents = Agent.active.order(:name)
+    @agents = Agent.active.order(:position)
   end
 
   def update
@@ -39,7 +39,7 @@ class TasksController < ApplicationController
       redirect_to task_path(@task.slug), notice: "Task updated."
     end
   rescue StandardError => e
-    @agents = Agent.active.order(:name)
+    @agents = Agent.active.order(:position)
     render :edit, status: :unprocessable_entity
   end
 

@@ -2,7 +2,7 @@ module Api
   module V1
     class AgentsController < BaseController
       def index
-        agents = Agent.all.order(:name)
+        agents = Agent.all.order(:position)
         render json: agents
       end
 

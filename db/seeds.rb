@@ -24,25 +24,8 @@ agents_data = [
     agent_type: "orchestrator",
     title: "Lead Orchestrator",
     description: "Coordinates all agents, manages task assignment, and oversees system operations. The central brain of McRitchie Studio.",
-    avatar: "/agents/alex.png"
-  },
-  {
-    name: "Mack",
-    slug: "mack",
-    status: "active",
-    agent_type: "worker",
-    title: "General Worker",
-    description: "Versatile worker agent handling data scraping, processing, and general-purpose tasks. Reliable and efficient.",
-    avatar: "/agents/mack.png"
-  },
-  {
-    name: "Mason",
-    slug: "mason",
-    status: "active",
-    agent_type: "specialist",
-    title: "Infrastructure Specialist",
-    description: "Handles infrastructure, deployments, monitoring, and system maintenance. Keeps everything running smoothly.",
-    avatar: "/agents/mason.png"
+    avatar: "/agents/alex.png",
+    position: 0
   },
   {
     name: "Turf Monster",
@@ -51,7 +34,28 @@ agents_data = [
     agent_type: "specialist",
     title: "Sports Domain Specialist",
     description: "Specializes in sports data, pick'em games, and the Turf Monster app. Expert in World Cup props and player stats.",
-    avatar: "/agents/turf-monster.png"
+    avatar: "/agents/turf-monster.png",
+    position: 1
+  },
+  {
+    name: "Mason",
+    slug: "mason",
+    status: "active",
+    agent_type: "specialist",
+    title: "Infrastructure Specialist",
+    description: "Handles infrastructure, deployments, monitoring, and system maintenance. Keeps everything running smoothly.",
+    avatar: "/agents/mason.png",
+    position: 2
+  },
+  {
+    name: "Mack",
+    slug: "mack",
+    status: "active",
+    agent_type: "worker",
+    title: "General Worker",
+    description: "Versatile worker agent handling data scraping, processing, and general-purpose tasks. Reliable and efficient.",
+    avatar: "/agents/mack.png",
+    position: 3
   }
 ]
 
@@ -63,8 +67,9 @@ agents = agents_data.map do |data|
     a.title = data[:title]
     a.description = data[:description]
     a.avatar = data[:avatar]
+    a.position = data[:position]
   end
-  agent.update!(avatar: data[:avatar]) if agent.avatar != data[:avatar]
+  agent.update!(avatar: data[:avatar], position: data[:position]) if agent.avatar != data[:avatar] || agent.position != data[:position]
   puts "Agent: #{agent.name} (#{agent.agent_type})"
   agent
 end
