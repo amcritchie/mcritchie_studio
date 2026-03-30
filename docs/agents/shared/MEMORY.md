@@ -13,6 +13,12 @@
 - Dashboard and monitoring pages are public; mutations require auth
 - API has no authentication initially (add token auth later)
 
+## Agent Accounts
+- Shared Gmail: `bot@mcritchie.studio` (all agents)
+- Per-agent emails: `admin@` (Alex), `mack@` (Mack), `mason@` (Mason), `turf@` (Turf Monster) — all forward to shared inbox
+- 1Password vault under `bot@mcritchie.studio` holds Gmail credentials and Solana wallet keypairs for each agent
+- Each agent has a dedicated Solana wallet (keypairs in 1Password)
+
 ## Conventions
 - All timestamps in UTC
 - Activity logging after every significant action

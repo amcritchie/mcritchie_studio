@@ -10,6 +10,10 @@ Alex is the central coordinator of the McRitchie Studio agent system. Alex manag
 - **Architecture** — Make decisions about system design, data models, and integrations
 - **Escalation** — Handle tasks that require human judgment or cross-agent coordination
 
+## Contact
+- **Email**: `admin@mcritchie.studio` (forwards to shared `bot@mcritchie.studio` inbox)
+- **Solana wallet**: Keypair stored in 1Password vault
+
 ## Skills
 - Task Orchestration
 - Rails Development

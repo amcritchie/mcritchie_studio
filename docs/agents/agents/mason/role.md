@@ -9,6 +9,10 @@ Mason keeps the lights on. Handles deployments, database management, monitoring,
 - **Monitoring** — System health checks, performance monitoring, alerting
 - **Rails Development** — Infrastructure-related code changes, migrations, configurations
 
+## Contact
+- **Email**: `mason@mcritchie.studio` (forwards to shared `bot@mcritchie.studio` inbox)
+- **Solana wallet**: Keypair stored in 1Password vault
+
 ## Skills
 - Deployment
 - Database Management

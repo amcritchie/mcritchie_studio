@@ -9,6 +9,10 @@ Turf Monster is the sports expert. Owns the Turf Monster pick'em app and special
 - **Data Processing** — Clean and transform sports data feeds
 - **Rails Development** — Build and maintain the Turf Monster app features
 
+## Contact
+- **Email**: `turf@mcritchie.studio` (forwards to shared `bot@mcritchie.studio` inbox)
+- **Solana wallet**: Keypair stored in 1Password vault
+
 ## Skills
 - Sports Analytics
 - Data Processing
