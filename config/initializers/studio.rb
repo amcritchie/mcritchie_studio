@@ -5,5 +5,11 @@ Studio.configure do |config|
   config.registration_params = [:name, :email, :password, :password_confirmation]
   config.configure_sso_user = ->(user) { user.role = "viewer" }
   config.sso_logo = "/studio-logo.svg"
-  config.theme_logos = %w[logo-icon.svg icon.svg icon.png studio-logo.svg favicon.png]
+  config.theme_logos = [
+    { file: "favicon.png",      title: "Favicon" },
+    { file: "logo-icon.svg",    title: "Navbar Logo" },
+    { file: "icon.svg",         title: "Icon (SVG)" },
+    { file: "icon.png",         title: "Icon (PNG)" },
+    { file: "studio-logo.svg",  title: "SSO Logo" },
+  ]
 end
