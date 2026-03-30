@@ -46,7 +46,7 @@ end
 
 **From the engine:** `Studio::ErrorHandling` concern (in ApplicationController), `ErrorLog` model, `Sluggable` concern, auth controllers (sessions, registrations, omniauth_callbacks, error_logs), error log views, generic login/signup views (overridden by app-branded versions).
 
-**Overridden locally:** `sessions/new.html.erb` and `registrations/new.html.erb` (violet-branded with logo).
+**Overridden locally:** `sessions/new.html.erb` and `registrations/new.html.erb` (branded with logo, uses `btn btn-primary`).
 
 **Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/sso_continue`, `/sso_login`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`, `/admin/theme` (GET + PATCH), `/admin/theme/regenerate`.
 
@@ -74,7 +74,7 @@ end
 ## Models
 
 - **User** — name, email, password_digest, provider, uid, role (admin/viewer), slug. `has_secure_password`, `from_omniauth`.
-- **Agent** — name, slug (unique), status (active/paused/inactive), agent_type, title, description, config (jsonb), metadata (jsonb), last_active_at. Has many tasks/activities/usages/skills.
+- **Agent** — name, slug (unique), status (active/paused/inactive), agent_type, title, description, avatar (string, URL path e.g. `/agents/alex.png`), config (jsonb), metadata (jsonb), last_active_at. Has many tasks/activities/usages/skills.
 - **Task** — title, slug (unique, random hex, immutable), description, stage (new/queued/in_progress/done/failed/archived), priority (0-2), agent_slug FK, required_skills (jsonb), result (jsonb), error_message, timestamps per stage. Does NOT use Sluggable. **State transitions enforced server-side** via `TRANSITIONS` map and `transition_to!` private method — invalid transitions raise RuntimeError.
 - **Skill** — name, slug (unique), category, description, config (jsonb). Has many agents through skill_assignments.
 - **SkillAssignment** — agent_slug FK, skill_slug FK, proficiency. Join table, no slug.
@@ -149,7 +149,7 @@ Every write action MUST use `rescue_and_log` with target/parent context. See top
 ## Seeds
 
 - Admin: `alex@mcritchie.studio` / `pass`
-- 4 agents: Alex (orchestrator), Mack (worker), Mason (specialist), Turf Monster (specialist)
+- 4 agents with avatars: Alex (orchestrator), Mack (worker), Mason (specialist), Turf Monster (specialist). Avatar images in `public/agents/`. Seed force-updates avatars on existing records.
 - 9 skills across data/development/infrastructure/system/domain
 - 15 skill assignments
 - 8 sample tasks in various stages
@@ -159,8 +159,8 @@ Every write action MUST use `rescue_and_log` with target/parent context. See top
 ## Docs
 
 Agent system documentation at `docs/agents/`:
-- `system/` — Architecture, bootstrap, comms protocol, coding standards, credentials
-- `agents/{alex,mack,mason,turf_monster}/` — Role and soul docs per agent
+- `system/` — Architecture, bootstrap, comms protocol, coding standards, credentials (email accounts, 1Password, Solana wallets)
+- `agents/{alex,mack,mason,turf_monster}/` — Role and soul docs per agent, each with `avatar.png`
 - `shared/MEMORY.md` — Cross-agent shared memory
 - **Web viewer**: `/docs` — read-only browser for all agent docs, rendered via Redcarpet gem
 
