@@ -13,7 +13,6 @@ class Task < ApplicationRecord
   end
 
   scope :by_stage, ->(stage) { where(stage: stage) }
-  scope :active, -> { where(stage: %w[new queued in_progress]) }
   scope :recent, -> { order(created_at: :desc) }
 
   TRANSITIONS = {

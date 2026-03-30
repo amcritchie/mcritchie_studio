@@ -11,8 +11,6 @@ class Agent < ApplicationRecord
   validates :slug, presence: true, uniqueness: true
 
   scope :active, -> { where(status: "active") }
-  scope :paused, -> { where(status: "paused") }
-  scope :inactive, -> { where(status: "inactive") }
 
   def name_slug
     name.parameterize
