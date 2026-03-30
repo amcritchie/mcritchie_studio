@@ -1,4 +1,5 @@
 <% stages = %w[new queued in_progress done failed archived] %>
+<% agent_avatars = @agents.index_by(&:slug).transform_values(&:avatar) %>
 
 <section x-data="kanbanBoard()" class="min-h-screen">
   <!-- Header -->
@@ -105,9 +106,13 @@
                 <% end %>
                 <% if task.agent_slug.present? %>
                   <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span class="text-primary text-[9px] font-bold"><%= task.agent_slug.first.upcase %></span>
-                    </div>
+                    <% if agent_avatars[task.agent_slug].present? %>
+                      <img src="<%= agent_avatars[task.agent_slug] %>" alt="<%= task.agent_slug %>" class="w-5 h-5 rounded-full object-cover">
+                    <% else %>
+                      <div class="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
+                        <span class="text-primary text-[9px] font-bold"><%= task.agent_slug.first.upcase %></span>
+                      </div>
+                    <% end %>
                     <span class="text-xs text-muted"><%= task.agent_slug %></span>
                   </div>
                 <% end %>

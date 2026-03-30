@@ -56,7 +56,17 @@
               <%= render "components/badge", text: activity.activity_type, scheme: "violet" %>
               <span class="text-sm text-body"><%= activity.description %></span>
               <% if activity.agent_slug.present? %>
-                <span class="text-xs text-muted">by <%= activity.agent_slug %></span>
+                <div class="flex items-center gap-1 shrink-0">
+                  <% agent = @agents.find { |a| a.slug == activity.agent_slug } %>
+                  <% if agent&.avatar.present? %>
+                    <img src="<%= agent.avatar %>" alt="<%= activity.agent_slug %>" class="w-5 h-5 rounded-full object-cover">
+                  <% else %>
+                    <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span class="text-primary text-[9px] font-bold"><%= activity.agent_slug.first.upcase %></span>
+                    </div>
+                  <% end %>
+                  <span class="text-xs text-muted"><%= activity.agent_slug %></span>
+                </div>
               <% end %>
             </div>
             <span class="text-xs text-muted"><%= time_ago_in_words(activity.created_at) %> ago</span>
