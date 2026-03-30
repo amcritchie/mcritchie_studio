@@ -47,7 +47,7 @@ end
 
 **Overridden locally:** `sessions/new.html.erb` and `registrations/new.html.erb` (violet-branded with logo).
 
-**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/sso_continue`, `/sso_login`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`.
+**Routes:** `Studio.routes(self)` in `config/routes.rb` draws `/login`, `/signup`, `/logout`, `/sso_continue`, `/sso_login`, `/auth/:provider/callback`, `/auth/failure`, `/error_logs`, `/admin/theme/edit`, `/admin/theme/update`, `/admin/theme/regenerate`.
 
 **SSO Hub Role:** This app is the central auth hub. On login, `set_app_session` stores `sso_*` fields (including `sso_logo`) in the shared session. Nav bar has a "Turf Monster" CTA button linking to `/sso_login` on the satellite app for one-click SSO. Login page does NOT show "Continue as" (one-way flow — hub only sends, never receives). SSO-created users on satellite apps get `role = "viewer"` via `configure_sso_user`. Requires shared `SECRET_KEY_BASE`.
 
@@ -55,9 +55,11 @@ end
 
 ## Branding & Theme
 
-- **Theme**: Dark/light mode toggle via CSS custom properties (see top-level `CLAUDE.md` for token reference)
-- **Primary**: `#8E82FE` Violet — CTAs, buttons, links, hovers, form focus (static, works on both themes)
-- **Success accent**: `#06D6A0` Mint — flash notices, success toasts, active status dots (static)
+- **Theme**: Dynamic — engine-generated CSS custom properties from 7 role colors (see top-level `CLAUDE.md` for full theme docs)
+- **Theme config**: Uses all Studio defaults (violet primary `#8E82FE`). No `theme_*` overrides in `studio.rb`.
+- **Admin editor**: `/admin/theme/edit` — color pickers, live preview, cache control
+- **Primary**: `#8E82FE` Violet — CTAs, buttons, links, hovers, form focus
+- **Success accent**: `#06D6A0` Mint — flash notices, success toasts, active status dots
 - **Font**: Montserrat (weights 400-900)
 - **Logo**: SVG icon (`app/assets/images/logo-icon.svg`) + "McRitchie **Studio**" (Studio in violet)
 - **Surfaces**: Use `bg-page`, `bg-surface`, `bg-surface-alt`, `bg-inset` — never hardcode `bg-navy-*`
@@ -65,7 +67,7 @@ end
 - **Borders**: Use `border-subtle`, `border-strong` — never hardcode `border-navy-*`
 - **CSS var naming**: `--color-cta` / `--color-cta-hover` (not `--color-primary`) to avoid Tailwind naming conflicts
 - Stage badges: blue=new, yellow=queued, mint=in_progress, green=done, red=failed, gray=archived
-- **Button system**: `.btn` base + `.btn-primary` (violet), `.btn-secondary` (mint), `.btn-outline`, `.btn-danger` (red), `.btn-google` (white). Size: `.btn-sm`, `.btn-lg`. See top-level `CLAUDE.md` for full reference.
+- **Button system**: `.btn` base + `.btn-primary` (uses `--color-cta`), `.btn-secondary` (uses `--color-success`), `.btn-outline` (hover uses `--color-cta`), `.btn-danger` (uses `--color-danger`), `.btn-google` (white). Size: `.btn-sm`, `.btn-lg`. See top-level `CLAUDE.md` for full reference.
 
 ## Models
 
