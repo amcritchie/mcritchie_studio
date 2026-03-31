@@ -1,11 +1,25 @@
 module Api
   module V1
     class BaseController < ActionController::API
+      before_action :authenticate_api!
+
       rescue_from ActiveRecord::RecordNotFound, with: :not_found
       rescue_from ActiveRecord::RecordInvalid, with: :unprocessable
       rescue_from StandardError, with: :handle_unexpected_error
 
       private
+
+      def authenticate_api!
+        token = request.headers["Authorization"]&.sub(/\ABearer\s+/, "")
+        return render json: { error: "Missing token" }, status: :unauthorized unless token.present?
+        message_verifier.verify(token, purpose: :api_auth)
+      rescue ActiveSupport::MessageVerifier::InvalidSignature
+        render json: { error: "Invalid or expired token" }, status: :unauthorized
+      end
+
+      def message_verifier
+        Rails.application.message_verifier("api_auth")
+      end
 
       def not_found
         render json: { error: "Not found" }, status: :not_found

@@ -27,6 +27,7 @@ Rails.application.routes.draw do
   # JSON API
   namespace :api do
     namespace :v1 do
+      post "auth", to: "auth#create"
       resources :agents, only: [:index, :show, :update], param: :slug
       resources :tasks, only: [:index, :show, :create, :update, :destroy], param: :slug do
         member do
