@@ -63,6 +63,7 @@ end
 - **Success accent**: `#4BAF50` Green (default) — flash notices, success toasts, active status dots
 - **Font**: Montserrat (weights 400-900)
 - **Logo**: SVG icon (`app/assets/images/logo-icon.svg`) + "McRitchie **Studio**" (Studio in violet)
+- **Navbar**: Sticky, scroll-responsive. Full-width `sticky top-0 z-50 bg-page` with Alpine `scrolled` state (triggers at 20px). On scroll: logo shrinks `w-8→w-5`, title `text-2xl→text-base`, padding `py-6→py-2`, adds `shadow-lg border-b border-subtle`. All transitions 300ms. Not extracted to studio engine — navbar content is fully app-specific.
 - **Surfaces**: Use `bg-page`, `bg-surface`, `bg-surface-alt`, `bg-inset` — never hardcode `bg-navy-*`
 - **Text**: Use `text-heading`, `text-body`, `text-secondary`, `text-muted` — never hardcode `text-white` for headings or `text-gray-*` for body text
 - **Borders**: Use `border-subtle`, `border-strong` — never hardcode `border-navy-*`
@@ -178,9 +179,9 @@ Agent system documentation at `docs/agents/`:
 ## Workflow Preferences
 
 - **Debugging**: STOP on bugs — show the issue and ask before fixing
-- **Testing**: Write tests alongside features
+- **Testing**: Write tests alongside features. **Always run `bin/rails test` before committing** — fix failures before creating the commit. A pre-commit hook enforces this, but proactively run tests after changes rather than waiting for the hook.
 - **Database**: Migrate and seed freely without asking
-- **Git**: Small frequent commits, push immediately
+- **Git**: Small frequent commits, push immediately. Run `bin/rails test` before every commit — fix failures before committing.
 - **UI**: Style as we build using brand palette
 - **Decisions**: Present 2-3 options briefly with a recommendation
 - **Refactoring**: Proactively clean up code smells
