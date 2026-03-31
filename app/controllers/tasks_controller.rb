@@ -1,5 +1,6 @@
 class TasksController < ApplicationController
   skip_before_action :require_authentication, only: [:index, :show]
+  before_action :require_admin, except: [:index, :show]
   before_action :set_task, only: [:show, :edit, :update, :destroy, :queue, :start, :complete, :fail_task, :archive]
 
   def index
