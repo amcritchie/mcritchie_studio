@@ -24,6 +24,7 @@
               <%= link_to "Tasks", tasks_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
               <%= link_to "Activity", activities_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
               <%= link_to "Docs", docs_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
+              <%= link_to "Expenses", expense_uploads_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
               <%= render "components/admin_dropdown" %>
               <% turf_url = Rails.env.production? ? "https://turf.mcritchie.studio" : "http://localhost:3001" %>
               <%= link_to turf_url + (logged_in? ? "/sso_login" : ""), class: "inline-flex items-center gap-2.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-emerald-500/20 transition", target: "_blank" do %>

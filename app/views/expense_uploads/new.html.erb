@@ -1,0 +1,22 @@
+<div class="max-w-lg mx-auto">
+  <h1 class="text-2xl font-extrabold text-heading mb-6">Upload Expense File</h1>
+
+  <%= form_tag expense_uploads_path, multipart: true, class: "card p-6 space-y-5" do %>
+    <div>
+      <label class="label-upper mb-2 block">File (CSV or XLSX)</label>
+      <%= file_field_tag :file, accept: ".csv,.xlsx,.xls", class: "input-field", required: true %>
+    </div>
+
+    <div>
+      <label class="label-upper mb-2 block">Card Type (optional — auto-detected)</label>
+      <%= select_tag :card_type,
+        options_for_select([["Auto-detect", ""]] + ExpenseUpload::CARD_TYPES.map { |k, v| [v, k] }),
+        class: "input-field" %>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <%= submit_tag "Upload", class: "btn btn-primary" %>
+      <%= link_to "Cancel", expense_uploads_path, class: "btn btn-outline" %>
+    </div>
+  <% end %>
+</div>

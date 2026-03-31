@@ -1,0 +1,104 @@
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-extrabold text-heading"><%= @upload.filename %></h1>
+    <p class="text-secondary text-sm mt-1">
+      <%= @upload.card_type_display %> &middot; Uploaded <%= @upload.created_at.strftime("%b %d, %Y") %>
+    </p>
+  </div>
+  <div class="flex items-center gap-3">
+    <% if @upload.pending? %>
+      <%= button_to "Process File", process_file_expense_upload_path(@upload.slug), method: :post, class: "btn btn-primary btn-sm" %>
+    <% elsif @upload.processed? %>
+      <%= button_to "Run AI Evaluation", evaluate_expense_upload_path(@upload.slug), method: :post, class: "btn btn-primary btn-sm" %>
+    <% end %>
+    <%= button_to "Delete", expense_upload_path(@upload.slug), method: :delete, class: "btn btn-danger btn-sm",
+        data: { turbo_confirm: "Delete this upload and all its transactions?" } %>
+  </div>
+</div>
+
+<%# Status + Summary %>
+<div class="card p-5 mb-6">
+  <div class="flex items-center gap-4 mb-4">
+    <span class="label-upper">Status</span>
+    <% case @upload.status %>
+    <% when "pending" %>
+      <span class="badge bg-yellow-500/10 text-yellow-500 border-yellow-500/30">Pending</span>
+    <% when "processed" %>
+      <span class="badge bg-blue-500/10 text-blue-500 border-blue-500/30">Processed</span>
+    <% when "evaluated" %>
+      <span class="badge bg-emerald-500/10 text-emerald-500 border-emerald-500/30">Evaluated</span>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+    <div>
+      <p class="text-muted">Transactions</p>
+      <p class="text-heading font-bold text-lg"><%= @upload.transaction_count %></p>
+    </div>
+    <div>
+      <p class="text-muted">Duplicates Skipped</p>
+      <p class="text-heading font-bold text-lg"><%= @upload.duplicates_skipped %></p>
+    </div>
+    <div>
+      <p class="text-muted">Credits Skipped</p>
+      <p class="text-heading font-bold text-lg"><%= @upload.credits_skipped %></p>
+    </div>
+    <% if @upload.evaluated? %>
+      <div>
+        <p class="text-muted">Needs Review</p>
+        <p class="text-heading font-bold text-lg"><%= @upload.expense_transactions.needs_review.count %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @upload.processing_summary["errors"].present? %>
+    <div class="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm">
+      <p class="font-bold text-red-400 mb-1">Processing Errors:</p>
+      <ul class="text-red-300 space-y-1">
+        <% @upload.processing_summary["errors"].each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</div>
+
+<%# Transactions Table %>
+<% if @transactions.any? %>
+  <div class="card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-surface-alt text-muted text-left">
+          <th class="px-4 py-3 font-medium">Date</th>
+          <th class="px-4 py-3 font-medium">Description</th>
+          <th class="px-4 py-3 font-medium text-right">Amount</th>
+          <th class="px-4 py-3 font-medium">Status</th>
+          <th class="px-4 py-3 font-medium">Category</th>
+          <th class="px-4 py-3 font-medium">Account</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-subtle">
+        <% @transactions.each do |txn| %>
+          <tr class="hover:bg-surface-alt/50 transition">
+            <td class="px-4 py-3 text-secondary"><%= txn.transaction_date.strftime("%m/%d/%y") %></td>
+            <td class="px-4 py-3">
+              <%= link_to expense_transaction_path(txn.slug), class: "text-heading hover:text-primary transition" do %>
+                <span class="font-medium"><%= txn.vendor || truncate(txn.raw_description, length: 50) %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-right font-mono text-heading"><%= txn.formatted_amount %></td>
+            <td class="px-4 py-3">
+              <%= render "expense_transactions/status_badge", txn: txn %>
+            </td>
+            <td class="px-4 py-3 text-secondary"><%= txn.category_display %></td>
+            <td class="px-4 py-3 text-secondary"><%= txn.account_display %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="empty-state">
+    <p class="text-secondary">No transactions yet. Process the file to extract transactions.</p>
+  </div>
+<% end %>
