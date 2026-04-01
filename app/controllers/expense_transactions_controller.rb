@@ -70,6 +70,25 @@ class ExpenseTransactionsController < ApplicationController
     @by_month = @business.group("to_char(transaction_date, 'YYYY-MM')").sum(:amount_cents).sort_by { |k, _| k }
   end
 
+  def tax_report
+    @year = (params[:year] || 2025).to_i
+    date_range = Date.new(@year, 1, 1)..Date.new(@year, 12, 31)
+
+    @business = ExpenseTransaction.business_expenses.where(transaction_date: date_range)
+    @all_transactions = ExpenseTransaction.where(transaction_date: date_range)
+    @needs_review = @all_transactions.where(status: "needs_review")
+    @unreviewed = @all_transactions.where(status: "unreviewed")
+
+    @total_business_cents = @business.sum(:amount_cents)
+    @total_all_cents = @all_transactions.not_excluded.sum(:amount_cents)
+
+    @by_category = @business.group(:category).sum(:amount_cents).sort_by { |_, v| -v }
+    @by_deduction_type = @business.group(:deduction_type).sum(:amount_cents).sort_by { |_, v| -v }
+    @by_account = @business.group(:account).sum(:amount_cents).sort_by { |_, v| -v }
+    @by_month = @business.group("to_char(transaction_date, 'YYYY-MM')").sum(:amount_cents).sort_by { |k, _| k }
+    @by_card = @business.group(:payment_method).sum(:amount_cents).sort_by { |_, v| -v }
+  end
+
   private
 
   def set_transaction

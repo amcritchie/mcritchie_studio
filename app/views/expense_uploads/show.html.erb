@@ -1,7 +1,10 @@
 <div class="flex items-center justify-between mb-6">
   <div>
     <h1 class="text-2xl font-extrabold text-heading"><%= @upload.filename %></h1>
-    <p class="text-secondary text-sm mt-1">
+    <p class="text-secondary text-sm mt-1 flex items-center gap-1.5">
+      <% if @upload.payment_method&.logo.present? %>
+        <img src="<%= @upload.payment_method.logo %>" alt="" class="w-4 h-4 object-contain">
+      <% end %>
       <%= @upload.card_type_display %> &middot; Uploaded <%= @upload.created_at.strftime("%b %d, %Y") %>
     </p>
   </div>
@@ -16,6 +19,44 @@
   </div>
 </div>
 
+<%# Evaluation Progress Bar %>
+<% if @upload.evaluating? %>
+<div x-data="evaluationProgress('<%= @upload.slug %>')" class="card p-5 mb-6">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="label-upper">AI Evaluation</span>
+    <span class="badge bg-primary/10 text-primary border-primary/30">
+      <span class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse mr-1.5"></span>
+      Evaluating
+    </span>
+  </div>
+
+  <%# Error state %>
+  <template x-if="error">
+    <div class="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm">
+      <p class="font-bold text-red-400 mb-1">Evaluation Error</p>
+      <p class="text-red-300" x-text="error"></p>
+      <p class="text-muted text-xs mt-2">Refreshing in 3 seconds...</p>
+    </div>
+  </template>
+
+  <%# Progress state %>
+  <template x-if="!error">
+    <div>
+      <div class="flex items-center justify-between text-sm mb-2">
+        <span class="text-secondary" x-text="statusText">Connecting...</span>
+        <span class="text-heading font-mono font-bold" x-text="percentText">0%</span>
+      </div>
+      <div class="w-full h-3 rounded-full bg-surface-alt overflow-hidden">
+        <div class="h-full rounded-full transition-all duration-500 ease-out"
+             style="background-color: var(--color-cta)"
+             :style="'width: ' + percent + '%'">
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+<% end %>
+
 <%# Status + Summary %>
 <div class="card p-5 mb-6">
   <div class="flex items-center gap-4 mb-4">
@@ -25,15 +66,21 @@
       <span class="badge bg-yellow-500/10 text-yellow-500 border-yellow-500/30">Pending</span>
     <% when "processed" %>
       <span class="badge bg-blue-500/10 text-blue-500 border-blue-500/30">Processed</span>
+    <% when "evaluating" %>
+      <span class="badge bg-primary/10 text-primary border-primary/30">Evaluating...</span>
     <% when "evaluated" %>
       <span class="badge bg-emerald-500/10 text-emerald-500 border-emerald-500/30">Evaluated</span>
     <% end %>
   </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
     <div>
       <p class="text-muted">Transactions</p>
       <p class="text-heading font-bold text-lg"><%= @upload.transaction_count %></p>
+    </div>
+    <div>
+      <p class="text-muted">Unique Transactions</p>
+      <p class="text-heading font-bold text-lg"><%= @upload.unique_transactions %></p>
     </div>
     <div>
       <p class="text-muted">Duplicates Skipped</p>
@@ -51,7 +98,7 @@
     <% end %>
   </div>
 
-  <% if @upload.processing_summary["errors"].present? %>
+  <% if @upload.processing_summary.present? && @upload.processing_summary["errors"].present? %>
     <div class="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm">
       <p class="font-bold text-red-400 mb-1">Processing Errors:</p>
       <ul class="text-red-300 space-y-1">
@@ -101,4 +148,68 @@
   <div class="empty-state">
     <p class="text-secondary">No transactions yet. Process the file to extract transactions.</p>
   </div>
+<% end %>
+
+<% if @upload.evaluating? %>
+<script>
+// Register immediately — Alpine is already loaded via CDN, and Turbo Drive
+// won't re-fire alpine:init on navigation so we register on script evaluation.
+Alpine.data('evaluationProgress', (uploadSlug) => ({
+  batch: 0,
+  totalBatches: 0,
+  processed: 0,
+  total: 0,
+  percent: 0,
+  error: null,
+  subscription: null,
+
+  get statusText() {
+    if (this.totalBatches === 0) return 'Connecting...'
+    return `Batch ${this.batch} of ${this.totalBatches} — ${this.processed} / ${this.total} transactions`
+  },
+
+  get percentText() {
+    return Math.round(this.percent) + '%'
+  },
+
+  init() {
+    const waitForCable = () => {
+      if (window.cable) {
+        this.subscribe(uploadSlug)
+      } else {
+        setTimeout(waitForCable, 100)
+      }
+    }
+    waitForCable()
+  },
+
+  subscribe(slug) {
+    const component = this
+    this.subscription = window.cable.subscriptions.create(
+      { channel: 'ExpenseEvaluationChannel', upload_slug: slug },
+      {
+        received(data) {
+          if (data.type === 'progress') {
+            component.batch = data.batch
+            component.totalBatches = data.total_batches
+            component.processed = data.processed
+            component.total = data.total
+            component.percent = data.total > 0 ? (data.processed / data.total) * 100 : 0
+          } else if (data.type === 'complete') {
+            component.percent = 100
+            setTimeout(() => window.location.reload(), 500)
+          } else if (data.type === 'error') {
+            component.error = data.message
+            setTimeout(() => window.location.reload(), 3000)
+          }
+        }
+      }
+    )
+  },
+
+  destroy() {
+    if (this.subscription) this.subscription.unsubscribe()
+  }
+}))
+</script>
 <% end %>

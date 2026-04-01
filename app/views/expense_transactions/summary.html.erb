@@ -3,6 +3,7 @@
   <div class="flex items-center gap-3">
     <%= link_to "Uploads", expense_uploads_path, class: "btn btn-outline btn-sm" %>
     <%= link_to "All Transactions", expense_transactions_path, class: "btn btn-outline btn-sm" %>
+    <%= link_to "2025 Tax Report", tax_report_expense_transactions_path(year: 2025), class: "btn btn-outline btn-sm" %>
     <%= link_to "Export CSV", export_expense_transactions_path, class: "btn btn-primary btn-sm" %>
   </div>
 </div>
@@ -58,7 +59,7 @@
       <div class="space-y-2">
         <% @by_card.each do |card, cents| %>
           <div class="flex items-center justify-between text-sm">
-            <span class="text-heading"><%= ExpenseUpload::CARD_TYPES[card] || card&.titleize || "Unknown" %></span>
+            <span class="text-heading"><%= PaymentMethod.find_by(parser_key: card)&.name || card&.titleize || "Unknown" %></span>
             <span class="font-mono text-heading">$<%= '%.2f' % (cents / 100.0) %></span>
           </div>
         <% end %>

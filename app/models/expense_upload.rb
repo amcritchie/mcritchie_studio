@@ -2,6 +2,7 @@ class ExpenseUpload < ApplicationRecord
   include Sluggable
 
   belongs_to :user
+  belongs_to :payment_method, optional: true
   has_many :expense_transactions, dependent: :destroy
   has_one_attached :file
 
@@ -9,14 +10,7 @@ class ExpenseUpload < ApplicationRecord
 
   validates :filename, presence: true
 
-  CARD_TYPES = {
-    "citi" => "Citi",
-    "capital_one_spark" => "Capital One Spark",
-    "amex_platinum" => "Amex Platinum",
-    "robinhood" => "Robinhood"
-  }.freeze
-
-  STATUS_VALUES = %w[pending processed evaluated].freeze
+  STATUS_VALUES = %w[pending processed evaluating evaluated].freeze
 
   scope :recent, -> { order(created_at: :desc) }
 
@@ -28,12 +22,16 @@ class ExpenseUpload < ApplicationRecord
     status == "processed"
   end
 
+  def evaluating?
+    status == "evaluating"
+  end
+
   def evaluated?
     status == "evaluated"
   end
 
   def card_type_display
-    CARD_TYPES[card_type] || card_type&.titleize || "Unknown"
+    payment_method&.name || card_type&.titleize || "Unknown"
   end
 
   private

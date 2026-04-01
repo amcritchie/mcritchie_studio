@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_31_204150) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_01_040000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -135,8 +135,30 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_31_204150) do
     t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "unique_transactions", default: 0
+    t.date "first_transaction_at"
+    t.date "last_transaction_at"
+    t.bigint "payment_method_id"
+    t.index ["payment_method_id"], name: "index_expense_uploads_on_payment_method_id"
     t.index ["slug"], name: "index_expense_uploads_on_slug", unique: true
     t.index ["user_id"], name: "index_expense_uploads_on_user_id"
+  end
+
+  create_table "payment_methods", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.string "last_four"
+    t.string "parser_key"
+    t.string "color"
+    t.string "logo"
+    t.integer "position", default: 0
+    t.string "status", default: "active"
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "color_secondary"
+    t.index ["slug"], name: "index_payment_methods_on_slug", unique: true
+    t.index ["user_id"], name: "index_payment_methods_on_user_id"
   end
 
   create_table "skill_assignments", force: :cascade do |t|
@@ -242,5 +264,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_31_204150) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "expense_transactions", "expense_uploads"
+  add_foreign_key "expense_uploads", "payment_methods"
   add_foreign_key "expense_uploads", "users"
+  add_foreign_key "payment_methods", "users"
 end

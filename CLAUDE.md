@@ -82,6 +82,9 @@ end
 - **Activity** — agent_slug FK, activity_type, description, task_slug FK, metadata (jsonb), slug (set via after_create).
 - **Usage** — agent_slug FK, period_date, period_type, model, tokens_in/out, api_calls, cost (decimal 10,4), tasks_completed/failed, metadata (jsonb), slug.
 - **ErrorLog** — message, inspect, backtrace (JSON), polymorphic target/parent, target_name, parent_name, slug.
+- **PaymentMethod** — name, slug (unique, Sluggable), last_four, parser_key (maps to `CsvParser::CARD_PATTERNS`), color (hex), color_secondary (hex, optional), logo (path to file in `public/payment_methods/`), position (integer, 100s increments), status (active/inactive). `belongs_to :user`, `has_many :expense_uploads`. Scopes: `active`, `ordered`. Seeds: Robinhood Gold, Capital One Spark (slug: "spark"), Capital One Savor (slug: "savor"), Chase Ink, Citi Double Cash. Some slugs overridden via `update_column` in seeds to bypass Sluggable.
+- **ExpenseUpload** — filename, slug (upload-{id}), card_type (string, legacy), status (pending/processed/evaluating/evaluated), transaction_count, unique_transactions, duplicates_skipped, credits_skipped, processing_summary (jsonb), first/last_transaction_at, payment_method_id (FK). `belongs_to :user`, `belongs_to :payment_method` (optional), `has_many :expense_transactions`, `has_one_attached :file`.
+- **ExpenseTransaction** — slug (txn-{id}), transaction_date, raw_description, normalized_description, amount_cents, payment_method (string), AI classification fields (category, deduction_type, account, vendor, etc.), status (unreviewed/classified/needs_review/excluded). `belongs_to :expense_upload`.
 
 ## Database Standards
 
@@ -90,7 +93,7 @@ end
 ## Key Patterns
 
 - **Slug-based FKs** — All foreign keys use slug strings (e.g. `agent_slug`), not integer IDs. Associations: `foreign_key: :agent_slug, primary_key: :slug`.
-- **Sluggable concern** (from studio engine) — `before_save :set_slug` via `name_slug` method. Used by User, Agent, Skill, Usage.
+- **Sluggable concern** (from studio engine) — `before_save :set_slug` via `name_slug` method. Used by User, Agent, Skill, Usage, PaymentMethod.
 - **Task slug** — Immutable random hex generated once on create via `before_validation`. Does NOT use Sluggable.
 - **Task transitions** — Enforced server-side. Valid transitions: new→queued, queued→in_progress/failed, in_progress→done/failed, done→archived, failed→archived/queued. Invalid transitions raise RuntimeError. API `task_params` does NOT permit `:stage` — stage changes must go through dedicated transition endpoints (`queue`, `start`, `complete`, `fail_task`, `archive`).
 - **Activity slug** — Set via `after_create` as `"activity-#{id}"` (needs id).
@@ -113,6 +116,13 @@ end
 - `/admin/theme` — Theme editor + styleguide (engine-provided: color editor, logos, tokens, typography, buttons, components)
 - `/error_logs` — Error log index (search with ILIKE, Esc to clear, 500ms loading animation)
 - `/error_logs/:slug` — Error log detail (backtrace, target/parent with copy-to-clipboard console commands, JSON)
+- `/expenses/uploads` — Expense uploads index (admin)
+- `/expenses/uploads/new` — Upload expense file with drag-and-drop + payment method picker
+- `/expenses/uploads/:slug` — Upload detail with process/evaluate actions
+- `/expenses/transactions` — Filterable transaction list (admin)
+- `/expenses/transactions/summary` — Expense summary by category/card/account
+- `/expenses/transactions/tax_report` — Tax report view
+- `/expenses/payment_methods` — Payment methods CRUD (admin, in admin gear dropdown)
 - `/login`, `/signup`, `/logout` — Auth
 
 ### JSON API (`/api/v1/`)
@@ -146,6 +156,24 @@ Every write action MUST use `rescue_and_log` with target/parent context. See top
 - API TasksController: all 8 write actions wrapped with `target: task`
 - API AgentsController#update, ActivitiesController#create, UsagesController#create: all wrapped
 - RegistrationsController#create: wrapped with `target: @user`
+- PaymentMethodsController: all 3 write actions (create, update, destroy) wrapped with `target: @payment_method`
+- ExpenseUploadsController: create, destroy, process_file, evaluate all wrapped with `target: @upload`
+
+## Expense Tracker
+
+Admin-gated expense tracking system for CSV/XLSX bank statement parsing and AI-assisted categorization.
+
+### Architecture
+- **PaymentMethod** — DB-backed card registry replacing hardcoded `CARD_TYPES`. Has brand color, logo, parser_key linking to `CsvParser::CARD_PATTERNS`.
+- **ExpenseUpload** — File upload with `has_one_attached :file`. Links to PaymentMethod via FK. Status pipeline: pending → processed → evaluating → evaluated.
+- **ExpenseTransaction** — Individual transactions parsed from uploads. AI-classified via `Expenses::AiEvaluator` with ActionCable progress.
+- **CsvParser** — Detects card format by scanning up to 20 rows for header patterns (handles Amex xlsx with metadata preamble). Auto-links PaymentMethod on detection.
+
+### Key Patterns
+- **Upload form** — Custom drag-and-drop file zone + Alpine.js payment method picker with logos/colors/last-four. Both Alpine components registered via `if (window.Alpine)` pattern for Turbo Drive compat.
+- **Payment method cards** — Index cards tinted with brand color gradient. Two-color gradient when `color_secondary` is set.
+- **Admin dropdown** — Local override of engine's `_admin_dropdown.html.erb` adds Expenses and Payment Methods links above Theme/Error Logs.
+- **Navbar** — "Expenses" link removed from main nav, moved to admin gear dropdown.
 
 ## Seeds
 
@@ -155,6 +183,7 @@ Every write action MUST use `rescue_and_log` with target/parent context. See top
 - 15 skill assignments
 - 8 sample tasks in various stages
 - 6 sample activities
+- 5 payment methods (Robinhood Gold, Capital One Spark, Capital One Savor, Chase Ink, Citi Double Cash) with logos in `public/payment_methods/`, brand colors, last four digits. Assigned to admin user. Spark/Savor get custom slugs via `update_column`.
 - All idempotent via `find_or_create_by!`
 
 ## Docs

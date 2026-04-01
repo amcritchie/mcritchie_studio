@@ -38,17 +38,25 @@ module Expenses
     def parse
       file = download_file
       spreadsheet = open_spreadsheet(file)
-      headers = spreadsheet.row(1).map(&:to_s).map(&:strip)
 
-      card_type = @upload.card_type.presence || detect_card_type(headers)
+      # Scan for header row — may not be row 1 (e.g. Amex xlsx has metadata rows)
+      header_row_num, headers, card_type = find_header_row(spreadsheet)
+
+      card_type = @upload.card_type.presence || card_type
       config = CARD_PATTERNS[card_type]
+
+      # Auto-link payment method if not already set
+      if card_type.present? && @upload.payment_method_id.nil?
+        pm = PaymentMethod.find_by(parser_key: card_type)
+        @upload.update_column(:payment_method_id, pm.id) if pm
+      end
 
       transactions = []
       duplicates_skipped = 0
       credits_skipped = 0
       errors = []
 
-      (2..spreadsheet.last_row).each do |row_num|
+      ((header_row_num + 1)..spreadsheet.last_row).each do |row_num|
         row = spreadsheet.row(row_num)
         next if row.all?(&:blank?)
 
@@ -113,6 +121,20 @@ module Expenses
       else
         Roo::Spreadsheet.open(file.path)
       end
+    end
+
+    def find_header_row(spreadsheet)
+      max_scan = [spreadsheet.last_row, 20].min
+      (1..max_scan).each do |row_num|
+        row = spreadsheet.row(row_num)
+        next if row.all?(&:blank?)
+        headers = row.map(&:to_s).map(&:strip)
+        card_type = detect_card_type(headers)
+        return [row_num, headers, card_type] if card_type
+      end
+      # Fallback to row 1 if no pattern matched
+      headers = spreadsheet.row(1).map(&:to_s).map(&:strip)
+      [1, headers, nil]
     end
 
     def detect_card_type(headers)

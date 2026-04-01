@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  mount ActionCable.server => "/cable"
+
   get "up" => "rails/health#show", as: :rails_health_check
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
@@ -22,6 +24,7 @@ Rails.application.routes.draw do
   resources :usages, only: [:index]
 
   # Expense Tracker
+  resources :payment_methods, path: "expenses/payment_methods", param: :slug, except: [:show]
   resources :expense_uploads, path: "expenses/uploads", param: :slug, only: [:index, :new, :create, :show, :destroy] do
     member do
       post :process_file
@@ -36,6 +39,7 @@ Rails.application.routes.draw do
     collection do
       get :export
       get :summary
+      get :tax_report
     end
   end
 

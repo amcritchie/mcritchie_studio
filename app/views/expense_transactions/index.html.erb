@@ -3,6 +3,7 @@
   <div class="flex items-center gap-3">
     <%= link_to "Uploads", expense_uploads_path, class: "btn btn-outline btn-sm" %>
     <%= link_to "Summary", summary_expense_transactions_path, class: "btn btn-outline btn-sm" %>
+    <%= link_to "2025 Tax Report", tax_report_expense_transactions_path(year: 2025), class: "btn btn-outline btn-sm" %>
     <%= link_to "Export CSV", export_expense_transactions_path, class: "btn btn-primary btn-sm" %>
   </div>
 </div>
@@ -35,12 +36,12 @@
     <div>
       <label class="label-upper mb-1 block">Card</label>
       <%= select_tag :payment_method,
-        options_for_select([["All", ""]] + ExpenseUpload::CARD_TYPES.map { |k, v| [v, k] }, params[:payment_method]),
+        options_for_select([["All", ""]] + PaymentMethod.ordered.map { |pm| [pm.name, pm.parser_key] }, params[:payment_method]),
         class: "input-field text-sm", style: "width: 170px" %>
     </div>
     <div>
       <%= submit_tag "Filter", class: "btn btn-outline btn-sm" %>
-      <% if params.except(:controller, :action).any? %>
+      <% if params.except(:controller, :action).values.any?(&:present?) %>
         <%= link_to "Clear", expense_transactions_path, class: "btn btn-sm text-secondary hover:text-heading" %>
       <% end %>
     </div>
