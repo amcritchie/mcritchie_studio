@@ -27,7 +27,7 @@
     @apply text-xs text-muted uppercase tracking-wider;
   }
 
-  /* ── Button System ── */
+  /* -- Button System (standardized across all Studio apps) -- */
   .btn {
     @apply inline-flex items-center justify-center font-bold rounded-lg transition px-6 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed;
   }
@@ -39,18 +39,19 @@
     background-color: var(--color-cta-hover);
   }
   .btn-secondary {
-    @apply text-navy;
+    @apply text-white;
     background-color: var(--color-success);
   }
   .btn-secondary:hover {
     filter: brightness(0.9);
   }
   .btn-outline {
-    @apply border border-strong text-secondary hover:text-heading bg-transparent;
-    border-color: var(--color-border-strong);
+    @apply bg-transparent border text-heading;
+    border-color: var(--color-cta);
   }
   .btn-outline:hover {
-    border-color: var(--color-cta);
+    @apply text-white;
+    background-color: var(--color-cta);
   }
   .btn-danger {
     @apply text-white;
@@ -59,8 +60,25 @@
   .btn-danger:hover {
     filter: brightness(0.9);
   }
+  .btn-warning {
+    @apply text-white;
+    background-color: var(--color-warning);
+  }
+  .btn-warning:hover {
+    filter: brightness(0.9);
+  }
+  .btn-success {
+    @apply text-white;
+    background-color: var(--color-success);
+  }
+  .btn-success:hover {
+    filter: brightness(0.9);
+  }
   .btn-google {
-    @apply bg-white hover:bg-gray-100 text-gray-800 shadow hover:shadow-lg;
+    @apply bg-white text-gray-700 border border-gray-300 shadow-sm;
+  }
+  .btn-google:hover {
+    @apply bg-gray-50;
   }
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
