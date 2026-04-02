@@ -4,84 +4,84 @@ module Api
       def index
         tasks = Task.recent
         tasks = tasks.by_stage(params[:stage]) if params[:stage].present?
-        agent_filter = params[:agent_slug].presence || params[:agent].presence
-        tasks = tasks.where(agent_slug: agent_filter) if agent_filter
-        render json: tasks
+        tasks = tasks.where(agent_slug: params[:agent_slug]) if params[:agent_slug].present?
+        result = paginate(tasks)
+        render_data(result[:records], meta: result[:meta])
       end
 
       def show
         task = Task.find_by!(slug: params[:slug])
-        render json: task
+        render_data(task)
       end
 
       def create
         task = Task.new(task_params)
         rescue_and_log(target: task) do
           task.save!
-          render json: task, status: :created
+          render_data(task, status: :created)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       def update
         task = Task.find_by!(slug: params[:slug])
         rescue_and_log(target: task) do
           task.update!(task_params)
-          render json: task
+          render_data(task)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       def queue
         task = Task.find_by!(slug: params[:slug])
         rescue_and_log(target: task) do
           task.queue!
-          render json: task
+          render_data(task)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       def start
         task = Task.find_by!(slug: params[:slug])
         rescue_and_log(target: task) do
           task.start!
-          render json: task
+          render_data(task)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       def complete
         task = Task.find_by!(slug: params[:slug])
         rescue_and_log(target: task) do
           task.complete!(params[:result] || {})
-          render json: task
+          render_data(task)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       def fail_task
         task = Task.find_by!(slug: params[:slug])
         rescue_and_log(target: task) do
           task.fail!(params[:error_message])
-          render json: task
+          render_data(task)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       def archive
         task = Task.find_by!(slug: params[:slug])
         rescue_and_log(target: task) do
           task.archive!
-          render json: task
+          render_data(task)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       def destroy
@@ -91,7 +91,7 @@ module Api
           head :no_content
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       private

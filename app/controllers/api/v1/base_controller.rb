@@ -1,6 +1,8 @@
 module Api
   module V1
     class BaseController < ActionController::API
+      include Api::Paginatable
+
       before_action :authenticate_api!
 
       rescue_from ActiveRecord::RecordNotFound, with: :not_found
@@ -11,18 +13,31 @@ module Api
 
       def authenticate_api!
         token = request.headers["Authorization"]&.sub(/\ABearer\s+/, "")
-        return render json: { error: "Missing token" }, status: :unauthorized unless token.present?
+        return render_error("Missing token", status: :unauthorized, error_code: "UNAUTHORIZED") unless token.present?
         message_verifier.verify(token, purpose: :api_auth)
       rescue ActiveSupport::MessageVerifier::InvalidSignature
-        render json: { error: "Invalid or expired token" }, status: :unauthorized
+        render_error("Invalid or expired token", status: :unauthorized, error_code: "UNAUTHORIZED")
       end
 
       def message_verifier
         Rails.application.message_verifier("api_auth")
       end
 
+      # Standardized JSON response helpers
+      def render_data(data, status: :ok, meta: nil)
+        body = { data: data }
+        body[:meta] = meta if meta
+        render json: body, status: status
+      end
+
+      def render_error(message, status: :unprocessable_entity, error_code: nil)
+        body = { error: message }
+        body[:error_code] = error_code if error_code
+        render json: body, status: status
+      end
+
       def not_found
-        render json: { error: "Not found" }, status: :not_found
+        render_error("Not found", status: :not_found, error_code: "NOT_FOUND")
       end
 
       # Central error logging method — all API error logging flows through here.
@@ -33,11 +48,11 @@ module Api
 
       def unprocessable(exception)
         create_error_log(exception)
-        render json: { error: exception.message }, status: :unprocessable_entity
+        render_error(exception.message, status: :unprocessable_entity, error_code: "VALIDATION_FAILED")
       end
 
       # Layer 2: Opt-in per-action wrapper with target/parent context.
-      # Sets @_error_logged flag so Layer 1 won't double-log.
+      # Sets @_error_logged flag so Layer 1 won’t double-log.
       def rescue_and_log(target: nil, parent: nil)
         yield
       rescue ActiveRecord::RecordNotFound => e
@@ -63,7 +78,7 @@ module Api
         create_error_log(exception) unless @_error_logged
         raise exception if Rails.env.development? || Rails.env.test?
 
-        render json: { error: "Internal server error" }, status: :internal_server_error
+        render_error("Internal server error", status: :internal_server_error, error_code: "INTERNAL_ERROR")
       end
     end
   end

@@ -3,21 +3,20 @@ module Api
     class ActivitiesController < BaseController
       def index
         activities = Activity.recent
-        agent_filter = params[:agent_slug].presence || params[:agent].presence
-        activities = activities.where(agent_slug: agent_filter) if agent_filter
-        type_filter = params[:activity_type].presence || params[:type].presence
-        activities = activities.by_type(type_filter) if type_filter
-        render json: activities.limit(100)
+        activities = activities.where(agent_slug: params[:agent_slug]) if params[:agent_slug].present?
+        activities = activities.by_type(params[:activity_type]) if params[:activity_type].present?
+        result = paginate(activities)
+        render_data(result[:records], meta: result[:meta])
       end
 
       def create
         activity = Activity.new(activity_params)
         rescue_and_log(target: activity) do
           activity.save!
-          render json: activity, status: :created
+          render_data(activity, status: :created)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       private

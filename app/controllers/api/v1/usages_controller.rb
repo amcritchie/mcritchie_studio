@@ -4,17 +4,18 @@ module Api
       def index
         usages = Usage.recent
         usages = usages.for_agent(params[:agent_slug]) if params[:agent_slug].present?
-        render json: usages.limit(100)
+        result = paginate(usages)
+        render_data(result[:records], meta: result[:meta])
       end
 
       def create
         usage = Usage.new(usage_params)
         rescue_and_log(target: usage) do
           usage.save!
-          render json: usage, status: :created
+          render_data(usage, status: :created)
         end
       rescue StandardError => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render_error(e.message)
       end
 
       private
