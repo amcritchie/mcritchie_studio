@@ -44,7 +44,7 @@
                   when 'in_progress' then 'bg-mint-900/50 text-mint-300'
                   when 'done' then 'bg-green-900/50 text-green-300'
                   when 'failed' then 'bg-red-900/50 text-red-300'
-                  when 'archived' then 'bg-gray-800/50 text-gray-400'
+                  when 'archived' then 'bg-surface-alt text-muted'
                   end %>"
               data-stage-count="<%= stage %>">
               <%= (@tasks_by_stage[stage] || []).size %>

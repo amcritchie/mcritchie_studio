@@ -1,6 +1,4 @@
 class ExpenseUpload < ApplicationRecord
-  include Sluggable
-
   belongs_to :user
   belongs_to :payment_method, optional: true
   has_many :expense_transactions, dependent: :destroy
@@ -38,6 +36,10 @@ class ExpenseUpload < ApplicationRecord
 
   def set_slug_from_id
     update_column(:slug, "upload-#{id}")
+  end
+
+  def to_param
+    slug
   end
 
   def name_slug

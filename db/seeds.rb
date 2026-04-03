@@ -9,7 +9,7 @@ users_data = [
 users_data.each do |data|
   user = User.find_or_create_by!(email: data[:email]) do |u|
     u.name = data[:name]
-    u.password = "pass"
+    u.password = "password"
     u.role = data[:role]
   end
   puts "User: #{user.email} (#{user.role})"

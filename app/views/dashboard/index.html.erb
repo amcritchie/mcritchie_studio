@@ -19,7 +19,7 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <span class="inline-block w-2 h-2 rounded-full <%= agent.status == 'active' ? 'bg-mint' : 'bg-gray-600' %>"></span>
+            <span class="inline-block w-2 h-2 rounded-full <%= agent.status == 'active' ? 'bg-mint' : 'bg-surface-alt' %>"></span>
             <span class="text-xs text-secondary"><%= agent.status.capitalize %></span>
           </div>
           <% if agent.description.present? %>

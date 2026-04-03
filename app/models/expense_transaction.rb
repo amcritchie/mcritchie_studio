@@ -1,6 +1,4 @@
 class ExpenseTransaction < ApplicationRecord
-  include Sluggable
-
   belongs_to :expense_upload
 
   after_create :set_slug_from_id
@@ -82,6 +80,10 @@ class ExpenseTransaction < ApplicationRecord
 
   def set_slug_from_id
     update_column(:slug, "txn-#{id}")
+  end
+
+  def to_param
+    slug
   end
 
   def name_slug

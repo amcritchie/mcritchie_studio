@@ -86,7 +86,7 @@
         <%= button_to "Fail", fail_task_task_path(@task.slug), class: "btn btn-danger" %>
       <% end %>
       <% unless @task.stage == "archived" %>
-        <%= button_to "Archive", archive_task_path(@task.slug), class: "btn bg-gray-600 hover:bg-gray-500 text-white" %>
+        <%= button_to "Archive", archive_task_path(@task.slug), class: "btn bg-surface-alt text-body hover:bg-inset" %>
       <% end %>
     </div>
   <% end %>
