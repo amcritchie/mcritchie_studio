@@ -24,6 +24,9 @@ class User < ApplicationRecord
       uid: auth.uid,
       password: SecureRandom.hex(16)
     )
+  rescue ActiveRecord::RecordNotUnique
+    # Race condition: another request created the user between our find_by and create
+    find_by(email: auth.info.email) || find_by(provider: auth.provider, uid: auth.uid)
   end
 
   def display_name
