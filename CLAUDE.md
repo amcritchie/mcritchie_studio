@@ -74,7 +74,7 @@ end
 
 ## Models
 
-- **User** — name, email, password_digest, provider, uid, role (admin/viewer), slug. `has_secure_password`, `from_omniauth`.
+- **User** — name, email, password_digest, provider, uid, role (admin/viewer), slug. `has_secure_password`, `has_one_attached :avatar`, `from_omniauth`. Helper methods: `avatar_initials` (returns first letters of name parts), `avatar_color` (deterministic hex color from name hash). `from_omniauth` wraps find-or-create in `rescue ActiveRecord::RecordNotUnique` to handle OAuth race conditions (concurrent callbacks for same user).
 - **Agent** — name, slug (unique), status (active/paused/inactive), agent_type, title, description, avatar (string, URL path e.g. `/agents/alex.png`), config (jsonb), metadata (jsonb), last_active_at. Has many tasks/activities/usages/skills.
 - **Task** — title, slug (unique, random hex, immutable), description, stage (new/queued/in_progress/done/failed/archived), priority (0-2), agent_slug FK, required_skills (jsonb), result (jsonb), error_message, timestamps per stage. Does NOT use Sluggable. **State transitions enforced server-side** via `TRANSITIONS` map and `transition_to!` private method — invalid transitions raise RuntimeError.
 - **Skill** — name, slug (unique), category, description, config (jsonb). Has many agents through skill_assignments.
@@ -177,7 +177,7 @@ Admin-gated expense tracking system for CSV/XLSX bank statement parsing and AI-a
 
 ## Seeds
 
-- Admin: `alex@mcritchie.studio` / `pass`
+- Admin: `alex@mcritchie.studio` / `password`
 - 4 agents with avatars: Alex (orchestrator), Mack (worker), Mason (specialist), Turf Monster (specialist). Avatar images in `public/agents/`. Seed force-updates avatars on existing records.
 - 9 skills across data/development/infrastructure/system/domain
 - 15 skill assignments
@@ -195,6 +195,14 @@ Agent system documentation at `docs/agents/`:
 - **Web viewer**: `/docs` — read-only browser for all agent docs, rendered via Redcarpet gem
 
 ## Testing
+
+### Rails Tests
+- `bin/rails test` — 34 tests total
+- Test fixtures for users, agents, tasks, skills (in `test/fixtures/`)
+- Test password: "password" for all fixtures
+- `log_in_as(user)` helper for integration tests
+- **Model tests**: task transitions (valid/invalid), user (display_name, admin?, avatar_initials, avatar_color, OAuth/`from_omniauth`), slug generation
+- **Controller tests**: sessions (login/logout), registrations (signup)
 
 ### Playwright E2E Tests
 - `npm test` — runs all Playwright tests (13 smoke tests)
