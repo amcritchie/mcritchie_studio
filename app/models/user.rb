@@ -2,6 +2,7 @@ class User < ApplicationRecord
   include Sluggable
 
   has_secure_password
+  has_one_attached :avatar
 
   validates :email, presence: true, uniqueness: true
 
@@ -35,6 +36,17 @@ class User < ApplicationRecord
 
   def admin?
     role == "admin"
+  end
+
+  def avatar_initials
+    (name.presence || email.split("@").first).first.upcase
+  end
+
+  AVATAR_COLORS = %w[#EF4444 #F97316 #EAB308 #22C55E #06B6D4 #3B82F6 #8B5CF6 #EC4899].freeze
+
+  def avatar_color
+    key = name.presence || email
+    AVATAR_COLORS[Digest::MD5.hexdigest(key).hex % AVATAR_COLORS.size]
   end
 
   private
