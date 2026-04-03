@@ -42,7 +42,7 @@ class DocsController < ApplicationController
   end
 
   def render_markdown(text)
-    renderer = Redcarpet::Render::HTML.new(hard_wrap: true)
+    renderer = Redcarpet::Render::HTML.new(hard_wrap: true, filter_html: true)
     markdown = Redcarpet::Markdown.new(renderer,
       fenced_code_blocks: true,
       tables: true,
