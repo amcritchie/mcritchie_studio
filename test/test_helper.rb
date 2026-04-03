@@ -2,6 +2,8 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 
+OmniAuth.config.test_mode = true
+
 module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers
@@ -11,5 +13,11 @@ module ActiveSupport
     fixtures :all
 
     # Add more helper methods to be used by all tests here...
+  end
+end
+
+class ActionDispatch::IntegrationTest
+  def log_in_as(user, password: "password")
+    post login_path, params: { email: user.email, password: password }
   end
 end

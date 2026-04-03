@@ -1,0 +1,13 @@
+alex_agent:
+  name: Alex
+  slug: alex
+  status: active
+  agent_type: orchestrator
+  title: Lead Orchestrator
+
+mack_agent:
+  name: Mack
+  slug: mack
+  status: active
+  agent_type: worker
+  title: Task Worker
