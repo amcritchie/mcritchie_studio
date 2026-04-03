@@ -76,14 +76,14 @@ class ExpenseTransaction < ApplicationRecord
     status == "needs_review"
   end
 
+  def to_param
+    slug
+  end
+
   private
 
   def set_slug_from_id
     update_column(:slug, "txn-#{id}")
-  end
-
-  def to_param
-    slug
   end
 
   def name_slug

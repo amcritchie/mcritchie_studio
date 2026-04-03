@@ -32,14 +32,14 @@ class ExpenseUpload < ApplicationRecord
     payment_method&.name || card_type&.titleize || "Unknown"
   end
 
+  def to_param
+    slug
+  end
+
   private
 
   def set_slug_from_id
     update_column(:slug, "upload-#{id}")
-  end
-
-  def to_param
-    slug
   end
 
   def name_slug
