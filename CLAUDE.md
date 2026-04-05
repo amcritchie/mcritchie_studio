@@ -15,8 +15,15 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - **Database**: Heroku Postgres (essential-0)
 - **DNS**: Google Domains — `app` CNAME → Heroku DNS target
 - **Deploy**: `git push heroku main` (then `heroku run bin/rails db:migrate --app mcritchie-studio` if new migrations)
-- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto from addon)
+- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - **ACM**: Enabled (auto SSL via Let's Encrypt)
+
+## Public Assets
+
+- `public/agents/` — Agent avatar images (alex.png, mack.png, mason.png, turf-monster.png)
+- `public/payment_methods/` — Card brand logos (robinhood-gold.png, etc.)
+- `public/studio-logo.svg` — SSO logo (shared with satellite apps)
+- `public/favicon.png`, `public/icon.png`, `public/logo-icon.svg` — App icons
 
 ## Tech Stack
 
@@ -68,7 +75,7 @@ end
 - **Text**: Use `text-heading`, `text-body`, `text-secondary`, `text-muted` — never hardcode `text-white` for headings or `text-gray-*` for body text
 - **Borders**: Use `border-subtle`, `border-strong` — never hardcode `border-navy-*`
 - **CSS var naming**: `--color-cta` / `--color-cta-hover` for singular CTA color. Full `--color-primary-{50..900}` palette with RGB variants for Tailwind `primary-*` utilities.
-- **Tailwind safelist**: `config/tailwind.config.js` safelists `primary-{50..900}` × `bg/text/border` × opacity variants to ensure compilation
+- **Tailwind config**: `config/tailwind.config.js` dynamically loads studio engine's shared config (`const studioColors = require(\`${studioPath}/tailwind/studio.tailwind.config.js\`)`). Safelists `primary-{50..900}` × `bg/text/border` × opacity variants to ensure compilation.
 - Stage badges: blue=new, yellow=queued, mint=in_progress, green=done, red=failed, gray=archived
 - **Button system**: `.btn` base + `.btn-primary` (uses `--color-cta`), `.btn-secondary` (uses `--color-success`), `.btn-outline` (hover uses `--color-cta`), `.btn-danger` (uses `--color-danger`), `.btn-google` (white). Size: `.btn-sm`, `.btn-lg`. See top-level `CLAUDE.md` for full reference.
 
