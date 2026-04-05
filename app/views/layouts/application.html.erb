@@ -32,17 +32,7 @@
             </nav>
           </div>
 
-          <div class="flex items-center gap-4">
-            <%= render "components/admin_dropdown" %>
-            <%= render "components/theme_toggle" %>
-            <% if logged_in? %>
-              <span class="text-heading font-semibold text-sm"><%= current_user.display_name %></span>
-              <%= link_to "Log out", logout_path, class: "text-secondary hover:text-heading text-sm font-medium transition" %>
-            <% else %>
-              <%= link_to "Log in", login_path, class: "text-heading hover:text-primary text-sm font-semibold transition" %>
-              <%= link_to "Sign up", signup_path, class: "btn btn-primary btn-sm" %>
-            <% end %>
-          </div>
+          <%= render "components/user_nav", show_logout_link: true %>
         </div>
       </div>
     </header>
