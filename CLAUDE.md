@@ -32,8 +32,14 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - Alpine.js via CDN for interactivity
 - Montserrat font (Google Fonts CDN)
 - ERB views, import maps, no JS frameworks
+- Stimulus infrastructure ready (pinned, eager-loaded, no controllers yet)
 - bcrypt password auth + Google OAuth (OmniAuth)
 - **Studio engine gem** — `gem "studio", git: "https://github.com/amcritchie/studio.git"`
+
+## JS Modules (importmap)
+
+- `kanban_board` — drag-and-drop task board with optimistic DOM moves, API transitions, toast notifications. Attached to `window.kanbanBoard` for Alpine `x-data` access.
+- `expense_components` — registers `fileDrop` (drag-and-drop file upload) and `evaluationProgress` (ActionCable real-time progress tracker) Alpine.data components. `paymentMethodPicker` remains inline in `expense_uploads/new.html.erb` due to ERB interpolation of DB records.
 
 ## Studio Engine
 
