@@ -1,16 +1,16 @@
 <% if txn.excluded %>
-  <span class="badge bg-gray-500/10 text-gray-400 border-gray-500/30">Excluded</span>
+  <%= render "components/badge", text: "Excluded", scheme: "gray" %>
 <% else %>
   <% case txn.status %>
   <% when "unreviewed" %>
-    <span class="badge bg-yellow-500/10 text-yellow-500 border-yellow-500/30">Unreviewed</span>
+    <%= render "components/badge", text: "Unreviewed", scheme: "warning" %>
   <% when "classified" %>
     <% if txn.business_expense? %>
-      <span class="badge bg-emerald-500/10 text-emerald-500 border-emerald-500/30">Business</span>
+      <%= render "components/badge", text: "Business", scheme: "emerald" %>
     <% else %>
-      <span class="badge bg-gray-500/10 text-gray-400 border-gray-500/30">Personal</span>
+      <%= render "components/badge", text: "Personal", scheme: "gray" %>
     <% end %>
   <% when "needs_review" %>
-    <span class="badge bg-orange-500/10 text-orange-500 border-orange-500/30">Needs Review</span>
+    <%= render "components/badge", text: "Needs Review", scheme: "orange" %>
   <% end %>
 <% end %>
