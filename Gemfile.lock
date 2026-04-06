@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/amcritchie/studio.git
-  revision: 8d61e549a83af67ba434d84dc91c2a0e0d6be6c1
+  revision: b7251f1a6c8a11bb070941aa6b7d317a9797f89b
   specs:
     studio (0.2.4)
       faker (>= 2.0)
