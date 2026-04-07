@@ -19,6 +19,7 @@
                   x-bind:class="scrolled ? 'text-base' : 'text-2xl'">McRitchie <span class="text-primary">Studio</span></h1>
             <% end %>
             <nav class="flex items-center gap-4">
+              <%= link_to "Landing", landing_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
               <%= link_to "Dashboard", root_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
               <%= link_to "Agents", agents_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
               <%= link_to "Tasks", tasks_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
@@ -45,10 +46,16 @@
       </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 py-6">
-      <%= render "layouts/studio/flash" %>
-
+    <% if content_for?(:full_width) %>
+      <div class="max-w-7xl mx-auto px-4">
+        <%= render "layouts/studio/flash" %>
+      </div>
       <%= yield %>
-    </div>
+    <% else %>
+      <div class="max-w-7xl mx-auto px-4 py-6">
+        <%= render "layouts/studio/flash" %>
+        <%= yield %>
+      </div>
+    <% end %>
   </body>
 </html>
