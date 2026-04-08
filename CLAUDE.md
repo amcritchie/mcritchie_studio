@@ -15,12 +15,13 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - **Database**: Heroku Postgres (essential-0)
 - **DNS**: Google Domains — `app` CNAME → Heroku DNS target
 - **Deploy**: `git push heroku main` (then `heroku run bin/rails db:migrate --app mcritchie-studio` if new migrations)
-- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ANTHROPIC_API_KEY` (for AI chat)
 - **ACM**: Enabled (auto SSL via Let's Encrypt)
 
 ## Public Assets
 
-- `public/agents/` — Agent avatar images (alex.png, mack.png, mason.png, turf-monster.png)
+- `public/agents/` — Agent avatar images (alex.png, alex-photo.png, mack.png, mason.png, turf-monster.png)
+- `public/denver-hero.avif` — Landing page hero background (Denver skyline)
 - `public/payment_methods/` — Card brand logos (robinhood-gold.png, etc.)
 - `public/studio-logo.svg` — SSO logo (shared with satellite apps)
 - `public/favicon.png`, `public/icon.png`, `public/logo-icon.svg` — App icons
@@ -40,6 +41,7 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 
 - `kanban_board` — drag-and-drop task board with optimistic DOM moves, API transitions, toast notifications. Attached to `window.kanbanBoard` for Alpine `x-data` access.
 - `expense_components` — registers `fileDrop` (drag-and-drop file upload) and `evaluationProgress` (ActionCable real-time progress tracker) Alpine.data components. `paymentMethodPicker` remains inline in `expense_uploads/new.html.erb` due to ERB interpolation of DB records.
+- `alex_chat` — Alpine.js `alexChat()` component for AI chat UI. Handles message sending via POST `/chat`, loading states, auto-scroll, basic markdown formatting. Attached to `window.alexChat`.
 
 ## Studio Engine
 
@@ -117,6 +119,9 @@ end
 
 ### HTML (public monitoring, auth-gated mutations)
 - `/` — Dashboard (agents, task pipeline, activity feed)
+- `/landing` — Public landing page (hero with Denver bg, about, get in touch with Sprintful + AI chat, acquisition criteria, contact)
+- `/chat` — AI chat with Alex agent (Claude Haiku, session-based conversation history). Chat widget partial (`chat/_chat_widget`) also embedded in landing page.
+- `/schedule` — Sprintful calendar embed (full-page)
 - `/docs` — Agent docs viewer (read-only, markdown rendered)
 - `/docs/*path` — Individual doc viewer
 - `/agents` — Agent grid
@@ -171,6 +176,7 @@ Every write action MUST use `rescue_and_log` with target/parent context. See top
 - RegistrationsController#create: wrapped with `target: @user`
 - PaymentMethodsController: all 3 write actions (create, update, destroy) wrapped with `target: @payment_method`
 - ExpenseUploadsController: create, destroy, process_file, evaluate all wrapped with `target: @upload`
+- ChatController#create: uses `create_error_log(e)` directly (no ActiveRecord target — API-only action)
 
 ## Expense Tracker
 
@@ -187,6 +193,21 @@ Admin-gated expense tracking system for CSV/XLSX bank statement parsing and AI-a
 - **Payment method cards** — Index cards tinted with brand color gradient. Two-color gradient when `color_secondary` is set.
 - **Admin dropdown** — Local override of engine's `_admin_dropdown.html.erb` adds Expenses and Payment Methods links above Theme/Error Logs.
 - **Navbar** — "Expenses" link removed from main nav, moved to admin gear dropdown.
+
+## AI Chat (Alex Agent)
+
+Public-facing chat interface powered by Claude API. Users can chat with an AI Alex persona.
+
+### Architecture
+- **ChatController** — `index` renders chat page, `create` accepts JSON `{ message }` and returns `{ response }`. Conversation history stored in `session[:chat_messages]` (last 10 messages).
+- **Chat::AlexResponder** — Service following `Expenses::AiEvaluator` pattern (raw `Net::HTTP` to Claude API). Alex McRitchie persona system prompt. Model: `claude-haiku-4-5-20251001`, max tokens: 1024.
+- **Chat widget partial** — `chat/_chat_widget.html.erb` accepts `compact:` local (true for landing page card, false for full `/chat` page). Used in both locations.
+- **Alpine.js component** — `alexChat()` in `alex_chat.js` handles message state, fetch to `/chat`, loading indicators, auto-scroll, basic markdown rendering.
+
+### Landing Page
+- **Hero** — Denver skyline background with Ken Burns pan animation (15s linear), dark overlay for text contrast.
+- **Get in Touch section** — Two cards: "Chat Over Video" (Sprintful inline widget embed via `on.sprintful.com`) and "Chat Right Now" (embedded chat widget).
+- **Sprintful widget** — Uses official inline widget JS (`app.sprintful.com/widget/v1.js`), not iframe (public URL blocks iframes via X-Frame-Options).
 
 ## Seeds
 
