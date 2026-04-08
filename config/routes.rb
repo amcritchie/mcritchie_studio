@@ -27,26 +27,6 @@ Rails.application.routes.draw do
   resources :activities, only: [:index]
   resources :usages, only: [:index]
 
-  # Expense Tracker
-  resources :payment_methods, path: "expenses/payment_methods", param: :slug, except: [:show]
-  resources :expense_uploads, path: "expenses/uploads", param: :slug, only: [:index, :new, :create, :show, :destroy] do
-    member do
-      post :process_file
-      post :evaluate
-    end
-  end
-  resources :expense_transactions, path: "expenses/transactions", param: :slug, only: [:index, :show, :update] do
-    member do
-      post :answer_review
-      post :toggle_exclude
-    end
-    collection do
-      get :export
-      get :summary
-      get :tax_report
-    end
-  end
-
   get "docs", to: "docs#index"
   get "docs/*path", to: "docs#show", as: :doc
 

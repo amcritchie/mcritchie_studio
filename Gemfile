@@ -67,4 +67,3 @@ gem "dotenv-rails", groups: [:development, :test]
 gem "redcarpet"
 gem "tailwindcss-rails", "~> 2.7"
 gem "studio", git: "https://github.com/amcritchie/studio.git"
-gem "roo", "~> 2.10"

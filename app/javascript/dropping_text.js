@@ -39,8 +39,10 @@ function initDroppingTexts() {
       // Advance
       current = stopOnLast ? current + 1 : (current + 1) % spans.length;
 
-      // Enter next word
-      spans[current].classList.add('drop-active');
+      // Enter next word after exit transition clears
+      setTimeout(() => {
+        spans[current].classList.add('drop-active');
+      }, 400);
 
       // Stop on last if configured
       if (stopOnLast && current >= spans.length - 1) {

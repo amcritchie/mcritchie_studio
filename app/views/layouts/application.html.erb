@@ -29,6 +29,10 @@
                 <img src="/turf-monster-logo.png" alt="" class="w-5 h-5">
                 Turf Monster
               <% end %>
+              <% tax_url = Rails.env.production? ? "https://tax.mcritchie.studio" : "http://localhost:3003" %>
+              <%= link_to tax_url + (logged_in? ? "/sso_login" : ""), class: "inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-emerald-500/20 transition", target: "_blank" do %>
+                Tax Studio
+              <% end %>
             </nav>
           </div>
 
