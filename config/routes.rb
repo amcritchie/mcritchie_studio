@@ -8,6 +8,8 @@ Rails.application.routes.draw do
   root "dashboard#index"
 
   get "landing", to: "landing#index"
+  resources :chat, only: [:index, :create]
+  resources :schedule, only: [:index]
 
   Studio.routes(self)
 

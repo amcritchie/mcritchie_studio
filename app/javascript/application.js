@@ -5,5 +5,6 @@ import { createConsumer } from "@rails/actioncable"
 import "kanban_board"
 import "expense_components"
 import "dropping_text"
+import "alex_chat"
 
 window.cable = createConsumer()
