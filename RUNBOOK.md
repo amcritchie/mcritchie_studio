@@ -74,16 +74,6 @@ Troubleshooting guide for autonomous agents. Format: problem, diagnosis, fix.
 - Diagnosis: User denied access or session expired during OAuth flow.
 - Fix: This is normal user behavior. The engine's `OmniauthCallbacksController#failure` handles it with a redirect. Check `/auth/failure` route exists (drawn by `Studio.routes`).
 
-## Expense Tracker Parsing Errors
-
-**CSV format not detected**
-- Diagnosis: `CsvParser` scans up to 20 rows for header patterns. Amex XLSX files have metadata preamble rows.
-- Fix: Check `CsvParser::CARD_PATTERNS` for the expected headers. If a new card format is added, add its pattern to `CARD_PATTERNS` and link it via `PaymentMethod#parser_key`.
-
-**XLSX file won't parse**
-- Diagnosis: Requires the `roo` gem. If `Roo::Spreadsheet.open` fails, the file may be corrupted or password-protected.
-- Fix: Verify `gem "roo"` is in Gemfile. Try opening the file manually: `bin/rails runner "Roo::Spreadsheet.open('path/to/file.xlsx')"`.
-
 ## Studio Engine Update Issues
 
 **`bundle update studio` fails**
