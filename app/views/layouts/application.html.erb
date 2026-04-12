@@ -30,7 +30,7 @@
               <h1 class="font-extrabold text-heading tracking-tight transition-all duration-300"
                   x-bind:class="scrolled ? 'text-base' : 'text-2xl'">McRitchie <span class="text-primary">Studio</span></h1>
             <% end %>
-            <nav class="flex items-center gap-4">
+            <nav class="hidden md:flex items-center gap-4">
               <%= link_to "Meet the Agents 🦞", activities_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
             </nav>
           </div>
@@ -45,6 +45,16 @@
             </div>
           <% end %>
         </div>
+      </div>
+      <%# Mobile sub-navbar %>
+      <div class="flex md:hidden items-center gap-3 px-4 py-1.5 overflow-x-auto border-t border-subtle bg-surface-alt">
+        <%= link_to "Meet the Agents 🦞", activities_path, class: "text-secondary hover:text-primary text-xs font-medium transition whitespace-nowrap" %>
+        <% unless logged_in? %>
+          <span class="ml-auto flex items-center gap-3">
+            <%= render "components/admin_dropdown" %>
+            <%= render "components/theme_toggle" %>
+          </span>
+        <% end %>
       </div>
     </header>
 
