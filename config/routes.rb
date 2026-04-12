@@ -8,6 +8,8 @@ Rails.application.routes.draw do
   root "landing#index"
 
   get "dashboard", to: "dashboard#index"
+  get "toast_test", to: "toast_test#index"
+  post "toast_test/flash", to: "toast_test#trigger_flash"
   resources :chat, only: [:index, :create]
   resources :schedule, only: [:index]
 
