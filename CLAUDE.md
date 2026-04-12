@@ -128,6 +128,7 @@ end
 - `/tasks/:slug` — Task detail with transition buttons
 - `/activities` — Activity feed
 - `/usages` — Usage table
+- `/toast_test` — Toast notification test page (all variants, server-side flash test)
 - `/admin/theme` — Theme editor + styleguide (engine-provided: color editor, logos, tokens, typography, buttons, components)
 - `/error_logs` — Error log index (search with ILIKE, Esc to clear, 500ms loading animation)
 - `/error_logs/:slug` — Error log detail (backtrace, target/parent with copy-to-clipboard console commands, JSON)
