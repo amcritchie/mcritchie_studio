@@ -39,9 +39,11 @@
             <%= render "components/user_nav", show_logout_link: true %>
           <% else %>
             <div class="flex items-center gap-3">
-              <%= render "components/admin_dropdown" %>
-              <%= render "components/theme_toggle" %>
-              <%= link_to "Log in", login_path, class: "btn btn-primary" %>
+              <span class="hidden md:flex items-center gap-3">
+                <%= render "components/admin_dropdown" %>
+                <%= render "components/theme_toggle" %>
+              </span>
+              <%= link_to "Log in", login_path, class: "btn btn-primary whitespace-nowrap" %>
             </div>
           <% end %>
         </div>
