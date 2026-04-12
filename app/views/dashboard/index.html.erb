@@ -6,21 +6,14 @@
       <% @agents.each do |agent| %>
         <%= link_to agent_path(agent.slug), class: "block card p-5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition" do %>
           <div class="flex items-center gap-3 mb-3">
-            <% if agent.avatar.present? %>
-              <img src="<%= agent.avatar %>" alt="<%= agent.name %>" class="w-10 h-10 rounded-full object-cover">
-            <% else %>
-              <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <span class="text-primary font-bold"><%= agent.name.first.upcase %></span>
-              </div>
-            <% end %>
+            <%= render "components/agent_avatar", agent: agent, size: "sm" %>
             <div>
               <h3 class="text-heading font-bold text-sm"><%= agent.name %></h3>
               <p class="text-muted text-xs"><%= agent.title %></p>
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <span class="inline-block w-2 h-2 rounded-full <%= agent.status == 'active' ? 'bg-mint' : 'bg-surface-alt' %>"></span>
-            <span class="text-xs text-secondary"><%= agent.status.capitalize %></span>
+            <%= render "components/agent_status", agent: agent %>
           </div>
           <% if agent.description.present? %>
             <p class="text-muted text-xs mt-2 line-clamp-2"><%= agent.description %></p>

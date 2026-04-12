@@ -109,6 +109,13 @@
   .prose-themed blockquote { border-left: 3px solid var(--color-cta); padding-left: 1rem; color: var(--color-text-secondary); margin-bottom: 0.75rem; }
   .prose-themed hr { border-color: var(--color-border); margin: 1.5rem 0; }
 
+  /* Landing page */
+  .section-padding { padding: 5rem 1rem; }
+  .section-padding-lg { padding: 8rem 1rem; }
+  .hero-title { font-size: clamp(2.5rem, 6vw, 4.5rem); }
+  .hero-subtitle { font-size: clamp(1.1rem, 2.5vw, 1.5rem); }
+  .criterion-value { font-size: 1.75rem; }
+
   /* Dropping text animation (JS-driven, see dropping_text.js) */
   .dropping-texts {
     display: inline-block;

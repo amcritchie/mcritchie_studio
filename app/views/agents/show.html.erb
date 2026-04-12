@@ -6,19 +6,12 @@
   <!-- Agent Header -->
   <div class="card p-6 mb-6">
     <div class="flex items-center gap-4 mb-4">
-      <% if @agent.avatar.present? %>
-        <img src="<%= @agent.avatar %>" alt="<%= @agent.name %>" class="w-16 h-16 rounded-full object-cover">
-      <% else %>
-        <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-          <span class="text-primary font-bold text-2xl"><%= @agent.name.first.upcase %></span>
-        </div>
-      <% end %>
+      <%= render "components/agent_avatar", agent: @agent, size: "lg" %>
       <div>
         <h2 class="text-2xl font-bold text-heading"><%= @agent.name %></h2>
         <p class="text-secondary"><%= @agent.title %></p>
         <div class="flex items-center gap-2 mt-1">
-          <span class="inline-block w-2 h-2 rounded-full <%= @agent.status == 'active' ? 'bg-mint' : 'bg-surface-alt' %>"></span>
-          <span class="text-xs text-secondary"><%= @agent.status.capitalize %></span>
+          <%= render "components/agent_status", agent: @agent %>
           <span class="text-xs text-muted">|</span>
           <span class="text-xs text-muted"><%= @agent.agent_type %></span>
         </div>

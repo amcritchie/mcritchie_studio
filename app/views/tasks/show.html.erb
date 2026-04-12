@@ -68,11 +68,11 @@
     <div class="flex flex-wrap gap-2">
       <% case @task.stage %>
       <% when "new" %>
-        <%= button_to "Queue", queue_task_path(@task.slug), class: "btn bg-yellow-600 hover:bg-yellow-500 text-white" %>
+        <%= button_to "Queue", queue_task_path(@task.slug), class: "btn btn-warning" %>
       <% when "queued" %>
         <%= button_to "Start", start_task_path(@task.slug), class: "btn btn-secondary" %>
       <% when "in_progress" %>
-        <%= button_to "Complete", complete_task_path(@task.slug), class: "btn bg-green-600 hover:bg-green-500 text-white" %>
+        <%= button_to "Complete", complete_task_path(@task.slug), class: "btn btn-success" %>
         <%= button_to "Fail", fail_task_task_path(@task.slug), class: "btn btn-danger" %>
       <% end %>
       <% unless @task.stage == "archived" %>

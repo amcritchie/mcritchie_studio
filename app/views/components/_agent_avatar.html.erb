@@ -1,0 +1,16 @@
+<%# locals: (agent:, size: "md") %>
+<%
+  sizes = {
+    "sm" => { container: "w-10 h-10", text: "text-sm" },
+    "md" => { container: "w-14 h-14", text: "text-xl" },
+    "lg" => { container: "w-16 h-16", text: "text-2xl" },
+  }
+  s = sizes[size] || sizes["md"]
+%>
+<% if agent.avatar.present? %>
+  <img src="<%= agent.avatar %>" alt="<%= agent.name %>" class="<%= s[:container] %> rounded-full object-cover">
+<% else %>
+  <div class="<%= s[:container] %> rounded-full bg-primary/20 flex items-center justify-center">
+    <span class="text-primary font-bold <%= s[:text] %>"><%= agent.name.first.upcase %></span>
+  </div>
+<% end %>
