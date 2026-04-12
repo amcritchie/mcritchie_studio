@@ -31,20 +31,8 @@
                   x-bind:class="scrolled ? 'text-base' : 'text-2xl'">McRitchie <span class="text-primary">Studio</span></h1>
             <% end %>
             <nav class="flex items-center gap-4">
-              <%= link_to "Dashboard", dashboard_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
-              <%= link_to "Agents", agents_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
-              <%= link_to "Tasks", tasks_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
               <%= link_to "Activity", activities_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
               <%= link_to "Docs", docs_path, class: "text-secondary hover:text-primary text-sm font-medium transition" %>
-              <% turf_url = Rails.env.production? ? "https://turf.mcritchie.studio" : "http://localhost:3001" %>
-              <%= link_to turf_url + (logged_in? ? "/sso_login" : ""), class: "inline-flex items-center gap-2.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-emerald-500/20 transition", target: "_blank" do %>
-                <img src="/turf-monster-logo.png" alt="" class="w-5 h-5">
-                Turf Monster
-              <% end %>
-              <% tax_url = Rails.env.production? ? "https://tax.mcritchie.studio" : "http://localhost:3003" %>
-              <%= link_to tax_url + (logged_in? ? "/sso_login" : ""), class: "inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-emerald-500/20 transition", target: "_blank" do %>
-                Tax Studio
-              <% end %>
             </nav>
           </div>
 
