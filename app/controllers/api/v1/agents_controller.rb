@@ -25,7 +25,7 @@ module Api
       private
 
       def agent_params
-        params.permit(:status, :description, :avatar_url, :title, config: {}, metadata: {})
+        params.permit(:status, :description, :avatar, :title, config: {}, metadata: {})
       end
     end
   end

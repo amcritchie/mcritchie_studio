@@ -25,5 +25,6 @@ class CreateTasks < ActiveRecord::Migration[7.2]
     add_index :tasks, :stage
     add_index :tasks, :agent_slug
     add_index :tasks, :priority
+    add_index :tasks, [:stage, :created_at], name: "index_tasks_on_stage_and_created_at"
   end
 end

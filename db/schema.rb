@@ -51,6 +51,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_08_100000) do
     t.string "slug"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["activity_type", "created_at"], name: "index_activities_on_activity_type_and_created_at"
     t.index ["activity_type"], name: "index_activities_on_activity_type"
     t.index ["agent_slug"], name: "index_activities_on_agent_slug"
     t.index ["slug"], name: "index_activities_on_slug", unique: true
@@ -137,6 +138,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_08_100000) do
     t.index ["agent_slug"], name: "index_tasks_on_agent_slug"
     t.index ["priority"], name: "index_tasks_on_priority"
     t.index ["slug"], name: "index_tasks_on_slug", unique: true
+    t.index ["stage", "created_at"], name: "index_tasks_on_stage_and_created_at"
     t.index ["stage"], name: "index_tasks_on_stage"
   end
 
