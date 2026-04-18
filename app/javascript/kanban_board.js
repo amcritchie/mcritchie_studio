@@ -6,6 +6,7 @@ function kanbanBoard() {
     draggedSlug: null,
     draggedStage: null,
     dropTarget: null,
+    _pendingMoves: {},
     agentFilter: '',
     showArchived: false,
     toasts: [],
@@ -55,8 +56,10 @@ function kanbanBoard() {
     async dropCard(newStage) {
       this.dropTarget = null;
       if (!this.draggedSlug || this.draggedStage === newStage) return;
+      if (this._pendingMoves[this.draggedSlug]) return;
 
       const slug = this.draggedSlug;
+      this._pendingMoves[slug] = true;
       const oldStage = this.draggedStage;
       const card = document.getElementById('card-' + slug);
       const newZone = document.getElementById('dropzone-' + newStage);
@@ -106,10 +109,15 @@ function kanbanBoard() {
         card.classList.add('ring-2', 'ring-red-500');
         setTimeout(() => card.classList.remove('ring-2', 'ring-red-500'), 1500);
         this.showToast(err.message || 'Move failed', 'error');
+      } finally {
+        delete this._pendingMoves[slug];
       }
     },
 
     async archiveTask(slug) {
+      if (this._pendingMoves[slug]) return;
+      this._pendingMoves[slug] = true;
+
       const card = document.getElementById('card-' + slug);
       const oldStage = card?.dataset.stage;
       const archivedZone = document.getElementById('dropzone-archived');
@@ -139,11 +147,16 @@ function kanbanBoard() {
           }
         }
         this.showToast(err.message, 'error');
+      } finally {
+        delete this._pendingMoves[slug];
       }
     },
 
     async deleteTask(slug) {
       if (!confirm('Delete this task?')) return;
+      if (this._pendingMoves[slug]) return;
+      this._pendingMoves[slug] = true;
+
       const card = document.getElementById('card-' + slug);
 
       try {
@@ -158,6 +171,8 @@ function kanbanBoard() {
         this.showToast('Task deleted', 'success');
       } catch (err) {
         this.showToast(err.message, 'error');
+      } finally {
+        delete this._pendingMoves[slug];
       }
     },
 

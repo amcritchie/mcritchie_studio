@@ -45,7 +45,8 @@ function alexChat() {
 
     formatMarkdown(text) {
       if (!text) return '';
-      // Basic markdown: bold, italic, code, line breaks
+      // SECURITY: HTML-escape MUST happen before markdown transforms to prevent XSS.
+      // The .replace(&/</>) calls below sanitize user input before bold/italic/code are applied.
       return text
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')

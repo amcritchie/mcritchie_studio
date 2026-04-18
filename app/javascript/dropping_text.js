@@ -11,6 +11,8 @@
 //   data-stop-on-last — if present, stops on the final word
 //   data-interval     — ms between words (default: 2500)
 
+var _droppingTimers = [];
+
 function initDroppingTexts() {
   document.querySelectorAll('.dropping-texts').forEach(container => {
     if (container.dataset.initialized) return;
@@ -49,8 +51,21 @@ function initDroppingTexts() {
         clearInterval(timer);
       }
     }, interval);
+
+    _droppingTimers.push(timer);
   });
 }
 
-document.addEventListener('DOMContentLoaded', initDroppingTexts);
+function cleanupDroppingTexts() {
+  _droppingTimers.forEach(t => clearInterval(t));
+  _droppingTimers = [];
+  document.querySelectorAll('.dropping-texts').forEach(container => {
+    delete container.dataset.initialized;
+    container.querySelectorAll(':scope > span').forEach(s => {
+      s.classList.remove('drop-active', 'drop-exit');
+    });
+  });
+}
+
 document.addEventListener('turbo:load', initDroppingTexts);
+document.addEventListener('turbo:before-cache', cleanupDroppingTexts);
