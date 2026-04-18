@@ -33,15 +33,14 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - Alpine.js via CDN for interactivity
 - Montserrat font (Google Fonts CDN)
 - ERB views, import maps, no JS frameworks
-- Stimulus infrastructure ready (pinned, eager-loaded, no controllers yet)
 - bcrypt password auth + Google OAuth (OmniAuth)
 - **Studio engine gem** — `gem "studio", git: "https://github.com/amcritchie/studio.git"`
 
 ## JS Modules (importmap)
 
-- `kanban_board` — drag-and-drop task board with optimistic DOM moves, API transitions, toast notifications. Attached to `window.kanbanBoard` for Alpine `x-data` access.
-- `dropping_text` — animated text effect on landing page.
-- `alex_chat` — Alpine.js `alexChat()` component for AI chat UI. Handles message sending via POST `/chat`, loading states, auto-scroll, basic markdown formatting. Attached to `window.alexChat`.
+- `kanban_board` — drag-and-drop task board with optimistic DOM moves, API transitions, toast notifications. Race-condition guard (`_pendingMoves`) prevents concurrent API calls for same task. Attached to `window.kanbanBoard` for Alpine `x-data` access.
+- `dropping_text` — animated text effect on landing page. Tracks timer IDs and cleans up on `turbo:before-cache` to prevent memory leaks.
+- `alex_chat` — Alpine.js `alexChat()` component for AI chat UI. Handles message sending via POST `/chat`, loading states, auto-scroll, basic markdown formatting. HTML-escape happens before markdown transforms (XSS-safe). Attached to `window.alexChat`.
 
 ## Studio Engine
 
