@@ -1,0 +1,194 @@
+<section>
+  <div class="mb-6 flex items-center justify-between">
+    <%= link_to "&larr; News Pipeline".html_safe, news_index_path, class: "text-secondary hover:text-heading text-sm transition" %>
+  </div>
+
+  <h2 class="text-2xl font-bold text-heading mb-2">News Workflow</h2>
+  <p class="text-secondary text-sm mb-8">News items flow through 6 stages, each owned by a specific agent. Articles are progressively enriched with metadata, summaries, and opinions as they move through the pipeline.</p>
+
+  <!-- Pipeline Overview -->
+  <div class="flex flex-wrap items-center gap-2 mb-8">
+    <% stages = [
+      { name: "New", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+      { name: "Reviewed", color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
+      { name: "Processed", color: "bg-mint/20 text-mint border-mint/30" },
+      { name: "Refined", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+      { name: "Concluded", color: "bg-violet/20 text-violet border-violet/30" },
+      { name: "Archived", color: "bg-surface-alt text-muted border-subtle" }
+    ] %>
+    <% stages.each_with_index do |stage, i| %>
+      <span class="badge <%= stage[:color] %> text-sm px-3 py-1"><%= stage[:name] %></span>
+      <% if i < stages.length - 1 %>
+        <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Stage Cards -->
+  <div class="space-y-4">
+    <!-- New -->
+    <div class="card p-6">
+      <div class="flex items-start gap-4">
+        <div class="shrink-0 w-24">
+          <span class="badge bg-blue-500/20 text-blue-300 border-blue-500/30">New</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <h3 class="text-heading font-bold">Manual Intake</h3>
+            <span class="text-xs text-muted bg-surface-alt px-2 py-0.5 rounded">No agent</span>
+          </div>
+          <p class="text-secondary text-sm mb-3">Raw news enters the system. Articles are added manually or via API with basic source information.</p>
+          <div>
+            <p class="label-upper mb-1.5">Fields Populated</p>
+            <div class="flex flex-wrap gap-1.5">
+              <% %w[title url x_post_id x_post_url author published_at].each do |field| %>
+                <code class="text-xs bg-surface-alt text-body px-2 py-0.5 rounded"><%= field %></code>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviewed -->
+    <div class="card p-6">
+      <div class="flex items-start gap-4">
+        <div class="shrink-0 w-24">
+          <span class="badge bg-yellow-500/20 text-yellow-300 border-yellow-500/30">Reviewed</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <h3 class="text-heading font-bold">Mason</h3>
+            <span class="text-xs text-muted bg-surface-alt px-2 py-0.5 rounded">Infrastructure Specialist</span>
+          </div>
+          <p class="text-secondary text-sm mb-3">Reads the article, identifies key people and teams involved, and labels the primary action. Extracts the article image if available.</p>
+          <div>
+            <p class="label-upper mb-1.5">Fields Populated</p>
+            <div class="flex flex-wrap gap-1.5">
+              <% %w[primary_person primary_team primary_action secondary_person secondary_team article_image_url].each do |field| %>
+                <code class="text-xs bg-surface-alt text-body px-2 py-0.5 rounded"><%= field %></code>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processed -->
+    <div class="card p-6">
+      <div class="flex items-start gap-4">
+        <div class="shrink-0 w-24">
+          <span class="badge bg-mint/20 text-mint border-mint/30">Processed</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <h3 class="text-heading font-bold">Mack</h3>
+            <span class="text-xs text-muted bg-surface-alt px-2 py-0.5 rounded">General Worker</span>
+          </div>
+          <p class="text-secondary text-sm mb-3">Links the people and teams identified in the review stage to their matching database records using slug lookups. This connects the news to the rest of the system.</p>
+          <div>
+            <p class="label-upper mb-1.5">Fields Populated</p>
+            <div class="flex flex-wrap gap-1.5">
+              <% %w[primary_person_slug primary_team_slug secondary_person_slug secondary_team_slug].each do |field| %>
+                <code class="text-xs bg-surface-alt text-body px-2 py-0.5 rounded"><%= field %></code>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Refined -->
+    <div class="card p-6">
+      <div class="flex items-start gap-4">
+        <div class="shrink-0 w-24">
+          <span class="badge bg-emerald-500/20 text-emerald-300 border-emerald-500/30">Refined</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <h3 class="text-heading font-bold">Alex</h3>
+            <span class="text-xs text-muted bg-surface-alt px-2 py-0.5 rounded">Lead Orchestrator</span>
+          </div>
+          <p class="text-secondary text-sm mb-3">Summarizes the article, writes a concise short title, and infers the emotional tone and significance. Polishes the raw <code class="text-xs bg-surface-alt text-body px-1 rounded">primary_action</code> into a cleaner <code class="text-xs bg-surface-alt text-body px-1 rounded">what_happened</code> label.</p>
+          <div>
+            <p class="label-upper mb-1.5">Fields Populated</p>
+            <div class="flex flex-wrap gap-1.5">
+              <% %w[title_short summary feeling feeling_emoji what_happened].each do |field| %>
+                <code class="text-xs bg-surface-alt text-body px-2 py-0.5 rounded"><%= field %></code>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concluded -->
+    <div class="card p-6">
+      <div class="flex items-start gap-4">
+        <div class="shrink-0 w-24">
+          <span class="badge bg-violet/20 text-violet border-violet/30">Concluded</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <h3 class="text-heading font-bold">Turf Monster</h3>
+            <span class="text-xs text-muted bg-surface-alt px-2 py-0.5 rounded">Sports Domain Specialist</span>
+          </div>
+          <p class="text-secondary text-sm mb-3">Forms an opinion on the article's impact, especially as it relates to sports props, picks, and content strategy. Creates a callback with a content idea or follow-up action.</p>
+          <div>
+            <p class="label-upper mb-1.5">Fields Populated</p>
+            <div class="flex flex-wrap gap-1.5">
+              <% %w[opinion callback].each do |field| %>
+                <code class="text-xs bg-surface-alt text-body px-2 py-0.5 rounded"><%= field %></code>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Archived -->
+    <div class="card p-6">
+      <div class="flex items-start gap-4">
+        <div class="shrink-0 w-24">
+          <span class="badge bg-surface-alt text-muted border-subtle">Archived</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <h3 class="text-heading font-bold">Alex</h3>
+            <span class="text-xs text-muted bg-surface-alt px-2 py-0.5 rounded">Lead Orchestrator</span>
+          </div>
+          <p class="text-secondary text-sm mb-3">Auto-archived after 48 hours, or manually archived when no longer relevant. No new fields are populated. Articles remain searchable.</p>
+          <div>
+            <p class="label-upper mb-1.5">Fields Populated</p>
+            <span class="text-xs text-muted">None (terminal stage)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card p-6 mt-8">
+    <h3 class="text-heading font-bold mb-3">How It Works</h3>
+    <ul class="space-y-2 text-secondary text-sm">
+      <li class="flex items-start gap-2">
+        <span class="text-primary mt-0.5">&#8226;</span>
+        <span><strong class="text-heading">Free movement</strong> &mdash; Articles can be dragged to any stage on the Kanban board. Agents are expected to follow the pipeline logically, but there are no enforced restrictions.</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-primary mt-0.5">&#8226;</span>
+        <span><strong class="text-heading">Stage timestamps</strong> &mdash; Each stage transition records a timestamp (<code class="text-xs bg-surface-alt text-body px-1 rounded">reviewed_at</code>, <code class="text-xs bg-surface-alt text-body px-1 rounded">processed_at</code>, etc.). Moving backwards does not clear previous timestamps.</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-primary mt-0.5">&#8226;</span>
+        <span><strong class="text-heading">Progressive enrichment</strong> &mdash; Each stage adds new metadata. Later stages build on earlier data (e.g. <code class="text-xs bg-surface-alt text-body px-1 rounded">primary_action</code> from Review becomes the basis for <code class="text-xs bg-surface-alt text-body px-1 rounded">what_happened</code> in Refine).</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-primary mt-0.5">&#8226;</span>
+        <span><strong class="text-heading">Inspired by Boodle Scraper</strong> &mdash; This pipeline adapts the news workflow from Boodle Scraper for the McRitchie Studio agent system.</span>
+      </li>
+    </ul>
+  </div>
+</section>

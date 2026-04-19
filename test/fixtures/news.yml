@@ -1,0 +1,75 @@
+new_article:
+  title: "Messi Announces World Cup 2026 Plans"
+  slug: news-aaa111
+  stage: new
+  url: "https://example.com/messi-wc2026"
+  author: "ESPN"
+  published_at: 2026-04-18 10:00:00
+  position: 0
+
+reviewed_article:
+  title: "Pulisic Scores Hat Trick in Qualifier"
+  slug: news-bbb222
+  stage: reviewed
+  primary_person: "Christian Pulisic"
+  primary_team: "USA"
+  primary_action: "Goals"
+  author: "Fox Sports"
+  published_at: 2026-04-17 14:00:00
+  reviewed_at: 2026-04-17 16:00:00
+  position: 0
+
+processed_article:
+  title: "Argentina Names Final Squad"
+  slug: news-ccc333
+  stage: processed
+  primary_person: "Lionel Messi"
+  primary_team: "Argentina"
+  primary_action: "Squad Announcement"
+  primary_person_slug: lionel-messi
+  primary_team_slug: argentina
+  author: "BBC Sport"
+  reviewed_at: 2026-04-16 12:00:00
+  processed_at: 2026-04-16 14:00:00
+  position: 0
+
+refined_article:
+  title: "Brazil Manager Fired After Qualifying Loss"
+  slug: news-ddd444
+  stage: refined
+  primary_person: "Dorival Junior"
+  primary_team: "Brazil"
+  primary_action: "Manager Sacked"
+  primary_person_slug: dorival-junior
+  primary_team_slug: brazil
+  title_short: "Brazil Sacks Manager"
+  summary: "Brazil has fired manager Dorival Junior following a shock qualifying loss to Bolivia."
+  feeling: "shocked"
+  feeling_emoji: "😱"
+  what_happened: "Manager fired after loss"
+  author: "The Athletic"
+  reviewed_at: 2026-04-15 10:00:00
+  processed_at: 2026-04-15 12:00:00
+  refined_at: 2026-04-15 14:00:00
+  position: 0
+
+concluded_article:
+  title: "World Cup Host Cities Announce Fan Zones"
+  slug: news-eee555
+  stage: concluded
+  primary_team: "FIFA"
+  primary_action: "Event Planning"
+  primary_team_slug: fifa
+  title_short: "Fan Zones Revealed"
+  summary: "FIFA reveals locations for fan zones across 16 host cities."
+  feeling: "excited"
+  feeling_emoji: "🎉"
+  what_happened: "Fan zones announced"
+  opinion: "This is huge for the atmosphere. Fan zones will be the heartbeat of the tournament."
+  callback: "Create a guide to the best fan zones for each group."
+  author: "FIFA.com"
+  reviewed_at: 2026-04-14 08:00:00
+  processed_at: 2026-04-14 10:00:00
+  refined_at: 2026-04-14 12:00:00
+  concluded_at: 2026-04-14 14:00:00
+  position: 0

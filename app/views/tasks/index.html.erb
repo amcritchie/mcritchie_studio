@@ -1,6 +1,183 @@
 <% stages = %w[new queued in_progress done failed archived] %>
 <% agent_avatars = @agents.index_by(&:slug).transform_values(&:avatar) %>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+
+<%# kanbanBoard must be defined inline (before Alpine CDN defer evaluates x-data) %>
+<script>
+function kanbanBoard() {
+  return {
+    _pendingMoves: {},
+    agentFilter: '',
+    showArchived: false,
+    toasts: [],
+
+    stageLabels: {
+      new: 'New', queued: 'Queued', in_progress: 'In Progress',
+      done: 'Done', failed: 'Failed', archived: 'Archived'
+    },
+
+    matchesFilter(agent) {
+      return !this.agentFilter || agent === this.agentFilter;
+    },
+
+    init() {
+      this.$nextTick(() => this.initSortables());
+    },
+
+    initSortables() {
+      document.querySelectorAll('.kanban-dropzone').forEach(zone => {
+        Sortable.create(zone, {
+          group: 'kanban',
+          animation: 150,
+          ghostClass: 'opacity-30',
+          draggable: '.kanban-card',
+          filter: '.kanban-empty',
+          onEnd: (evt) => this.handleSortEnd(evt)
+        });
+      });
+    },
+
+    async handleSortEnd(evt) {
+      const card = evt.item;
+      const slug = card.dataset.slug;
+      const oldStage = card.dataset.stage;
+      const newZone = evt.to;
+      const newStage = newZone.dataset.stage;
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+      // Stage changed — update via PATCH
+      if (oldStage !== newStage) {
+        card.dataset.stage = newStage;
+        try {
+          const resp = await fetch('/tasks/' + slug + '.json', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ task: { stage: newStage } })
+          });
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed (' + resp.status + ')');
+          }
+          this.showToast('Task moved to ' + this.stageLabels[newStage], 'success');
+        } catch (err) {
+          // Revert: move card back to old column
+          const oldZone = document.getElementById('dropzone-' + oldStage);
+          if (oldZone) {
+            oldZone.insertBefore(card, oldZone.querySelector('.kanban-empty'));
+            card.dataset.stage = oldStage;
+          }
+          card.classList.add('ring-2', 'ring-red-500');
+          setTimeout(() => card.classList.remove('ring-2', 'ring-red-500'), 1500);
+          this.showToast(err.message || 'Move failed', 'error');
+          this.updateCounts();
+          return;
+        }
+      }
+
+      // Save order of destination column
+      const slugs = Array.from(newZone.querySelectorAll('.kanban-card')).map(c => c.dataset.slug);
+      try {
+        await fetch('/tasks/reorder.json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+          body: JSON.stringify({ slugs: slugs })
+        });
+      } catch (err) {
+        // Reorder save failed silently — positions will be stale but functional
+      }
+
+      this.updateCounts();
+    },
+
+    updateCounts() {
+      document.querySelectorAll('[data-stage-count]').forEach(badge => {
+        const stage = badge.dataset.stageCount;
+        const zone = document.getElementById('dropzone-' + stage);
+        if (zone) {
+          const count = zone.querySelectorAll('.kanban-card').length;
+          badge.textContent = count;
+          const empty = zone.querySelector('.kanban-empty');
+          if (empty) empty.style.display = count === 0 ? 'flex' : 'none';
+        }
+      });
+    },
+
+    async archiveTask(slug) {
+      if (this._pendingMoves[slug]) return;
+      this._pendingMoves[slug] = true;
+
+      const card = document.getElementById('card-' + slug);
+      const oldStage = card?.dataset.stage;
+      const archivedZone = document.getElementById('dropzone-archived');
+
+      if (card && archivedZone) {
+        archivedZone.insertBefore(card, archivedZone.querySelector('.kanban-empty'));
+        card.dataset.stage = 'archived';
+        this.updateCounts();
+      }
+
+      try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const resp = await fetch('/tasks/' + slug + '/archive.json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
+        });
+        if (!resp.ok) throw new Error('Archive failed');
+        this.showToast('Task archived', 'success');
+      } catch (err) {
+        if (card && oldStage) {
+          const oldZone = document.getElementById('dropzone-' + oldStage);
+          if (oldZone) {
+            oldZone.insertBefore(card, oldZone.querySelector('.kanban-empty'));
+            card.dataset.stage = oldStage;
+            this.updateCounts();
+          }
+        }
+        this.showToast(err.message, 'error');
+      } finally {
+        delete this._pendingMoves[slug];
+      }
+    },
+
+    async deleteTask(slug) {
+      if (!confirm('Delete this task?')) return;
+      if (this._pendingMoves[slug]) return;
+      this._pendingMoves[slug] = true;
+
+      const card = document.getElementById('card-' + slug);
+
+      try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const resp = await fetch('/tasks/' + slug + '.json', {
+          method: 'DELETE',
+          headers: { 'X-CSRF-Token': csrfToken }
+        });
+        if (!resp.ok) throw new Error('Delete failed');
+        if (card) card.remove();
+        this.updateCounts();
+        this.showToast('Task deleted', 'success');
+      } catch (err) {
+        this.showToast(err.message, 'error');
+      } finally {
+        delete this._pendingMoves[slug];
+      }
+    },
+
+    showToast(message, type) {
+      const id = Date.now();
+      const toast = { id, message, type, visible: true };
+      this.toasts.push(toast);
+      setTimeout(() => {
+        const t = this.toasts.find(t => t.id === id);
+        if (t) t.visible = false;
+        setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 300);
+      }, 3000);
+    }
+  }
+}
+</script>
+
 <section x-data="kanbanBoard()" class="min-h-screen">
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
@@ -55,24 +232,15 @@
         <!-- Drop Zone -->
         <div id="dropzone-<%= stage %>"
              data-stage="<%= stage %>"
-             class="kanban-dropzone rounded-xl border-2 border-dashed min-h-[calc(100vh-220px)] p-2 space-y-2 transition-colors duration-150 border-subtle"
-             @dragover.prevent="dropTarget = '<%= stage %>'"
-             @dragenter.prevent="dropTarget = '<%= stage %>'"
-             @dragleave.self="dropTarget = null"
-             @drop.prevent="dropCard('<%= stage %>')"
-             :class="dropTarget === '<%= stage %>' ? 'border-primary bg-primary-900/20' : 'border-subtle'">
+             class="kanban-dropzone rounded-xl border-2 border-dashed min-h-[calc(100vh-220px)] p-2 space-y-2 transition-colors duration-150 border-subtle">
 
           <% (@tasks_by_stage[stage] || []).each do |task| %>
             <div id="card-<%= task.slug %>"
                  data-slug="<%= task.slug %>"
                  data-stage="<%= stage %>"
                  data-agent="<%= task.agent_slug %>"
-                 draggable="true"
                  x-show="matchesFilter('<%= task.agent_slug %>')"
-                 @dragstart="startDrag($event, '<%= task.slug %>', '<%= stage %>')"
-                 @dragend="endDrag()"
-                 class="kanban-card bg-surface rounded-lg border border-subtle p-3 cursor-grab active:cursor-grabbing hover:border-primary/30 transition group"
-                 :class="draggedSlug === '<%= task.slug %>' ? 'opacity-40' : ''">
+                 class="kanban-card bg-surface rounded-lg border border-subtle p-3 cursor-grab active:cursor-grabbing hover:border-primary/30 transition group">
 
               <div class="flex items-center justify-between mb-1.5">
                 <a href="<%= task_path(task.slug) %>"

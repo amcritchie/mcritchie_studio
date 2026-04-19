@@ -58,33 +58,24 @@ class TaskTest < ActiveSupport::TestCase
     assert_equal "queued", task.stage
   end
 
-  # --- Invalid transitions ---
+  # --- Free movement (no transition restrictions) ---
 
-  test "new task cannot be started directly" do
+  test "task can move to any stage" do
     task = tasks(:new_task)
-    error = assert_raises(RuntimeError) { task.start! }
-    assert_match(/Cannot transition from new to in_progress/, error.message)
+    task.start!
+    assert_equal "in_progress", task.stage
+    task.complete!
+    assert_equal "done", task.stage
+    task.queue!
+    assert_equal "queued", task.stage
   end
 
-  test "new task cannot be completed" do
+  test "stage change sets appropriate timestamp" do
     task = tasks(:new_task)
-    error = assert_raises(RuntimeError) { task.complete! }
-    assert_match(/Cannot transition from new to done/, error.message)
-  end
-
-  test "done task cannot go back to in_progress" do
-    task = tasks(:done_task)
-    error = assert_raises(RuntimeError) { task.start! }
-    assert_match(/Cannot transition from done to in_progress/, error.message)
-  end
-
-  test "archived task cannot transition anywhere" do
-    task = tasks(:done_task)
-    task.archive!
-    assert_raises(RuntimeError) { task.queue! }
-    assert_raises(RuntimeError) { task.start! }
-    assert_raises(RuntimeError) { task.complete! }
-    assert_raises(RuntimeError) { task.fail! }
+    task.update!(stage: "done")
+    assert_not_nil task.completed_at
+    task.update!(stage: "failed")
+    assert_not_nil task.failed_at
   end
 
   # --- Slug ---
@@ -105,5 +96,26 @@ class TaskTest < ActiveSupport::TestCase
   test "to_param returns slug" do
     task = tasks(:new_task)
     assert_equal task.slug, task.to_param
+  end
+
+  # --- Position ---
+
+  test "position is auto-set on create" do
+    task = Task.create!(title: "Auto position test", stage: "new")
+    assert_not_nil task.position
+  end
+
+  test "position resets when stage changes" do
+    task = tasks(:new_task)
+    original_position = task.position
+    task.update!(stage: "queued")
+    assert_equal "queued", task.stage
+    assert_not_nil task.position
+  end
+
+  test "new tasks get appended to end of stage" do
+    t1 = Task.create!(title: "First", stage: "new")
+    t2 = Task.create!(title: "Second", stage: "new")
+    assert t2.position > t1.position
   end
 end

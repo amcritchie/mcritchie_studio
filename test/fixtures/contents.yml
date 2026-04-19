@@ -1,0 +1,51 @@
+idea_content:
+  title: "Top 5 World Cup Sleeper Teams"
+  slug: content-aaa111
+  stage: idea
+  description: "Underdog teams that could surprise in 2026"
+  source_type: manual
+  content_type: tiktok_video
+  position: 0
+
+hook_content:
+  title: "Group of Death Preview"
+  slug: content-bbb222
+  stage: hook
+  hook_ideas: '["This group is INSANE", "4 teams. Only 2 survive.", "Group of death revealed."]'
+  selected_hook_index: 1
+  source_type: manual
+  content_type: tiktok_video
+  hooked_at: 2026-04-18 10:00:00
+  position: 0
+
+script_content:
+  title: "Pulisic Hat Trick Breakdown"
+  slug: content-ccc333
+  stage: script
+  script_text: "Captain America just went CRAZY."
+  duration_seconds: 45
+  scenes: '[{"scene_number":1,"description":"Hook","duration_seconds":5},{"scene_number":2,"description":"Goal analysis","duration_seconds":15}]'
+  source_type: news
+  content_type: tiktok_video
+  hooked_at: 2026-04-17 10:00:00
+  scripted_at: 2026-04-17 14:00:00
+  position: 0
+
+posted_content:
+  title: "Messi's Last World Cup"
+  slug: content-ddd444
+  stage: posted
+  script_text: "The GOAT has spoken."
+  duration_seconds: 30
+  platform: tiktok
+  post_url: "https://tiktok.com/@mcritchie/video/example1"
+  post_id: tiktok_001
+  source_type: news
+  source_news_slug: news-eee555
+  content_type: tiktok_video
+  hooked_at: 2026-04-15 10:00:00
+  scripted_at: 2026-04-15 12:00:00
+  asset_at: 2026-04-15 14:00:00
+  assembled_at: 2026-04-15 16:00:00
+  posted_at: 2026-04-16 10:00:00
+  position: 0

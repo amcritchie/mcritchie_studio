@@ -12,6 +12,8 @@ All sensitive credentials are stored as environment variables, never in code.
 - `GOOGLE_CLIENT_SECRET` — Google OAuth client secret
 - `RAILS_MASTER_KEY` — Rails encrypted credentials key
 - `SOLANA_ADMIN_KEY` — Alex Bot's Solana private key (base58), used by Turf Monster for onchain operations
+- `ANTHROPIC_API_KEY` — Claude API key for AI chat (McRitchie Studio)
+- `X_BEARER_TOKEN` — X (Twitter) API bearer token for News intake (McRitchie Studio). See `docs/agents/system/news-pipeline.md` for setup.
 
 ## Development Defaults
 

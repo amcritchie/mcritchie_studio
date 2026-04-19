@@ -1,0 +1,9 @@
+messi_argentina:
+  person_slug: lionel-messi
+  team_slug: argentina
+  slug: lionel-messi-argentina
+
+pulisic_usa:
+  person_slug: christian-pulisic
+  team_slug: united-states
+  slug: christian-pulisic-united-states

@@ -10,6 +10,9 @@
     <a href="/dashboard" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Dashboard</a>
     <a href="/agents" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Agents</a>
     <a href="/tasks" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Tasks</a>
+    <a href="/news" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">News</a>
+    <a href="/contents" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Content</a>
+    <a href="/news/workflow" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">News Workflow</a>
     <div class="border-t border-subtle my-1"></div>
     <% turf_url = Rails.env.production? ? "https://turf.mcritchie.studio" : "http://localhost:3001" %>
     <a href="<%= turf_url + (logged_in? ? "/sso_login" : "") %>" target="_blank" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Turf Monster</a>

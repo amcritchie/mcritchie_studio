@@ -1,10 +1,25 @@
 class TasksController < ApplicationController
+  skip_before_action :verify_authenticity_token, if: -> { request.format.json? }
   skip_before_action :require_authentication, only: [:index, :show]
   before_action :require_admin, except: [:index, :show]
   before_action :set_task, only: [:show, :edit, :update, :destroy, :queue, :start, :complete, :fail_task, :archive]
 
+  def reorder
+    slugs = params[:slugs]
+    return render json: { error: "slugs required" }, status: :unprocessable_entity unless slugs.is_a?(Array)
+
+    rescue_and_log(target: nil) do
+      slugs.each_with_index do |slug, index|
+        Task.where(slug: slug).update_all(position: index)
+      end
+      render json: { success: true }
+    end
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
   def index
-    tasks = Task.recent
+    tasks = Task.ordered
     agent_filter = params[:agent_slug].presence || params[:agent].presence
     tasks = tasks.where(agent_slug: agent_filter) if agent_filter
     @tasks_by_stage = tasks.group_by(&:stage)
@@ -37,65 +52,109 @@ class TasksController < ApplicationController
   def update
     rescue_and_log(target: @task) do
       @task.update!(task_params)
-      redirect_to task_path(@task.slug), notice: "Task updated."
+      respond_to do |format|
+        format.html { redirect_to task_path(@task.slug), notice: "Task updated." }
+        format.json { render json: @task }
+      end
     end
   rescue StandardError => e
-    @agents = Agent.active.order(:position)
-    render :edit, status: :unprocessable_entity
+    respond_to do |format|
+      format.html do
+        @agents = Agent.active.order(:position)
+        render :edit, status: :unprocessable_entity
+      end
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    end
   end
 
   def queue
     rescue_and_log(target: @task) do
       @task.queue!
-      redirect_to task_path(@task.slug), notice: "Task queued."
+      respond_to do |format|
+        format.html { redirect_to task_path(@task.slug), notice: "Task queued." }
+        format.json { render json: @task }
+      end
     end
   rescue StandardError => e
-    redirect_to task_path(@task.slug), alert: e.message
+    respond_to do |format|
+      format.html { redirect_to task_path(@task.slug), alert: e.message }
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    end
   end
 
   def start
     rescue_and_log(target: @task) do
       @task.start!
-      redirect_to task_path(@task.slug), notice: "Task started."
+      respond_to do |format|
+        format.html { redirect_to task_path(@task.slug), notice: "Task started." }
+        format.json { render json: @task }
+      end
     end
   rescue StandardError => e
-    redirect_to task_path(@task.slug), alert: e.message
+    respond_to do |format|
+      format.html { redirect_to task_path(@task.slug), alert: e.message }
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    end
   end
 
   def complete
     rescue_and_log(target: @task) do
       @task.complete!
-      redirect_to task_path(@task.slug), notice: "Task completed."
+      respond_to do |format|
+        format.html { redirect_to task_path(@task.slug), notice: "Task completed." }
+        format.json { render json: @task }
+      end
     end
   rescue StandardError => e
-    redirect_to task_path(@task.slug), alert: e.message
+    respond_to do |format|
+      format.html { redirect_to task_path(@task.slug), alert: e.message }
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    end
   end
 
   def fail_task
     rescue_and_log(target: @task) do
       @task.fail!(params[:error_message])
-      redirect_to task_path(@task.slug), notice: "Task marked as failed."
+      respond_to do |format|
+        format.html { redirect_to task_path(@task.slug), notice: "Task marked as failed." }
+        format.json { render json: @task }
+      end
     end
   rescue StandardError => e
-    redirect_to task_path(@task.slug), alert: e.message
+    respond_to do |format|
+      format.html { redirect_to task_path(@task.slug), alert: e.message }
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    end
   end
 
   def archive
     rescue_and_log(target: @task) do
       @task.archive!
-      redirect_to task_path(@task.slug), notice: "Task archived."
+      respond_to do |format|
+        format.html { redirect_to task_path(@task.slug), notice: "Task archived." }
+        format.json { render json: @task }
+      end
     end
   rescue StandardError => e
-    redirect_to task_path(@task.slug), alert: e.message
+    respond_to do |format|
+      format.html { redirect_to task_path(@task.slug), alert: e.message }
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    end
   end
 
   def destroy
     rescue_and_log(target: @task) do
       @task.destroy!
-      redirect_to tasks_path, notice: "Task deleted."
+      respond_to do |format|
+        format.html { redirect_to tasks_path, notice: "Task deleted." }
+        format.json { head :no_content }
+      end
     end
   rescue StandardError => e
-    redirect_to tasks_path, alert: e.message
+    respond_to do |format|
+      format.html { redirect_to tasks_path, alert: e.message }
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    end
   end
 
   private
@@ -106,6 +165,6 @@ class TasksController < ApplicationController
   end
 
   def task_params
-    params.require(:task).permit(:title, :description, :priority, :agent_slug)
+    params.require(:task).permit(:title, :description, :priority, :agent_slug, :stage)
   end
 end

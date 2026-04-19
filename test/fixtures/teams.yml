@@ -1,0 +1,26 @@
+argentina:
+  name: Argentina
+  short_name: ARG
+  slug: argentina
+  location: Argentina
+  emoji: "🇦🇷"
+  color_primary: "#75AADB"
+  color_secondary: "#FFFFFF"
+
+brazil:
+  name: Brazil
+  short_name: BRA
+  slug: brazil
+  location: Brazil
+  emoji: "🇧🇷"
+  color_primary: "#009C3B"
+  color_secondary: "#FFDF00"
+
+usa:
+  name: United States
+  short_name: USA
+  slug: united-states
+  location: United States
+  emoji: "🇺🇸"
+  color_primary: "#002868"
+  color_secondary: "#BF0A30"

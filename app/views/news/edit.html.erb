@@ -1,0 +1,97 @@
+<section>
+  <div class="mb-6">
+    <%= link_to "&larr; Back to Article".html_safe, news_path(@news.slug), class: "text-secondary hover:text-heading text-sm transition" %>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+      <h2 class="text-2xl font-bold text-heading mb-6">Edit Article</h2>
+      <%= render "form", news: @news %>
+    </div>
+
+    <!-- People Search Sidebar -->
+    <div x-data="personSearch()" class="space-y-4">
+      <div class="card p-4 sticky top-20">
+        <p class="label-upper mb-3">People Search</p>
+        <input type="text" x-model="query" @input.debounce.300ms="search()"
+               class="input-field w-full mb-3" placeholder="Search by name or slug...">
+
+        <div class="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <template x-if="loading">
+            <p class="text-muted text-sm">Searching...</p>
+          </template>
+
+          <template x-if="!loading && query.length > 0 && results.length === 0">
+            <p class="text-muted text-sm">No people found</p>
+          </template>
+
+          <template x-for="person in results" :key="person.slug">
+            <div class="bg-surface-alt rounded-lg p-3 border border-subtle">
+              <div class="flex items-center justify-between">
+                <p class="text-heading text-sm font-semibold" x-text="person.full_name"></p>
+                <span class="text-[9px] text-muted font-mono" x-text="'#' + person.id"></span>
+              </div>
+              <p class="text-[10px] text-primary font-mono mt-0.5" x-text="person.slug"></p>
+              <template x-if="person.aliases && person.aliases.length > 0">
+                <p class="text-[10px] text-muted mt-0.5">aka <span x-text="person.aliases.join(', ')"></span></p>
+              </template>
+              <template x-if="person.teams && person.teams.length > 0">
+                <div class="flex flex-wrap gap-1 mt-1.5">
+                  <template x-for="team in person.teams" :key="team">
+                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-900/50 text-blue-300 border border-blue-700/50" x-text="team"></span>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <template x-if="!loading && query.length === 0">
+            <div class="space-y-2">
+              <p class="text-muted text-xs mb-2">Recent people</p>
+              <template x-for="person in recent" :key="person.slug">
+                <div class="bg-surface-alt rounded-lg p-3 border border-subtle">
+                  <div class="flex items-center justify-between">
+                    <p class="text-heading text-sm font-semibold" x-text="person.full_name"></p>
+                    <span class="text-[9px] text-muted font-mono" x-text="'#' + person.id"></span>
+                  </div>
+                  <p class="text-[10px] text-primary font-mono mt-0.5" x-text="person.slug"></p>
+                  <template x-if="person.teams && person.teams.length > 0">
+                    <div class="flex flex-wrap gap-1 mt-1.5">
+                      <template x-for="team in person.teams" :key="team">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-900/50 text-blue-300 border border-blue-700/50" x-text="team"></span>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function personSearch() {
+  return {
+    query: '',
+    results: [],
+    recent: <%= raw Person.order(created_at: :desc).limit(10).map { |p|
+      { id: p.id, slug: p.slug, full_name: p.full_name, aliases: p.aliases, teams: p.teams.pluck(:name) }
+    }.to_json %>,
+    loading: false,
+
+    async search() {
+      const q = this.query.trim();
+      if (q.length === 0) { this.results = []; return; }
+      this.loading = true;
+      try {
+        const resp = await fetch('/people/search.json?q=' + encodeURIComponent(q));
+        if (resp.ok) this.results = await resp.json();
+      } catch(e) {}
+      this.loading = false;
+    }
+  }
+}
+</script>

@@ -1,0 +1,17 @@
+messi:
+  first_name: Lionel
+  last_name: Messi
+  slug: lionel-messi
+  athlete: true
+
+pulisic:
+  first_name: Christian
+  last_name: Pulisic
+  slug: christian-pulisic
+  athlete: true
+
+neymar:
+  first_name: Neymar
+  last_name: Jr
+  slug: neymar-jr
+  athlete: true

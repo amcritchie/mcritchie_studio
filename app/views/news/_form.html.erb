@@ -1,0 +1,193 @@
+<div class="card p-6">
+  <% if news.errors.any? %>
+    <div class="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
+      <% news.errors.full_messages.each do |msg| %>
+        <p><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= form_with model: news, url: news.persisted? ? news_path(news.slug) : news_index_path do |f| %>
+    <!-- Source (New stage) -->
+    <p class="label-upper mb-3">Source</p>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Title</label>
+      <%= f.text_field :title, class: "input-field", placeholder: "Article title" %>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">URL</label>
+        <%= f.url_field :url, class: "input-field", placeholder: "https://..." %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Author</label>
+        <%= f.text_field :author, class: "input-field", placeholder: "Author name" %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">X Post ID</label>
+        <%= f.text_field :x_post_id, class: "input-field", placeholder: "Post ID" %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">X Post URL</label>
+        <%= f.url_field :x_post_url, class: "input-field", placeholder: "https://x.com/..." %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Published At</label>
+        <%= f.datetime_local_field :published_at, class: "input-field" %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Stage</label>
+        <%= f.select :stage, News::STAGES.map { |s| [s.humanize, s] }, {}, class: "input-field" %>
+      </div>
+    </div>
+
+    <hr class="border-subtle my-6">
+
+    <!-- Reviewed (Mason) -->
+    <p class="label-upper mb-3">Reviewed <span class="text-muted">(Mason)</span></p>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Primary Person</label>
+        <%= f.text_field :primary_person, class: "input-field", placeholder: "e.g. Lionel Messi" %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Primary Team</label>
+        <%= f.text_field :primary_team, class: "input-field", placeholder: "e.g. Argentina" %>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Primary Action</label>
+      <%= f.text_field :primary_action, class: "input-field", placeholder: "e.g. Transfer, Injury, Goal" %>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Secondary Person</label>
+        <%= f.text_field :secondary_person, class: "input-field" %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Secondary Team</label>
+        <%= f.text_field :secondary_team, class: "input-field" %>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Article Image URL</label>
+      <%= f.url_field :article_image_url, class: "input-field", placeholder: "https://..." %>
+    </div>
+
+    <hr class="border-subtle my-6">
+
+    <!-- Processed (Mack) -->
+    <p class="label-upper mb-3">Processed <span class="text-muted">(Mack)</span></p>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Primary Person Slug</label>
+        <%= f.text_field :primary_person_slug, class: "input-field", placeholder: "lionel-messi" %>
+        <% if news.primary_person_slug.present? %>
+          <% rec = Person.find_by(slug: news.primary_person_slug) %>
+          <p class="mt-1 text-[10px] font-mono flex items-center gap-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full <%= rec ? 'bg-green-400' : 'bg-red-400' %>"></span>
+            <span class="<%= rec ? 'text-green-400' : 'text-red-400' %>"><%= rec ? "found" : "missing" %></span>
+          </p>
+        <% end %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Primary Team Slug</label>
+        <%= f.text_field :primary_team_slug, class: "input-field", placeholder: "argentina" %>
+        <% if news.primary_team_slug.present? %>
+          <% rec = Team.find_by(slug: news.primary_team_slug) %>
+          <p class="mt-1 text-[10px] font-mono flex items-center gap-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full <%= rec ? 'bg-green-400' : 'bg-red-400' %>"></span>
+            <span class="<%= rec ? 'text-green-400' : 'text-red-400' %>"><%= rec ? "found" : "missing" %></span>
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Secondary Person Slug</label>
+        <%= f.text_field :secondary_person_slug, class: "input-field" %>
+        <% if news.secondary_person_slug.present? %>
+          <% rec = Person.find_by(slug: news.secondary_person_slug) %>
+          <p class="mt-1 text-[10px] font-mono flex items-center gap-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full <%= rec ? 'bg-green-400' : 'bg-red-400' %>"></span>
+            <span class="<%= rec ? 'text-green-400' : 'text-red-400' %>"><%= rec ? "found" : "missing" %></span>
+          </p>
+        <% end %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Secondary Team Slug</label>
+        <%= f.text_field :secondary_team_slug, class: "input-field" %>
+        <% if news.secondary_team_slug.present? %>
+          <% rec = Team.find_by(slug: news.secondary_team_slug) %>
+          <p class="mt-1 text-[10px] font-mono flex items-center gap-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full <%= rec ? 'bg-green-400' : 'bg-red-400' %>"></span>
+            <span class="<%= rec ? 'text-green-400' : 'text-red-400' %>"><%= rec ? "found" : "missing" %></span>
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <hr class="border-subtle my-6">
+
+    <!-- Refined (Alex) -->
+    <p class="label-upper mb-3">Refined <span class="text-muted">(Alex)</span></p>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Short Title</label>
+      <%= f.text_field :title_short, class: "input-field", placeholder: "Concise headline" %>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Summary</label>
+      <%= f.text_area :summary, rows: 3, class: "input-field", placeholder: "Article summary..." %>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Feeling</label>
+        <%= f.text_field :feeling, class: "input-field", placeholder: "e.g. excited" %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Feeling Emoji</label>
+        <%= f.text_field :feeling_emoji, class: "input-field", placeholder: "e.g. 🔥" %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">What Happened</label>
+        <%= f.text_field :what_happened, class: "input-field", placeholder: "e.g. Star player traded" %>
+      </div>
+    </div>
+
+    <hr class="border-subtle my-6">
+
+    <!-- Concluded (Turf Monster) -->
+    <p class="label-upper mb-3">Concluded <span class="text-muted">(Turf Monster)</span></p>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Opinion</label>
+      <%= f.text_area :opinion, rows: 3, class: "input-field", placeholder: "Turf Monster's take..." %>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Callback</label>
+      <%= f.text_area :callback, rows: 3, class: "input-field", placeholder: "Content idea or follow-up..." %>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg">
+      <%= news.persisted? ? "Update Article" : "Create Article" %>
+    </button>
+  <% end %>
+</div>

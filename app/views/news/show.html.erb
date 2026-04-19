@@ -1,0 +1,267 @@
+<section>
+  <div class="mb-6 flex items-center justify-between">
+    <%= link_to "&larr; All News".html_safe, news_index_path, class: "text-secondary hover:text-heading text-sm transition" %>
+    <% if logged_in? %>
+      <%= link_to "Edit", edit_news_path(@news.slug), class: "btn btn-outline btn-sm" %>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="card p-6">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-heading"><%= @news.title %></h2>
+            <% if @news.title_short.present? && @news.title_short != @news.title %>
+              <p class="text-secondary text-sm mt-1"><%= @news.title_short %></p>
+            <% end %>
+            <div class="flex items-center gap-3 mt-2">
+              <%= render "components/badge", text: @news.stage.humanize, scheme: news_stage_scheme(@news.stage) %>
+              <% if @news.feeling_emoji.present? %>
+                <span class="text-lg"><%= @news.feeling_emoji %></span>
+              <% end %>
+              <% if @news.feeling.present? %>
+                <span class="text-xs text-secondary"><%= @news.feeling %></span>
+              <% end %>
+            </div>
+          </div>
+          <span class="text-xs text-muted font-mono"><%= @news.slug %></span>
+        </div>
+
+        <% if @news.article_image_url.present? %>
+          <div class="mb-4 rounded-lg overflow-hidden">
+            <img src="<%= @news.article_image_url %>" alt="Article image" class="w-full h-48 object-cover">
+          </div>
+        <% end %>
+
+        <% if @news.summary.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Summary</p>
+            <p class="text-body text-sm whitespace-pre-wrap"><%= @news.summary %></p>
+          </div>
+        <% end %>
+
+        <% if @news.what_happened.present? %>
+          <div class="mb-4">
+            <p class="label-upper">What Happened</p>
+            <p class="text-body text-sm"><%= @news.what_happened %></p>
+          </div>
+        <% end %>
+
+        <% if @news.opinion.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Opinion</p>
+            <p class="text-body text-sm whitespace-pre-wrap"><%= @news.opinion %></p>
+          </div>
+        <% end %>
+
+        <% if @news.callback.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Callback</p>
+            <p class="text-body text-sm whitespace-pre-wrap"><%= @news.callback %></p>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @news.stage == "new" && logged_in? %>
+        <div class="card p-6">
+          <p class="label-upper mb-4">Review — Identify People & Teams</p>
+          <%= form_tag review_news_path(@news.slug), method: :post, class: "space-y-4" do %>
+            <div>
+              <label class="text-xs text-muted uppercase tracking-wider block mb-1">Primary Person *</label>
+              <input type="text" name="primary_person" required placeholder='e.g. "Patrick Mahomes"' class="input-field w-full">
+            </div>
+            <div>
+              <label class="text-xs text-muted uppercase tracking-wider block mb-1">Primary Team *</label>
+              <input type="text" name="primary_team" required placeholder='e.g. "Kansas City Chiefs"' class="input-field w-full">
+            </div>
+            <div>
+              <label class="text-xs text-muted uppercase tracking-wider block mb-1">Primary Action *</label>
+              <input type="text" name="primary_action" required placeholder='e.g. "extended", "traded", "injured"' class="input-field w-full">
+            </div>
+            <div>
+              <label class="text-xs text-muted uppercase tracking-wider block mb-1">Secondary Person</label>
+              <input type="text" name="secondary_person" placeholder='e.g. "Dak Prescott"' class="input-field w-full">
+            </div>
+            <div>
+              <label class="text-xs text-muted uppercase tracking-wider block mb-1">Secondary Team</label>
+              <input type="text" name="secondary_team" placeholder='e.g. "Dallas Cowboys"' class="input-field w-full">
+            </div>
+            <div>
+              <label class="text-xs text-muted uppercase tracking-wider block mb-1">Article Image URL</label>
+              <input type="url" name="article_image_url" placeholder="https://..." class="input-field w-full">
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Submit Review</button>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+      <!-- Info Card -->
+      <div class="card p-6">
+        <p class="label-upper mb-3">Details</p>
+
+        <div class="space-y-3">
+          <% if @news.author.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">Author</p>
+              <p class="text-heading text-sm"><%= @news.author %></p>
+            </div>
+          <% end %>
+
+          <% if @news.published_at.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">Published</p>
+              <p class="text-heading text-sm"><%= @news.published_at.strftime("%b %d, %Y %H:%M") %></p>
+            </div>
+          <% end %>
+
+          <% if @news.url.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">Source</p>
+              <a href="<%= @news.url %>" target="_blank" class="text-primary text-sm hover:text-primary-300 truncate block"><%= @news.url.gsub(%r{https?://}, '').truncate(40) %></a>
+            </div>
+          <% end %>
+
+          <% if @news.x_post_url.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">X Post</p>
+              <a href="<%= @news.x_post_url %>" target="_blank" class="text-primary text-sm hover:text-primary-300">View Post</a>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Person/Team Card -->
+      <% if @news.primary_person.present? || @news.primary_team.present? || @news.secondary_person.present? || @news.secondary_team.present? %>
+        <div class="card p-6">
+          <p class="label-upper mb-3">People & Teams</p>
+          <div class="space-y-3">
+            <% if @news.primary_person.present? %>
+              <div>
+                <p class="text-[10px] text-muted uppercase tracking-wider">Primary Person</p>
+                <p class="text-heading text-sm"><%= @news.primary_person %></p>
+                <% if @news.primary_person_slug.present? %>
+                  <% person_record = Person.find_by(slug: @news.primary_person_slug) %>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full <%= person_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
+                    <span class="text-[10px] font-mono <%= person_record ? 'text-primary hover:text-primary-300' : 'text-muted' %>"><%= @news.primary_person_slug %></span>
+                    <span class="text-[9px] text-muted"><%= person_record ? 'found' : 'missing' %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            <% if @news.primary_team.present? %>
+              <div>
+                <p class="text-[10px] text-muted uppercase tracking-wider">Primary Team</p>
+                <p class="text-heading text-sm"><%= @news.primary_team %></p>
+                <% if @news.primary_team_slug.present? %>
+                  <% team_record = Team.find_by(slug: @news.primary_team_slug) %>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full <%= team_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
+                    <span class="text-[10px] font-mono <%= team_record ? 'text-primary hover:text-primary-300' : 'text-muted' %>"><%= @news.primary_team_slug %></span>
+                    <span class="text-[9px] text-muted"><%= team_record ? 'found' : 'missing' %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            <% if @news.secondary_person.present? %>
+              <div>
+                <p class="text-[10px] text-muted uppercase tracking-wider">Secondary Person</p>
+                <p class="text-heading text-sm"><%= @news.secondary_person %></p>
+                <% if @news.secondary_person_slug.present? %>
+                  <% person_record = Person.find_by(slug: @news.secondary_person_slug) %>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full <%= person_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
+                    <span class="text-[10px] font-mono <%= person_record ? 'text-primary hover:text-primary-300' : 'text-muted' %>"><%= @news.secondary_person_slug %></span>
+                    <span class="text-[9px] text-muted"><%= person_record ? 'found' : 'missing' %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            <% if @news.secondary_team.present? %>
+              <div>
+                <p class="text-[10px] text-muted uppercase tracking-wider">Secondary Team</p>
+                <p class="text-heading text-sm"><%= @news.secondary_team %></p>
+                <% if @news.secondary_team_slug.present? %>
+                  <% team_record = Team.find_by(slug: @news.secondary_team_slug) %>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full <%= team_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
+                    <span class="text-[10px] font-mono <%= team_record ? 'text-primary hover:text-primary-300' : 'text-muted' %>"><%= @news.secondary_team_slug %></span>
+                    <span class="text-[9px] text-muted"><%= team_record ? 'found' : 'missing' %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Timeline Card -->
+      <div class="card p-6">
+        <p class="label-upper mb-3">Timeline</p>
+        <div class="space-y-2">
+          <div class="bg-surface-alt rounded-lg p-3">
+            <p class="text-[10px] text-muted uppercase tracking-wider">Created</p>
+            <p class="text-heading text-sm"><%= @news.created_at.strftime("%b %d, %H:%M") %></p>
+          </div>
+          <% if @news.reviewed_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Reviewed</p>
+              <p class="text-heading text-sm"><%= @news.reviewed_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @news.processed_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Processed</p>
+              <p class="text-heading text-sm"><%= @news.processed_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @news.refined_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Refined</p>
+              <p class="text-heading text-sm"><%= @news.refined_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @news.concluded_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Concluded</p>
+              <p class="text-heading text-sm"><%= @news.concluded_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @news.archived_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Archived</p>
+              <p class="text-heading text-sm"><%= @news.archived_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <% if logged_in? %>
+        <div class="flex flex-wrap gap-2">
+          <% if @news.stage == "reviewed" %>
+            <%= button_to "Process (auto)", process_step_news_path(@news.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% if @news.stage == "processed" %>
+            <%= button_to "Refine (auto)", refine_news_path(@news.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% if @news.stage == "refined" %>
+            <%= button_to "Conclude (auto)", conclude_news_path(@news.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% if @news.stage == "concluded" %>
+            <%= button_to "Create Content", create_content_news_path(@news.slug), class: "btn btn-secondary btn-sm" %>
+          <% end %>
+          <% unless @news.stage == "archived" %>
+            <%= button_to "Archive", archive_news_path(@news.slug), class: "btn bg-surface-alt text-body hover:bg-inset" %>
+          <% end %>
+          <%= button_to "Delete", news_path(@news.slug), method: :delete, class: "btn btn-danger", data: { turbo_confirm: "Delete this news item?" } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>

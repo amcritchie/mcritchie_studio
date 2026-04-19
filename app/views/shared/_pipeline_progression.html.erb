@@ -1,0 +1,38 @@
+<%# locals: (highlight:) — "news" or "content" %>
+<% news_steps = [
+  { num: 1, label: "new" },
+  { num: 2, label: "reviewed" },
+  { num: 3, label: "processed" },
+  { num: 4, label: "refined" },
+  { num: 5, label: "concluded" }
+] %>
+<% content_steps = [
+  { num: 6, label: "idea" },
+  { num: 7, label: "hook" },
+  { num: 8, label: "script" },
+  { num: 9, label: "assets" },
+  { num: 10, label: "assembly" },
+  { num: 11, label: "posted" },
+  { num: 12, label: "reviewed" }
+] %>
+
+<div class="flex items-center gap-1 mb-4 px-1 text-[11px] font-mono text-muted overflow-x-auto flex-wrap">
+  <% news_steps.each_with_index do |step, i| %>
+    <span class="whitespace-nowrap <%= highlight == 'news' ? 'text-secondary' : 'opacity-40' %>"><%= step[:num] %>.<%= step[:label] %></span>
+    <% if i < news_steps.length - 1 %>
+      <span class="<%= highlight == 'news' ? 'text-muted' : 'opacity-40' %>">&rarr;</span>
+    <% end %>
+  <% end %>
+
+  <%# Archived branches off concluded %>
+  <span class="opacity-40 whitespace-nowrap">&darr; archived</span>
+
+  <span class="text-muted">&rarr;</span>
+
+  <% content_steps.each_with_index do |step, i| %>
+    <span class="whitespace-nowrap <%= highlight == 'content' ? 'text-secondary' : 'opacity-40' %>"><%= step[:num] %>.<%= step[:label] %></span>
+    <% unless i == content_steps.length - 1 %>
+      <span class="<%= highlight == 'content' ? 'text-muted' : 'opacity-40' %>">&rarr;</span>
+    <% end %>
+  <% end %>
+</div>

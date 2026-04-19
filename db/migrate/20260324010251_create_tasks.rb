@@ -11,6 +11,7 @@ class CreateTasks < ActiveRecord::Migration[7.2]
       t.jsonb :result, default: {}
       t.jsonb :metadata, default: {}
       t.text :error_message
+      t.integer :position
 
       t.datetime :queued_at
       t.datetime :started_at
@@ -26,5 +27,6 @@ class CreateTasks < ActiveRecord::Migration[7.2]
     add_index :tasks, :agent_slug
     add_index :tasks, :priority
     add_index :tasks, [:stage, :created_at], name: "index_tasks_on_stage_and_created_at"
+    add_index :tasks, [:stage, :position], name: "index_tasks_on_stage_and_position"
   end
 end

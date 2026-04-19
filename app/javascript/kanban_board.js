@@ -77,10 +77,10 @@ function kanbanBoard() {
       let url, method, body;
 
       if (transitionName) {
-        url = '/api/v1/tasks/' + slug + '/' + transitionName;
+        url = '/tasks/' + slug + '/' + transitionName + '.json';
         method = 'POST';
       } else {
-        url = '/api/v1/tasks/' + slug;
+        url = '/tasks/' + slug + '.json';
         method = 'PATCH';
         body = JSON.stringify({ stage: newStage });
       }
@@ -130,7 +130,7 @@ function kanbanBoard() {
 
       try {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        const resp = await fetch('/api/v1/tasks/' + slug + '/archive', {
+        const resp = await fetch('/tasks/' + slug + '/archive.json', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
         });
@@ -161,7 +161,7 @@ function kanbanBoard() {
 
       try {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        const resp = await fetch('/api/v1/tasks/' + slug, {
+        const resp = await fetch('/tasks/' + slug + '.json', {
           method: 'DELETE',
           headers: { 'X-CSRF-Token': csrfToken }
         });

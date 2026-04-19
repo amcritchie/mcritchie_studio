@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   # HTML
   resources :agents, only: [:index, :show], param: :slug
   resources :tasks, param: :slug do
+    collection do
+      post :reorder
+    end
     member do
       post :queue
       post :start
@@ -26,6 +29,34 @@ Rails.application.routes.draw do
       post :archive
     end
   end
+  resources :news, param: :slug do
+    collection do
+      get :workflow
+      post :reorder
+    end
+    member do
+      post :archive
+      post :review
+      post :process_step
+      post :refine
+      post :conclude
+      post :create_content
+    end
+  end
+  resources :contents, param: :slug do
+    collection do
+      post :reorder
+    end
+    member do
+      post :hook_step
+      post :script_step
+      post :assets_step
+      post :assemble_step
+      post :post_step
+      post :review_step
+    end
+  end
+  get "people/search", to: "people#search", as: :search_people
   resources :activities, only: [:index]
   resources :usages, only: [:index]
 

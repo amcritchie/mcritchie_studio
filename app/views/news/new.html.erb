@@ -1,0 +1,10 @@
+<section>
+  <div class="mb-6">
+    <%= link_to "&larr; All News".html_safe, news_index_path, class: "text-secondary hover:text-heading text-sm transition" %>
+  </div>
+
+  <div class="max-w-2xl">
+    <h2 class="text-2xl font-bold text-heading mb-6">New Article</h2>
+    <%= render "form", news: @news %>
+  </div>
+</section>

@@ -1,0 +1,245 @@
+<section>
+  <div class="mb-6 flex items-center justify-between">
+    <%= link_to "&larr; All Content".html_safe, contents_path, class: "text-secondary hover:text-heading text-sm transition" %>
+    <% if logged_in? %>
+      <%= link_to "Edit", edit_content_path(@content.slug), class: "btn btn-outline btn-sm" %>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="card p-6">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-heading"><%= @content.title %></h2>
+            <div class="flex items-center gap-3 mt-2">
+              <%= render "components/badge", text: @content.stage.humanize, scheme: content_stage_scheme(@content.stage) %>
+              <% if @content.content_type.present? %>
+                <span class="text-xs text-secondary"><%= @content.content_type.humanize %></span>
+              <% end %>
+            </div>
+          </div>
+          <span class="text-xs text-muted font-mono"><%= @content.slug %></span>
+        </div>
+
+        <% if @content.description.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Description</p>
+            <p class="text-body text-sm whitespace-pre-wrap"><%= @content.description %></p>
+          </div>
+        <% end %>
+
+        <% if @content.hook_ideas.present? && @content.hook_ideas.any? %>
+          <div class="mb-4">
+            <p class="label-upper">Hook Ideas</p>
+            <div class="space-y-2 mt-1">
+              <% @content.hook_ideas.each_with_index do |hook, i| %>
+                <div class="bg-surface-alt rounded-lg p-3 text-sm text-body flex items-start gap-2">
+                  <% if @content.selected_hook_index == i %>
+                    <span class="text-primary font-bold text-xs mt-0.5">SELECTED</span>
+                  <% else %>
+                    <span class="text-muted text-xs mt-0.5"><%= i + 1 %>.</span>
+                  <% end %>
+                  <span><%= hook %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if @content.hook_image_url.present? %>
+          <div class="mb-4 rounded-lg overflow-hidden">
+            <p class="label-upper mb-1">Hook Image</p>
+            <img src="<%= @content.hook_image_url %>" alt="Hook image" class="w-full h-48 object-cover rounded-lg">
+          </div>
+        <% end %>
+
+        <% if @content.script_text.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Script</p>
+            <p class="text-body text-sm whitespace-pre-wrap"><%= @content.script_text %></p>
+          </div>
+        <% end %>
+
+        <% if @content.scenes.present? && @content.scenes.any? %>
+          <div class="mb-4">
+            <p class="label-upper">Scenes</p>
+            <div class="space-y-2 mt-1">
+              <% @content.scenes.each do |scene| %>
+                <div class="bg-surface-alt rounded-lg p-3">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-bold text-heading">Scene <%= scene["scene_number"] %></span>
+                    <% if scene["duration_seconds"] %>
+                      <span class="text-[10px] text-muted"><%= scene["duration_seconds"] %>s</span>
+                    <% end %>
+                  </div>
+                  <% if scene["description"] %>
+                    <p class="text-sm text-body"><%= scene["description"] %></p>
+                  <% end %>
+                  <% if scene["screen_direction"] %>
+                    <p class="text-[10px] text-secondary mt-1"><%= scene["screen_direction"] %></p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if @content.final_video_url.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Final Video</p>
+            <a href="<%= @content.final_video_url %>" target="_blank" class="text-primary text-sm hover:text-primary-300"><%= @content.final_video_url.truncate(60) %></a>
+          </div>
+        <% end %>
+
+        <% if @content.post_url.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Post</p>
+            <a href="<%= @content.post_url %>" target="_blank" class="text-primary text-sm hover:text-primary-300"><%= @content.post_url.truncate(60) %></a>
+          </div>
+        <% end %>
+
+        <% if @content.review_notes.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Review Notes</p>
+            <p class="text-body text-sm whitespace-pre-wrap"><%= @content.review_notes %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+      <!-- Details Card -->
+      <div class="card p-6">
+        <p class="label-upper mb-3">Details</p>
+        <div class="space-y-3">
+          <% if @content.source_type.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">Source</p>
+              <p class="text-heading text-sm"><%= @content.source_type.humanize %></p>
+            </div>
+          <% end %>
+
+          <% if @content.source_news.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">From News</p>
+              <a href="<%= news_path(@content.source_news.slug) %>" class="text-primary text-sm hover:text-primary-300"><%= @content.source_news.title.truncate(40) %></a>
+            </div>
+          <% end %>
+
+          <% if @content.duration_seconds.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">Duration</p>
+              <p class="text-heading text-sm"><%= @content.duration_seconds %>s</p>
+            </div>
+          <% end %>
+
+          <% if @content.platform.present? && @content.stage == "posted" || @content.stage == "reviewed" %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">Platform</p>
+              <p class="text-heading text-sm"><%= @content.platform.humanize %></p>
+            </div>
+          <% end %>
+
+          <% if @content.views.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">Performance</p>
+              <div class="grid grid-cols-2 gap-2 mt-1">
+                <div class="bg-surface-alt rounded p-2 text-center">
+                  <p class="text-heading font-bold text-sm"><%= number_with_delimiter(@content.views) %></p>
+                  <p class="text-[10px] text-muted">Views</p>
+                </div>
+                <div class="bg-surface-alt rounded p-2 text-center">
+                  <p class="text-heading font-bold text-sm"><%= number_with_delimiter(@content.likes || 0) %></p>
+                  <p class="text-[10px] text-muted">Likes</p>
+                </div>
+                <div class="bg-surface-alt rounded p-2 text-center">
+                  <p class="text-heading font-bold text-sm"><%= number_with_delimiter(@content.comments_count || 0) %></p>
+                  <p class="text-[10px] text-muted">Comments</p>
+                </div>
+                <div class="bg-surface-alt rounded p-2 text-center">
+                  <p class="text-heading font-bold text-sm"><%= number_with_delimiter(@content.shares || 0) %></p>
+                  <p class="text-[10px] text-muted">Shares</p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Timeline Card -->
+      <div class="card p-6">
+        <p class="label-upper mb-3">Timeline</p>
+        <div class="space-y-2">
+          <div class="bg-surface-alt rounded-lg p-3">
+            <p class="text-[10px] text-muted uppercase tracking-wider">Created</p>
+            <p class="text-heading text-sm"><%= @content.created_at.strftime("%b %d, %H:%M") %></p>
+          </div>
+          <% if @content.hooked_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Hooked</p>
+              <p class="text-heading text-sm"><%= @content.hooked_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @content.scripted_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Scripted</p>
+              <p class="text-heading text-sm"><%= @content.scripted_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @content.asset_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Assets</p>
+              <p class="text-heading text-sm"><%= @content.asset_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @content.assembled_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Assembled</p>
+              <p class="text-heading text-sm"><%= @content.assembled_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @content.posted_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Posted</p>
+              <p class="text-heading text-sm"><%= @content.posted_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if @content.reviewed_at %>
+            <div class="bg-surface-alt rounded-lg p-3">
+              <p class="text-[10px] text-muted uppercase tracking-wider">Reviewed</p>
+              <p class="text-heading text-sm"><%= @content.reviewed_at.strftime("%b %d, %H:%M") %></p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <% if logged_in? %>
+        <div class="flex flex-wrap gap-2">
+          <% if @content.stage == "idea" %>
+            <%= button_to "Hook", hook_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% if @content.stage == "hook" %>
+            <%= button_to "Script", script_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% if @content.stage == "script" %>
+            <%= button_to "Assets", assets_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% if @content.stage == "assets" %>
+            <%= button_to "Assemble", assemble_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% if @content.stage == "assembly" %>
+            <%= button_to "Post", post_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% if @content.stage == "posted" %>
+            <%= button_to "Review", review_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <%= button_to "Delete", content_path(@content.slug), method: :delete, class: "btn btn-danger btn-sm", data: { turbo_confirm: "Delete this content?" } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
