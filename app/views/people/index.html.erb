@@ -1,0 +1,96 @@
+<section x-data="{
+  search: '',
+  sport: 'all',
+  get filtered() {
+    const q = this.search.toLowerCase().trim();
+    const sp = this.sport;
+    const cards = document.querySelectorAll('[data-person-card]');
+    let count = 0;
+    cards.forEach(card => {
+      const name = (card.dataset.name || '').toLowerCase();
+      const cardSport = card.dataset.sport || '';
+      const matchSearch = !q || name.includes(q);
+      const matchSport = sp === 'all' || cardSport === sp;
+      const visible = matchSearch && matchSport;
+      card.style.display = visible ? '' : 'none';
+      if (visible) count++;
+    });
+    return count;
+  }
+}">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+    <h2 class="text-2xl font-bold text-heading">People</h2>
+    <div class="flex items-center gap-3 w-full sm:w-auto">
+      <input type="text"
+             x-model.debounce.300ms="search"
+             placeholder="Search people..."
+             class="input-field text-sm !py-2 !px-3 w-full sm:w-64">
+      <span class="text-sm text-muted whitespace-nowrap" x-text="filtered + ' people'"></span>
+    </div>
+  </div>
+
+  <%# Sport filter tabs %>
+  <div class="flex flex-wrap gap-2 mb-6">
+    <button class="btn btn-sm" :class="sport === 'all' ? 'btn-primary' : 'btn-outline'" @click="sport = 'all'">All</button>
+    <button class="btn btn-sm" :class="sport === 'football' ? 'btn-primary' : 'btn-outline'" @click="sport = 'football'">Football</button>
+    <button class="btn btn-sm" :class="sport === 'soccer' ? 'btn-primary' : 'btn-outline'" @click="sport = 'soccer'">Soccer</button>
+  </div>
+
+  <% if @people.empty? %>
+    <%= render "components/empty_state", message: "No people yet." %>
+  <% else %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <% @people.each do |person| %>
+        <% athlete = person.athlete_profile %>
+        <% active_contracts = person.contracts.select(&:active?) %>
+        <% expired_contracts = person.contracts.select(&:expired?) %>
+        <div class="card p-4"
+             data-person-card
+             data-name="<%= "#{person.full_name} #{person.teams.map(&:name).join(' ')}".downcase %>"
+             data-sport="<%= athlete&.sport %>">
+          <div class="flex items-start gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="text-heading font-semibold truncate"><%= person.full_name %></p>
+              <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                <% if athlete&.position.present? %>
+                  <span class="badge bg-primary/10 text-primary border-primary/20 text-xs"><%= athlete.position %></span>
+                <% end %>
+                <% if athlete&.sport.present? %>
+                  <span class="badge bg-surface-alt text-secondary border-subtle text-xs"><%= athlete.sport.capitalize %></span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <%# Team badges %>
+          <% if person.teams.any? %>
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <% person.contracts.each do |contract| %>
+                <% team = contract.team %>
+                <span class="inline-flex items-center gap-1 text-xs rounded px-1.5 py-0.5 border <%= contract.expired? ? 'border-subtle text-muted line-through' : 'border-subtle text-secondary' %>">
+                  <% if team.color_primary.present? %>
+                    <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" style="background-color: <%= team.color_primary %>"></span>
+                  <% end %>
+                  <%= team.emoji %> <%= team.short_name || team.name %>
+                </span>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%# Draft info + salary %>
+          <% if athlete&.draft_round.present? || active_contracts.any? { |c| c.annual_value_cents.to_i > 0 } %>
+            <div class="mt-2 pt-2 border-t border-subtle flex items-center gap-3">
+              <% if athlete&.draft_round.present? %>
+                <span class="text-xs text-muted">Round <%= athlete.draft_round %><%= ", Pick #{athlete.draft_pick}" if athlete.draft_pick.present? %></span>
+              <% end %>
+              <% top_contract = active_contracts.select { |c| c.annual_value_cents.to_i > 0 }.max_by(&:annual_value_cents) %>
+              <% if top_contract %>
+                <span class="text-xs text-primary font-semibold ml-auto">$<%= (top_contract.annual_value_cents / 100_000_000.0).round(1) %>M/yr</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</section>

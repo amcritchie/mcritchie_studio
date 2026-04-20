@@ -1,0 +1,86 @@
+<section x-data="{
+  search: '',
+  league: 'all',
+  get filtered() {
+    const q = this.search.toLowerCase().trim();
+    const lg = this.league;
+    const cards = document.querySelectorAll('[data-team-card]');
+    let count = 0;
+    cards.forEach(card => {
+      const name = (card.dataset.name || '').toLowerCase();
+      const cardLeague = card.dataset.league || '';
+      const matchSearch = !q || name.includes(q);
+      const matchLeague = lg === 'all' || cardLeague === lg;
+      const visible = matchSearch && matchLeague;
+      card.style.display = visible ? '' : 'none';
+      if (visible) count++;
+    });
+    return count;
+  }
+}">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+    <h2 class="text-2xl font-bold text-heading">Teams</h2>
+    <div class="flex items-center gap-3 w-full sm:w-auto">
+      <input type="text"
+             x-model.debounce.300ms="search"
+             placeholder="Search teams..."
+             class="input-field text-sm !py-2 !px-3 w-full sm:w-64">
+      <span class="text-sm text-muted whitespace-nowrap" x-text="filtered + ' teams'"></span>
+    </div>
+  </div>
+
+  <%# League filter tabs %>
+  <div class="flex flex-wrap gap-2 mb-6">
+    <button class="btn btn-sm" :class="league === 'all' ? 'btn-primary' : 'btn-outline'" @click="league = 'all'">All</button>
+    <button class="btn btn-sm" :class="league === 'nfl' ? 'btn-primary' : 'btn-outline'" @click="league = 'nfl'">NFL</button>
+    <button class="btn btn-sm" :class="league === 'ncaa' ? 'btn-primary' : 'btn-outline'" @click="league = 'ncaa'">NCAA</button>
+    <button class="btn btn-sm" :class="league === 'fifa' ? 'btn-primary' : 'btn-outline'" @click="league = 'fifa'">FIFA</button>
+  </div>
+
+  <% if @teams.empty? %>
+    <%= render "components/empty_state", message: "No teams yet." %>
+  <% else %>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <% @teams.each do |team| %>
+        <div class="card p-4"
+             data-team-card
+             data-name="<%= "#{team.name} #{team.short_name} #{team.location}".downcase %>"
+             data-league="<%= team.league %>">
+          <div class="flex items-center gap-2 mb-2">
+            <% if team.color_primary.present? %>
+              <div class="w-4 h-4 rounded-full flex-shrink-0 border border-white/20" style="background-color: <%= team.color_primary %>"></div>
+            <% end %>
+            <% if team.color_secondary.present? && team.color_secondary != team.color_primary %>
+              <div class="w-4 h-4 rounded-full flex-shrink-0 border border-white/20" style="background-color: <%= team.color_secondary %>"></div>
+            <% end %>
+            <span class="badge bg-surface-alt text-muted border-subtle text-xs ml-auto"><%= team.league&.upcase %></span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-xl flex-shrink-0"><%= team.emoji %></span>
+            <div class="min-w-0">
+              <p class="text-heading font-semibold text-sm truncate"><%= team.name %></p>
+              <% if team.short_name.present? %>
+                <span class="text-xs text-secondary font-mono"><%= team.short_name %></span>
+              <% end %>
+            </div>
+          </div>
+          <% if team.location.present? || team.conference.present? %>
+            <div class="mt-1 flex items-center gap-2">
+              <% if team.location.present? %>
+                <p class="text-xs text-muted truncate"><%= team.location %></p>
+              <% end %>
+              <% if team.conference.present? %>
+                <span class="text-xs text-secondary"><%= team.conference %><%= " #{team.division}" if team.division.present? %></span>
+              <% end %>
+            </div>
+          <% end %>
+          <% if team.people.any? %>
+            <div class="mt-2 pt-2 border-t border-subtle">
+              <p class="text-xs text-muted"><%= team.people.size %> people</p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</section>

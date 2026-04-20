@@ -2,8 +2,24 @@ messi_argentina:
   person_slug: lionel-messi
   team_slug: argentina
   slug: lionel-messi-argentina
+  position: FW
 
 pulisic_usa:
   person_slug: christian-pulisic
   team_slug: united-states
   slug: christian-pulisic-united-states
+  position: FW
+
+prospect_college:
+  person_slug: cam-ward
+  team_slug: michigan-wolverines
+  slug: cam-ward-michigan-wolverines
+  expires_at: "2026-04-01"
+  position: QB
+
+nfl_star:
+  person_slug: josh-allen
+  team_slug: buffalo-bills
+  slug: josh-allen-buffalo-bills
+  annual_value_cents: 5500000000
+  position: QB

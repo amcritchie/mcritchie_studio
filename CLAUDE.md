@@ -99,9 +99,10 @@ end
 - **Usage** — agent_slug FK, period_date, period_type, model, tokens_in/out, api_calls, cost (decimal 10,4), tasks_completed/failed, metadata (jsonb), slug.
 - **News** — title, slug (unique, random hex `news-*`, immutable), stage (new/reviewed/processed/refined/concluded/archived), url, x_post_id, x_post_url, author, published_at. Pipeline fields populated per stage: reviewed (primary/secondary person/team, primary_action, article_image_url), processed (*_slug fields linking to Person/Team/Contract records), refined (title_short, summary, feeling, feeling_emoji, what_happened), concluded (opinion, callback). Timestamps per stage. Position (integer, 100s increments DESC — highest = top of kanban = processed first by agents). Does NOT use Sluggable. Free movement between stages (like Tasks). Agent assignments: new=intake, reviewed=Mason, processed=Mack, refined=Alex, concluded=Turf Monster, archived=Alex.
 - **Content** — title, slug (unique, random hex `content-*`, immutable), stage (idea/hook/script/assets/assembly/posted/reviewed), description, source_type, source_news_slug. Pipeline fields per stage: hook (hook_image_url, hook_ideas JSONB, selected_hook_index), script (script_text, duration_seconds, scenes JSONB), assets (scene_assets JSONB), assembly (final_video_url, music_track, text_overlays JSONB, logo_overlay), posted (platform, post_url, post_id, posted_at), reviewed (views, likes, comments_count, shares, review_notes). Position (integer, 100s increments DESC). Stage timestamps set on before_save. `belongs_to :source_news` (optional, via slug FK). Transition methods: `hook!`, `script!`, `assets!`, `assemble!`, `post!`, `review!`. Does NOT use Sluggable.
-- **Team** — name, short_name, slug (unique), location, emoji, color_primary, color_secondary, color_text_light (boolean — true when primary color needs dark text). `include Sluggable`, `name_slug` = `name.parameterize`. Has many contracts/people. Seeded with 48 World Cup + 32 NFL teams (80 total).
-- **Person** — first_name, last_name, slug (unique), athlete (boolean), aliases (JSONB array, default `[]` — alternate name spellings). `include Sluggable`, `name_slug` = full name parameterized. Has many contracts/teams. Helper: `full_name`. Created automatically by `News::Process` when processing news articles.
-- **Contract** — person_slug, team_slug, slug (unique). `include Sluggable`, `name_slug` = `"#{person_slug}-#{team_slug}"`. Join table linking Person ↔ Team via slug FKs. Unique constraint on `[person_slug, team_slug]`. Created automatically by `News::Process`.
+- **Team** — name, short_name, slug (unique), location, emoji, color_primary, color_secondary, color_text_light (boolean — true when primary color needs dark text), sport (`"football"`/`"soccer"`), league (`"nfl"`/`"ncaa"`/`"fifa"`), conference (AFC/NFC, SEC/Big Ten, Group A-L), division (East/North/South/West — NFL only). `include Sluggable`, `name_slug` = `name.parameterize`. Has many contracts/people. Scopes: `nfl`, `ncaa`, `fifa`, `football`, `soccer`. Seeded with 32 NFL + 71 NCAA + 48 FIFA = 151 total.
+- **Person** — first_name, last_name, slug (unique), athlete (boolean), aliases (JSONB array, default `[]` — alternate name spellings). `include Sluggable`, `name_slug` = full name parameterized. Has many contracts/teams. `has_one :athlete_profile` (Athlete model via `person_slug`). Helper: `full_name`. Created automatically by `News::Process` when processing news articles.
+- **Athlete** — person_slug (unique FK to Person), sport (`"football"`/`"soccer"`), position (QB, WR, EDGE, FW, MF, GK, etc.), draft_year, draft_round, draft_pick. `include Sluggable`, `name_slug` = `"#{person_slug}-athlete"`. `belongs_to :person` via slug FK. **Note:** Person has a boolean `athlete` column AND `has_one :athlete_profile` — the association is named `athlete_profile` (not `athlete`) to avoid collision with the boolean column.
+- **Contract** — person_slug, team_slug, slug (unique), expires_at (date — college contracts expire April 1, 2026), annual_value_cents (bigint — NFL star salaries in cents, e.g. $55M = 5_500_000_000), position. `include Sluggable`, `name_slug` = `"#{person_slug}-#{team_slug}"`. Join table linking Person ↔ Team via slug FKs. Unique constraint on `[person_slug, team_slug]`. Helpers: `active?` (no expiry or future), `expired?` (past expiry). Created automatically by `News::Process`.
 - **ErrorLog** — message, inspect, backtrace (JSON), polymorphic target/parent, target_name, parent_name, slug.
 
 ## Database Standards
@@ -111,7 +112,7 @@ end
 ## Key Patterns
 
 - **Slug-based FKs** — All foreign keys use slug strings (e.g. `agent_slug`), not integer IDs. Associations: `foreign_key: :agent_slug, primary_key: :slug`.
-- **Sluggable concern** (from studio engine) — `before_save :set_slug` via `name_slug` method. Used by User, Agent, Skill, Usage, Team, Person, Contract.
+- **Sluggable concern** (from studio engine) — `before_save :set_slug` via `name_slug` method. Used by User, Agent, Skill, Usage, Team, Person, Contract, Athlete.
 - **Task slug** — Immutable random hex generated once on create via `before_validation`. Does NOT use Sluggable.
 - **Task transitions** — Enforced server-side. Valid transitions: new→queued, queued→in_progress/failed, in_progress→done/failed, done→archived, failed→archived/queued. Invalid transitions raise RuntimeError. API `task_params` does NOT permit `:stage` — stage changes must go through dedicated transition endpoints (`queue`, `start`, `complete`, `fail_task`, `archive`).
 - **Position ordering** — Both News and Content use position integers in 100-increments, ordered DESC (highest = top of kanban = processed first by agents). Initial position set on create. Position updated when stage changes. Reorder via POST `/news/reorder` or `/contents/reorder`.
@@ -238,16 +239,30 @@ Public-facing chat interface powered by Claude API. Users can chat with an AI Al
 
 ## Seeds
 
+Seeds are split into `db/seeds/` directory, loaded in order by `db/seeds.rb`:
+
+| File | Contents |
+|------|----------|
+| `01_users.rb` | 4 admin users |
+| `02_agents.rb` | 4 agents with avatars |
+| `03_skills.rb` | 9 skills + 15 assignments |
+| `04_tasks.rb` | 8 sample tasks |
+| `05_activities.rb` | 6 sample activities |
+| `06_news.rb` | 5 world cup articles + 34 NFL Draft tweets (@AdamSchefter) |
+| `07_contents.rb` | 4 content items across stages |
+| `10_teams_nfl.rb` | 32 NFL teams (sport/league/conference/division) |
+| `11_teams_ncaa.rb` | 71 NCAA teams (schools from 2025 draft picks) |
+| `12_teams_fifa.rb` | 48 FIFA World Cup 2026 teams (sport/league/group) |
+| `20_people_nfl_prospects.rb` | 100 draft prospects → Person + Athlete + college Contract |
+| `21_people_nfl_stars.rb` | 32 NFL stars (one per team) → Person + Athlete + Contract w/ salary |
+| `22_people_fifa_stars.rb` | 48 FIFA stars (one per team) → Person + Athlete + Contract |
+| `30_contracts.rb` | Summary (contracts created inline by 20-22 files) |
+
+**Totals:** 151 teams, 180 people, 180 athletes, 180 contracts. All idempotent via `find_or_create_by!`.
+
 - Admin: `alex@mcritchie.studio` / `password`
-- 4 agents with avatars: Alex (orchestrator), Mack (worker), Mason (specialist), Turf Monster (specialist). Avatar images in `public/agents/`. Seed force-updates avatars on existing records.
-- 9 skills across data/development/infrastructure/system/domain
-- 15 skill assignments
-- 8 sample tasks in various stages
-- 39 NFL Draft news articles from @AdamSchefter (2025 draft tweets, oldest→newest in array, `.reverse` before seeding so oldest = top of kanban). Deduped by `x_post_id`.
-- 4 sample content items across stages (idea, hook, script, posted). One linked to a concluded News article via `source_news_slug`.
-- 6 sample activities
-- 80 teams: 48 World Cup 2026 + 32 NFL (with `color_text_light` flag for light-primary teams)
-- All idempotent via `find_or_create_by!`
+- NFL Draft tweets: oldest→newest in array, `.reverse` before seeding so oldest = top of kanban. Deduped by `x_post_id`.
+- College contracts expire `2026-04-01`. NFL star contracts have `annual_value_cents` (bigint).
 
 ## Docs
 
@@ -260,11 +275,11 @@ Agent system documentation at `docs/agents/`:
 ## Testing
 
 ### Rails Tests
-- `bin/rails test` — 174 tests total
-- Test fixtures for users, agents, tasks, news, contents, skills, teams, people, contracts (in `test/fixtures/`)
+- `bin/rails test` — 182 tests total
+- Test fixtures for users, agents, tasks, news, contents, skills, teams, people, contracts, athletes (in `test/fixtures/`)
 - Test password: "password" for all fixtures
 - `log_in_as(user)` helper for integration tests
-- **Model tests**: task transitions (valid/invalid), news transitions/slug/position/validations, content slug/stages/position/source_news, user (display_name, admin?, avatar_initials, avatar_color, OAuth/`from_omniauth`), slug generation, team/person/contract associations and validations
+- **Model tests**: task transitions (valid/invalid), news transitions/slug/position/validations, content slug/stages/position/source_news, user (display_name, admin?, avatar_initials, avatar_color, OAuth/`from_omniauth`), slug generation, team/person/contract associations and validations, athlete slug/validations/person association
 - **Controller tests**: sessions (login/logout), registrations (signup), news (CRUD, stage moves, reorder, refine, conclude, create_content, auth enforcement), contents (CRUD, step actions, stage guards, auth enforcement), tasks (CRUD, stage moves, reorder, auth enforcement)
 
 ### Playwright E2E Tests

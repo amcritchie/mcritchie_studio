@@ -6,6 +6,9 @@ argentina:
   emoji: "🇦🇷"
   color_primary: "#75AADB"
   color_secondary: "#FFFFFF"
+  sport: soccer
+  league: fifa
+  conference: J
 
 brazil:
   name: Brazil
@@ -15,6 +18,9 @@ brazil:
   emoji: "🇧🇷"
   color_primary: "#009C3B"
   color_secondary: "#FFDF00"
+  sport: soccer
+  league: fifa
+  conference: C
 
 usa:
   name: United States
@@ -24,3 +30,31 @@ usa:
   emoji: "🇺🇸"
   color_primary: "#002868"
   color_secondary: "#BF0A30"
+  sport: soccer
+  league: fifa
+  conference: D
+
+buffalo_bills:
+  name: Buffalo Bills
+  short_name: BUF
+  slug: buffalo-bills
+  location: Buffalo
+  emoji: "🦬"
+  color_primary: "#00338D"
+  color_secondary: "#C60C30"
+  sport: football
+  league: nfl
+  conference: AFC
+  division: East
+
+michigan:
+  name: Michigan Wolverines
+  short_name: MICH
+  slug: michigan-wolverines
+  location: "Ann Arbor, MI"
+  emoji: "〽️"
+  color_primary: "#00274C"
+  color_secondary: "#FFCB05"
+  sport: football
+  league: ncaa
+  conference: Big Ten

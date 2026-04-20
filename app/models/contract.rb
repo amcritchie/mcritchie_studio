@@ -9,4 +9,12 @@ class Contract < ApplicationRecord
   def name_slug
     "#{person_slug}-#{team_slug}"
   end
+
+  def active?
+    expires_at.nil? || expires_at > Date.current
+  end
+
+  def expired?
+    expires_at.present? && expires_at <= Date.current
+  end
 end

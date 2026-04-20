@@ -1,0 +1,20 @@
+messi_athlete:
+  person_slug: lionel-messi
+  sport: soccer
+  position: FW
+  slug: lionel-messi-athlete
+
+ward_athlete:
+  person_slug: cam-ward
+  sport: football
+  position: QB
+  draft_year: 2025
+  draft_round: 1
+  draft_pick: 1
+  slug: cam-ward-athlete
+
+allen_athlete:
+  person_slug: josh-allen
+  sport: football
+  position: QB
+  slug: josh-allen-athlete

@@ -15,3 +15,15 @@ neymar:
   last_name: Jr
   slug: neymar-jr
   athlete: true
+
+cam_ward:
+  first_name: Cam
+  last_name: Ward
+  slug: cam-ward
+  athlete: true
+
+josh_allen:
+  first_name: Josh
+  last_name: Allen
+  slug: josh-allen
+  athlete: true

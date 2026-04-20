@@ -1,4 +1,10 @@
 class PeopleController < ApplicationController
+  skip_before_action :require_authentication, only: [:index]
+
+  def index
+    @people = Person.includes(:teams, :athlete_profile, contracts: :team).order(:last_name, :first_name)
+  end
+
   def search
     query = params[:q].to_s.strip
     people = if query.present?

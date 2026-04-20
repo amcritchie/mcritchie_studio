@@ -14,6 +14,9 @@
     <a href="/contents" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Content</a>
     <a href="/news/workflow" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">News Workflow</a>
     <div class="border-t border-subtle my-1"></div>
+    <a href="/teams" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Teams</a>
+    <a href="/people" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">People</a>
+    <div class="border-t border-subtle my-1"></div>
     <% turf_url = Rails.env.production? ? "https://turf.mcritchie.studio" : "http://localhost:3001" %>
     <a href="<%= turf_url + (logged_in? ? "/sso_login" : "") %>" target="_blank" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Turf Monster</a>
     <% tax_url = Rails.env.production? ? "https://tax.mcritchie.studio" : "http://localhost:3003" %>

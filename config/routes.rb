@@ -56,6 +56,8 @@ Rails.application.routes.draw do
       post :review_step
     end
   end
+  resources :teams, only: [:index], param: :slug
+  resources :people, only: [:index], param: :slug
   get "people/search", to: "people#search", as: :search_people
   resources :activities, only: [:index]
   resources :usages, only: [:index]

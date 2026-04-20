@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_19_200130) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_19_222312) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -76,6 +76,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_19_200130) do
     t.index ["status"], name: "index_agents_on_status"
   end
 
+  create_table "athletes", force: :cascade do |t|
+    t.string "person_slug", null: false
+    t.string "sport", null: false
+    t.string "position"
+    t.integer "draft_year"
+    t.integer "draft_round"
+    t.integer "draft_pick"
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["person_slug"], name: "index_athletes_on_person_slug", unique: true
+    t.index ["slug"], name: "index_athletes_on_slug", unique: true
+    t.index ["sport"], name: "index_athletes_on_sport"
+  end
+
   create_table "contents", force: :cascade do |t|
     t.string "stage", default: "idea", null: false
     t.integer "position"
@@ -124,6 +139,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_19_200130) do
     t.string "slug", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "expires_at"
+    t.bigint "annual_value_cents"
+    t.string "position"
     t.index ["person_slug", "team_slug"], name: "index_contracts_on_person_slug_and_team_slug", unique: true
     t.index ["person_slug"], name: "index_contracts_on_person_slug"
     t.index ["slug"], name: "index_contracts_on_slug", unique: true
@@ -328,7 +346,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_19_200130) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "color_text_light", default: false
+    t.string "sport"
+    t.string "league"
+    t.string "conference"
+    t.string "division"
     t.index ["slug"], name: "index_teams_on_slug", unique: true
+    t.index ["sport", "league"], name: "index_teams_on_sport_and_league"
   end
 
   create_table "theme_settings", force: :cascade do |t|
