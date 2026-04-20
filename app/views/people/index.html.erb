@@ -1,5 +1,5 @@
 <section x-data="{
-  search: '',
+  search: '<%= params[:q].to_s.gsub("'", "\\\\'") %>',
   sport: 'all',
   get filtered() {
     const q = this.search.toLowerCase().trim();

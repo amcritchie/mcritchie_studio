@@ -99,7 +99,11 @@
           <% rec = Person.find_by(slug: news.primary_person_slug) %>
           <p class="mt-1 text-[10px] font-mono flex items-center gap-1">
             <span class="inline-block w-1.5 h-1.5 rounded-full <%= rec ? 'bg-green-400' : 'bg-red-400' %>"></span>
-            <span class="<%= rec ? 'text-green-400' : 'text-red-400' %>"><%= rec ? "found" : "missing" %></span>
+            <% if rec %>
+              <a href="<%= people_path(q: rec.full_name) %>" class="text-green-400 hover:text-green-300 underline">found</a>
+            <% else %>
+              <span class="text-red-400">missing</span>
+            <% end %>
           </p>
         <% end %>
       </div>
@@ -110,7 +114,11 @@
           <% rec = Team.find_by(slug: news.primary_team_slug) %>
           <p class="mt-1 text-[10px] font-mono flex items-center gap-1">
             <span class="inline-block w-1.5 h-1.5 rounded-full <%= rec ? 'bg-green-400' : 'bg-red-400' %>"></span>
-            <span class="<%= rec ? 'text-green-400' : 'text-red-400' %>"><%= rec ? "found" : "missing" %></span>
+            <% if rec %>
+              <a href="<%= teams_path(q: rec.name) %>" class="text-green-400 hover:text-green-300 underline">found</a>
+            <% else %>
+              <span class="text-red-400">missing</span>
+            <% end %>
           </p>
         <% end %>
       </div>
@@ -124,7 +132,11 @@
           <% rec = Person.find_by(slug: news.secondary_person_slug) %>
           <p class="mt-1 text-[10px] font-mono flex items-center gap-1">
             <span class="inline-block w-1.5 h-1.5 rounded-full <%= rec ? 'bg-green-400' : 'bg-red-400' %>"></span>
-            <span class="<%= rec ? 'text-green-400' : 'text-red-400' %>"><%= rec ? "found" : "missing" %></span>
+            <% if rec %>
+              <a href="<%= people_path(q: rec.full_name) %>" class="text-green-400 hover:text-green-300 underline">found</a>
+            <% else %>
+              <span class="text-red-400">missing</span>
+            <% end %>
           </p>
         <% end %>
       </div>
@@ -135,7 +147,11 @@
           <% rec = Team.find_by(slug: news.secondary_team_slug) %>
           <p class="mt-1 text-[10px] font-mono flex items-center gap-1">
             <span class="inline-block w-1.5 h-1.5 rounded-full <%= rec ? 'bg-green-400' : 'bg-red-400' %>"></span>
-            <span class="<%= rec ? 'text-green-400' : 'text-red-400' %>"><%= rec ? "found" : "missing" %></span>
+            <% if rec %>
+              <a href="<%= teams_path(q: rec.name) %>" class="text-green-400 hover:text-green-300 underline">found</a>
+            <% else %>
+              <span class="text-red-400">missing</span>
+            <% end %>
           </p>
         <% end %>
       </div>

@@ -8,7 +8,7 @@ class News
       You are a sports news editor. Given a tweet/headline and context about the people and teams involved, generate a refined summary.
 
       Respond with ONLY a JSON object (no markdown, no explanation) with these fields:
-      - title_short: A punchy headline of exactly 3-5 words. No more than 5 words. Examples: "Mahomes Signs Record Extension", "Branch Arrested Before Draft", "Messi Retires From Argentina".
+      - title_short: A factual headline of exactly 3-5 words built from the PRIMARY person (or team) and the action. Format: "[Person/Team] [Action verb] [Object]". Focus on the raw event, not secondary context. Examples: "Mahomes Signs Record Extension", "Ward Drafted By Titans", "Messi Retires From Argentina".
       - summary: A 1-3 sentence summary of what happened and why it matters.
       - feeling: A single word describing the emotional tone (e.g. "excited", "concerned", "shocked", "hopeful", "bittersweet").
       - feeling_emoji: A single emoji that captures the feeling.
@@ -17,7 +17,7 @@ class News
       Examples:
       Tweet: "Breaking: Patrick Mahomes has agreed to a 10-year extension with the Kansas City Chiefs worth $450M"
       Context: Person=Patrick Mahomes, Team=Kansas City Chiefs, Action=extended
-      {"title_short":"Mahomes Signs Record Extension","summary":"Patrick Mahomes has locked in with the Kansas City Chiefs on a historic 10-year, $450 million extension, the richest deal in NFL history.","feeling":"hyped","feeling_emoji":"🔥","what_happened":"Patrick Mahomes agreed to a 10-year contract extension with the Chiefs."}
+      {"title_short":"Mahomes Signs Record Extension","summary":"Patrick Mahomes has locked in with the Kansas City Chiefs on a historic 10-year, $450 million extension, the richest deal in NFL history. The deal makes him the highest-paid player in NFL history.","feeling":"hyped","feeling_emoji":"🔥","what_happened":"Patrick Mahomes agreed to a 10-year, $450M contract extension with the Chiefs."}
     PROMPT
 
     def self.refine_latest

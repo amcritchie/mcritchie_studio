@@ -148,7 +148,11 @@
                   <% person_record = Person.find_by(slug: @news.primary_person_slug) %>
                   <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="inline-block w-1.5 h-1.5 rounded-full <%= person_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
-                    <span class="text-[10px] font-mono <%= person_record ? 'text-primary hover:text-primary-300' : 'text-muted' %>"><%= @news.primary_person_slug %></span>
+                    <% if person_record %>
+                      <a href="<%= people_path(q: person_record.full_name) %>" class="text-[10px] font-mono text-primary hover:text-primary-300"><%= @news.primary_person_slug %></a>
+                    <% else %>
+                      <span class="text-[10px] font-mono text-muted"><%= @news.primary_person_slug %></span>
+                    <% end %>
                     <span class="text-[9px] text-muted"><%= person_record ? 'found' : 'missing' %></span>
                   </div>
                 <% end %>
@@ -162,7 +166,11 @@
                   <% team_record = Team.find_by(slug: @news.primary_team_slug) %>
                   <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="inline-block w-1.5 h-1.5 rounded-full <%= team_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
-                    <span class="text-[10px] font-mono <%= team_record ? 'text-primary hover:text-primary-300' : 'text-muted' %>"><%= @news.primary_team_slug %></span>
+                    <% if team_record %>
+                      <a href="<%= teams_path(q: team_record.name) %>" class="text-[10px] font-mono text-primary hover:text-primary-300"><%= @news.primary_team_slug %></a>
+                    <% else %>
+                      <span class="text-[10px] font-mono text-muted"><%= @news.primary_team_slug %></span>
+                    <% end %>
                     <span class="text-[9px] text-muted"><%= team_record ? 'found' : 'missing' %></span>
                   </div>
                 <% end %>
@@ -176,7 +184,11 @@
                   <% person_record = Person.find_by(slug: @news.secondary_person_slug) %>
                   <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="inline-block w-1.5 h-1.5 rounded-full <%= person_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
-                    <span class="text-[10px] font-mono <%= person_record ? 'text-primary hover:text-primary-300' : 'text-muted' %>"><%= @news.secondary_person_slug %></span>
+                    <% if person_record %>
+                      <a href="<%= people_path(q: person_record.full_name) %>" class="text-[10px] font-mono text-primary hover:text-primary-300"><%= @news.secondary_person_slug %></a>
+                    <% else %>
+                      <span class="text-[10px] font-mono text-muted"><%= @news.secondary_person_slug %></span>
+                    <% end %>
                     <span class="text-[9px] text-muted"><%= person_record ? 'found' : 'missing' %></span>
                   </div>
                 <% end %>
@@ -190,7 +202,11 @@
                   <% team_record = Team.find_by(slug: @news.secondary_team_slug) %>
                   <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="inline-block w-1.5 h-1.5 rounded-full <%= team_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
-                    <span class="text-[10px] font-mono <%= team_record ? 'text-primary hover:text-primary-300' : 'text-muted' %>"><%= @news.secondary_team_slug %></span>
+                    <% if team_record %>
+                      <a href="<%= teams_path(q: team_record.name) %>" class="text-[10px] font-mono text-primary hover:text-primary-300"><%= @news.secondary_team_slug %></a>
+                    <% else %>
+                      <span class="text-[10px] font-mono text-muted"><%= @news.secondary_team_slug %></span>
+                    <% end %>
                     <span class="text-[9px] text-muted"><%= team_record ? 'found' : 'missing' %></span>
                   </div>
                 <% end %>
