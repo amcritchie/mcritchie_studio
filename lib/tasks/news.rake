@@ -76,7 +76,9 @@ namespace :news do
 
     puts "Concluded: #{news.title.truncate(80)} (#{news.slug})"
     puts "  Opinion:  #{news.opinion&.truncate(100)}"
-    puts "  Callback: #{news.callback&.truncate(100)}"
+    (news.callback_ideas || []).each_with_index do |idea, i|
+      puts "  Idea #{i + 1}:   #{idea.truncate(100)}"
+    end
     puts "Done — stage is now '#{news.stage}'"
   end
 

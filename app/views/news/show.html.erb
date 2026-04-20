@@ -56,10 +56,14 @@
           </div>
         <% end %>
 
-        <% if @news.callback.present? %>
+        <% if @news.callback_ideas.present? %>
           <div class="mb-4">
-            <p class="label-upper">Callback</p>
-            <p class="text-body text-sm whitespace-pre-wrap"><%= @news.callback %></p>
+            <p class="label-upper">Content Ideas</p>
+            <ul class="list-disc list-inside space-y-1">
+              <% @news.callback_ideas.each do |idea| %>
+                <li class="text-body text-sm"><%= idea %></li>
+              <% end %>
+            </ul>
           </div>
         <% end %>
       </div>

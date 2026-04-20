@@ -5,17 +5,17 @@ class News
     MAX_TOKENS = 512
 
     SYSTEM_PROMPT = <<~PROMPT
-      You are a sports content strategist for a pick'em gaming platform focused on the 2026 World Cup. Given a refined news article, generate an editorial opinion and a callback action.
+      You are a sports content strategist. Given a refined news article, generate a quick opinion and three content ideas.
 
       Respond with ONLY a JSON object (no markdown, no explanation) with these fields:
-      - opinion: A 2-4 sentence editorial take on the news from the perspective of a sports gaming platform. What does this mean for fans, bettors, and the tournament? Be opinionated but fair.
-      - callback: A 1-2 sentence action item — what content, feature, or follow-up should the platform create in response to this news? Be specific and actionable.
+      - opinion: One sentence — a simple, opinionated take on the news.
+      - callback_ideas: An array of exactly 3 strings. Each is a one-sentence content idea inspired by this news. Be specific and varied (e.g. a stat graphic, a video concept, a poll).
 
       Examples:
       Title: "Mahomes Signs Record $450M Extension"
       Summary: "Patrick Mahomes has locked in with the Kansas City Chiefs on a historic 10-year, $450 million extension."
       Feeling: hyped
-      {"opinion":"This is the kind of commitment that reshapes a franchise for a decade. Mahomes is the safest bet in football, and this extension means Chiefs props will be premium content for years. The real question is whether the cap hit affects their supporting cast.","callback":"Create a 'Mahomes Era' prop series highlighting key career milestones he could hit during the extension."}
+      {"opinion":"This is the safest bet in football and locks the Chiefs as contenders for a decade.","callback_ideas":["Infographic comparing Mahomes' deal to the top 10 NFL contracts of all time.","Poll: Will Mahomes win another Super Bowl before the extension ends?","Video breakdown of how the Chiefs' cap space changes year-by-year under the new deal."]}
     PROMPT
 
     def self.conclude_latest
@@ -49,7 +49,7 @@ class News
 
       {
         opinion: parsed["opinion"],
-        callback: parsed["callback"]
+        callback_ideas: parsed["callback_ideas"] || []
       }
     end
 

@@ -7,7 +7,7 @@ class News
     def call(fields)
       @news.update!(
         opinion: fields[:opinion],
-        callback: fields[:callback]
+        callback_ideas: fields[:callback_ideas] || []
       )
       @news.conclude!
       @news

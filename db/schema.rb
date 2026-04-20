@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_19_222312) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_20_025622) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -250,6 +250,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_19_222312) do
     t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "callback_ideas", default: []
     t.index ["primary_person_slug"], name: "index_news_on_primary_person_slug"
     t.index ["primary_team_slug"], name: "index_news_on_primary_team_slug"
     t.index ["slug"], name: "index_news_on_slug", unique: true

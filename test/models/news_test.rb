@@ -192,12 +192,13 @@ class NewsTest < ActiveSupport::TestCase
     article = news(:refined_article)
     result = News::Conclude.new(article).call(
       opinion: "Brazil needs stability at the top.",
-      callback: "Watch for the new manager announcement."
+      callback_ideas: ["Watch for the new manager announcement.", "Rank Brazil's coaching candidates.", "Poll: Can Brazil win the World Cup?"]
     )
 
     assert_equal "concluded", result.stage
     assert_equal "Brazil needs stability at the top.", result.opinion
-    assert_equal "Watch for the new manager announcement.", result.callback
+    assert_equal 3, result.callback_ideas.size
+    assert_equal "Watch for the new manager announcement.", result.callback_ideas.first
     assert_not_nil result.concluded_at
   end
 

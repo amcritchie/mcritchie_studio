@@ -128,7 +128,7 @@ class NewsController < ApplicationController
       raise "News must be in refined stage" unless @news.stage == "refined"
 
       News::ConcludeAgent.new(@news).call
-      redirect_to news_path(@news.slug), notice: "Concluded — opinion and callback generated."
+      redirect_to news_path(@news.slug), notice: "Concluded — opinion and content ideas generated."
     end
   rescue StandardError => e
     redirect_to news_path(@news.slug), alert: e.message
@@ -177,7 +177,7 @@ class NewsController < ApplicationController
       :primary_person, :primary_team, :primary_action, :secondary_person, :secondary_team, :article_image_url,
       :primary_person_slug, :primary_team_slug, :secondary_person_slug, :secondary_team_slug,
       :title_short, :summary, :feeling, :feeling_emoji, :what_happened,
-      :opinion, :callback
+      :opinion, callback_ideas: []
     )
   end
 end
