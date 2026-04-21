@@ -1,3 +1,5 @@
+require_relative "../../../lib/encoding_sanitizer"
+
 class News
   class Intake
     SCHEFTER_USERNAME = "AdamSchefter"
@@ -13,7 +15,7 @@ class News
       tweets.each do |tweet|
         next if News.exists?(x_post_id: tweet["id"])
 
-        text = tweet["text"] || ""
+        text = EncodingSanitizer.sanitize_utf8(tweet["text"] || "")
         url = text[/https?:\/\/\S+/]
 
         return News.create!(
@@ -36,7 +38,7 @@ class News
       @user_id ||= begin
         uri = URI("#{BASE_URL}/2/users/by/username/#{SCHEFTER_USERNAME}")
         response = get(uri, token)
-        data = JSON.parse(response.body)
+        data = JSON.parse(EncodingSanitizer.sanitize_response_body(response))
         data.dig("data", "id") || raise("Could not resolve user ID for #{SCHEFTER_USERNAME}")
       end
     end
@@ -44,7 +46,7 @@ class News
     def fetch_recent_tweets(user_id, token)
       uri = URI("#{BASE_URL}/2/users/#{user_id}/tweets?max_results=5&tweet.fields=created_at")
       response = get(uri, token)
-      data = JSON.parse(response.body)
+      data = JSON.parse(EncodingSanitizer.sanitize_response_body(response))
       data["data"] || []
     end
 

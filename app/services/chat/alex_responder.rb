@@ -1,3 +1,5 @@
+require_relative "../../../lib/encoding_sanitizer"
+
 module Chat
   class AlexResponder
     API_URL = "https://api.anthropic.com/v1/messages"
@@ -55,7 +57,7 @@ module Chat
         model: MODEL,
         max_tokens: MAX_TOKENS,
         system: SYSTEM_PROMPT,
-        messages: @messages.map { |m| { role: m["role"], content: m["content"] } }
+        messages: @messages.map { |m| { role: m["role"], content: EncodingSanitizer.sanitize_utf8(m["content"]) } }
       }.to_json
 
       response = http.request(request)
@@ -64,7 +66,7 @@ module Chat
         raise "Claude API error: #{response.code} — #{response.body}"
       end
 
-      JSON.parse(response.body)
+      JSON.parse(EncodingSanitizer.sanitize_response_body(response))
     end
   end
 end

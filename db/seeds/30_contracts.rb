@@ -1,5 +1,4 @@
-# Contracts are created inline by the people seed files (20_*, 21_*, 22_*)
-# This file exists as a placeholder for any additional contract logic.
+# Backfill contract_type for contracts created by 20_*, 21_*, 22_* seed files
 #
 # Contract sources:
 #   20_people_nfl_prospects.rb — 100 college contracts (expires_at: 2026-04-01)
@@ -8,4 +7,14 @@
 #
 # Total: ~180 contracts
 
-puts "Contracts: #{Contract.count} total (#{Contract.where.not(expires_at: nil).count} with expiration, #{Contract.where.not(annual_value_cents: nil).count} with salary)"
+# College contracts: have expires_at but no salary
+Contract.where.not(expires_at: nil).where(annual_value_cents: nil).where(contract_type: "active").update_all(contract_type: "college")
+
+# Active contracts: have annual_value_cents (NFL stars)
+Contract.where.not(annual_value_cents: nil).where(contract_type: "college").update_all(contract_type: "active")
+
+college_count = Contract.where(contract_type: "college").count
+active_count  = Contract.where(contract_type: "active").count
+draft_count   = Contract.where(contract_type: "draft_pick").count
+
+puts "Contracts: #{Contract.count} total (#{college_count} college, #{active_count} active, #{draft_count} draft_pick)"

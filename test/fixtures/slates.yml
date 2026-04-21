@@ -1,0 +1,24 @@
+nfl_offseason:
+  season_slug: 2025-nfl
+  sequence: 0
+  label: Offseason
+  slate_type: offseason
+  slug: 2025-nfl-offseason
+
+nfl_week1:
+  season_slug: 2025-nfl
+  sequence: 1
+  label: "Week 1"
+  slate_type: regular
+  starts_at: "2025-09-04"
+  ends_at: "2025-09-08"
+  slug: 2025-nfl-week-1
+
+nfl_week2:
+  season_slug: 2025-nfl
+  sequence: 2
+  label: "Week 2"
+  slate_type: regular
+  starts_at: "2025-09-11"
+  ends_at: "2025-09-15"
+  slug: 2025-nfl-week-2

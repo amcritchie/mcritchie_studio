@@ -1,0 +1,15 @@
+nfl_2025:
+  year: 2025
+  sport: football
+  league: nfl
+  name: "2025 NFL Season"
+  active: true
+  slug: 2025-nfl
+
+ncaa_2025:
+  year: 2025
+  sport: football
+  league: ncaa
+  name: "2025 NCAA Football"
+  active: false
+  slug: 2025-ncaa

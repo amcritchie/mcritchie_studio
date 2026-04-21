@@ -136,5 +136,5 @@ news_data.each do |data|
     when "archived"  then n.reviewed_at = 2.weeks.ago;  n.processed_at = 2.weeks.ago; n.refined_at = 2.weeks.ago; n.concluded_at = 2.weeks.ago; n.archived_at = 1.week.ago
     end
   end
-  puts "News: #{news.title.truncate(60)} (#{news.stage})"
+  safe_puts "News: #{news.title.truncate(60)} (#{news.stage})"
 end

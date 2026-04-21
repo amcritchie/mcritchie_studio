@@ -3,6 +3,7 @@ class Team < ApplicationRecord
 
   has_many :contracts, foreign_key: :team_slug, primary_key: :slug
   has_many :people, through: :contracts
+  has_many :rosters, foreign_key: :team_slug, primary_key: :slug
 
   validates :name, presence: true
 
@@ -11,6 +12,10 @@ class Team < ApplicationRecord
   scope :fifa, -> { where(league: "fifa") }
   scope :football, -> { where(sport: "football") }
   scope :soccer, -> { where(sport: "soccer") }
+
+  def current_roster
+    rosters.joins(:slate).order("slates.sequence DESC").first
+  end
 
   def name_slug
     name.parameterize

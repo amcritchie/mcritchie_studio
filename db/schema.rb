@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_20_025622) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -74,6 +74,31 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_20_025622) do
     t.integer "position", default: 0
     t.index ["slug"], name: "index_agents_on_slug", unique: true
     t.index ["status"], name: "index_agents_on_status"
+  end
+
+  create_table "athlete_grades", force: :cascade do |t|
+    t.string "athlete_slug", null: false
+    t.string "season_slug", null: false
+    t.float "overall_grade"
+    t.float "offense_grade"
+    t.float "defense_grade"
+    t.float "pass_grade"
+    t.float "run_grade"
+    t.float "pass_route_grade"
+    t.float "pass_block_grade"
+    t.float "run_block_grade"
+    t.float "pass_rush_grade"
+    t.float "coverage_grade"
+    t.float "rush_defense_grade"
+    t.integer "games_played"
+    t.integer "snaps"
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["athlete_slug", "season_slug"], name: "index_athlete_grades_on_athlete_slug_and_season_slug", unique: true
+    t.index ["athlete_slug"], name: "index_athlete_grades_on_athlete_slug"
+    t.index ["season_slug"], name: "index_athlete_grades_on_season_slug"
+    t.index ["slug"], name: "index_athlete_grades_on_slug", unique: true
   end
 
   create_table "athletes", force: :cascade do |t|
@@ -142,6 +167,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_20_025622) do
     t.date "expires_at"
     t.bigint "annual_value_cents"
     t.string "position"
+    t.string "contract_type", default: "active"
+    t.index ["contract_type"], name: "index_contracts_on_contract_type"
     t.index ["person_slug", "team_slug"], name: "index_contracts_on_person_slug_and_team_slug", unique: true
     t.index ["person_slug"], name: "index_contracts_on_person_slug"
     t.index ["slug"], name: "index_contracts_on_slug", unique: true
@@ -286,6 +313,45 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_20_025622) do
     t.index ["slug"], name: "index_people_on_slug", unique: true
   end
 
+  create_table "roster_spots", force: :cascade do |t|
+    t.bigint "roster_id", null: false
+    t.string "person_slug", null: false
+    t.string "position", null: false
+    t.string "side", null: false
+    t.integer "depth", default: 1, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["person_slug"], name: "index_roster_spots_on_person_slug"
+    t.index ["roster_id", "position", "depth"], name: "index_roster_spots_on_roster_id_and_position_and_depth", unique: true
+    t.index ["roster_id"], name: "index_roster_spots_on_roster_id"
+  end
+
+  create_table "rosters", force: :cascade do |t|
+    t.string "team_slug", null: false
+    t.string "slate_slug", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slate_slug"], name: "index_rosters_on_slate_slug"
+    t.index ["slug"], name: "index_rosters_on_slug", unique: true
+    t.index ["team_slug", "slate_slug"], name: "index_rosters_on_team_slug_and_slate_slug", unique: true
+    t.index ["team_slug"], name: "index_rosters_on_team_slug"
+  end
+
+  create_table "seasons", force: :cascade do |t|
+    t.integer "year", null: false
+    t.string "sport", null: false
+    t.string "league", null: false
+    t.string "name", null: false
+    t.boolean "active", default: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["league", "active"], name: "index_seasons_on_league_and_active"
+    t.index ["slug"], name: "index_seasons_on_slug", unique: true
+    t.index ["year", "league"], name: "index_seasons_on_year_and_league", unique: true
+  end
+
   create_table "skill_assignments", force: :cascade do |t|
     t.string "agent_slug", null: false
     t.string "skill_slug", null: false
@@ -307,6 +373,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_20_025622) do
     t.datetime "updated_at", null: false
     t.index ["category"], name: "index_skills_on_category"
     t.index ["slug"], name: "index_skills_on_slug", unique: true
+  end
+
+  create_table "slates", force: :cascade do |t|
+    t.string "season_slug", null: false
+    t.integer "sequence", null: false
+    t.string "label", null: false
+    t.string "slate_type", null: false
+    t.date "starts_at"
+    t.date "ends_at"
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["season_slug", "sequence"], name: "index_slates_on_season_slug_and_sequence", unique: true
+    t.index ["season_slug"], name: "index_slates_on_season_slug"
+    t.index ["slug"], name: "index_slates_on_slug", unique: true
   end
 
   create_table "tasks", force: :cascade do |t|
@@ -414,4 +495,5 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_20_025622) do
   add_foreign_key "expense_uploads", "payment_methods"
   add_foreign_key "expense_uploads", "users"
   add_foreign_key "payment_methods", "users"
+  add_foreign_key "roster_spots", "rosters"
 end

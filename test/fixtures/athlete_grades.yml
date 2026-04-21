@@ -1,0 +1,17 @@
+allen_2025:
+  athlete_slug: josh-allen-athlete
+  season_slug: 2025-nfl
+  overall_grade: 90.5
+  offense_grade: 91.2
+  pass_grade: 92.0
+  games_played: 17
+  snaps: 1050
+  slug: josh-allen-athlete-2025-nfl
+
+ward_2025:
+  athlete_slug: cam-ward-athlete
+  season_slug: 2025-nfl
+  overall_grade: 82.3
+  games_played: 13
+  snaps: 650
+  slug: cam-ward-athlete-2025-nfl

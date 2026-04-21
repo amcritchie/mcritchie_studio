@@ -1,3 +1,5 @@
+require_relative "../../../lib/encoding_sanitizer"
+
 class News
   class ReviewAgent
     API_URL = "https://api.anthropic.com/v1/messages"
@@ -76,7 +78,7 @@ class News
         model: MODEL,
         max_tokens: MAX_TOKENS,
         system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: @news.title }]
+        messages: [{ role: "user", content: EncodingSanitizer.sanitize_utf8(@news.title) }]
       }.to_json
 
       response = http.request(request)
@@ -85,7 +87,7 @@ class News
         raise "Claude API error: #{response.code} — #{response.body}"
       end
 
-      JSON.parse(response.body)
+      JSON.parse(EncodingSanitizer.sanitize_response_body(response))
     end
   end
 end

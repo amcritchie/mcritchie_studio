@@ -21,4 +21,19 @@ class ContractTest < ActiveSupport::TestCase
       Contract.create!(person_slug: "lionel-messi", team_slug: "argentina")
     end
   end
+
+  test "contract_type must be valid" do
+    assert_raises ActiveRecord::RecordInvalid do
+      Contract.create!(person_slug: "neymar-jr", team_slug: "brazil", contract_type: "invalid")
+    end
+  end
+
+  test "contract_type defaults to active" do
+    contract = Contract.create!(person_slug: "neymar-jr", team_slug: "brazil")
+    assert_equal "active", contract.contract_type
+  end
+
+  test "CONTRACT_TYPES includes college active draft_pick" do
+    assert_equal %w[college active draft_pick], Contract::CONTRACT_TYPES
+  end
 end

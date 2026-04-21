@@ -3,12 +3,14 @@ messi_argentina:
   team_slug: argentina
   slug: lionel-messi-argentina
   position: FW
+  contract_type: active
 
 pulisic_usa:
   person_slug: christian-pulisic
   team_slug: united-states
   slug: christian-pulisic-united-states
   position: FW
+  contract_type: active
 
 prospect_college:
   person_slug: cam-ward
@@ -16,6 +18,7 @@ prospect_college:
   slug: cam-ward-michigan-wolverines
   expires_at: "2026-04-01"
   position: QB
+  contract_type: college
 
 nfl_star:
   person_slug: josh-allen
@@ -23,3 +26,4 @@ nfl_star:
   slug: josh-allen-buffalo-bills
   annual_value_cents: 5500000000
   position: QB
+  contract_type: active
