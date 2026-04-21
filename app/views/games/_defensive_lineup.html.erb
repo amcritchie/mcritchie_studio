@@ -1,0 +1,54 @@
+<%# Defensive lineup for a team
+    Locals: team, roster %>
+<%
+  groups    = roster&.defense_starting_12 || {}
+  d_line    = (groups[:edge] || []) + (groups[:dl] || []) + (groups[:flex_dl] || [])
+  lbs       = groups[:lb] || []
+  secondary = (groups[:cb] || []) + (groups[:s] || [])
+  total     = d_line.size + lbs.size + secondary.size
+%>
+
+<div class="card p-4">
+  <%# Header %>
+  <div class="flex items-center gap-2 mb-4 pb-2 border-b border-subtle">
+    <span class="text-lg"><%= team.emoji %></span>
+    <h3 class="font-bold text-heading text-sm"><%= team.short_name %> Defense</h3>
+    <div class="ml-auto rounded-full px-2 py-0.5 text-xs font-bold" style="background: linear-gradient(135deg, #ea580c, #dc2626); color: white;">
+      DEF
+    </div>
+  </div>
+
+  <% if total == 0 %>
+    <p class="text-muted text-sm text-center py-4">No defensive roster data</p>
+  <% else %>
+    <%# D-Line (EDGE + DL Interior) %>
+    <% if d_line.any? %>
+      <p class="text-xs text-muted uppercase tracking-wider mb-2 font-semibold">Defensive Line</p>
+      <div class="grid grid-cols-3 md:grid-cols-5 gap-1 mb-4">
+        <% d_line.each do |spot| %>
+          <%= render "games/player_card", spot: spot %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Linebackers %>
+    <% if lbs.any? %>
+      <p class="text-xs text-muted uppercase tracking-wider mb-2 font-semibold">Linebackers</p>
+      <div class="grid grid-cols-2 gap-1 mb-4">
+        <% lbs.each do |spot| %>
+          <%= render "games/player_card", spot: spot %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Secondary (CB + S) %>
+    <% if secondary.any? %>
+      <p class="text-xs text-muted uppercase tracking-wider mb-2 font-semibold">Secondary</p>
+      <div class="grid grid-cols-3 md:grid-cols-5 gap-1">
+        <% secondary.each do |spot| %>
+          <%= render "games/player_card", spot: spot %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

@@ -18,3 +18,147 @@ allen_athlete:
   sport: football
   position: QB
   slug: josh-allen-athlete
+
+cook_athlete:
+  person_slug: james-cook
+  sport: football
+  position: RB
+  slug: james-cook-athlete
+
+davis_athlete:
+  person_slug: ray-davis
+  sport: football
+  position: RB
+  slug: ray-davis-athlete
+
+shakir_athlete:
+  person_slug: khalil-shakir
+  sport: football
+  position: WR
+  slug: khalil-shakir-athlete
+
+coleman_athlete:
+  person_slug: keon-coleman
+  sport: football
+  position: WR
+  slug: keon-coleman-athlete
+
+samuel_athlete:
+  person_slug: curtis-samuel
+  sport: football
+  position: WR
+  slug: curtis-samuel-athlete
+
+kincaid_athlete:
+  person_slug: dalton-kincaid
+  sport: football
+  position: TE
+  slug: dalton-kincaid-athlete
+
+dawkins_athlete:
+  person_slug: dion-dawkins
+  sport: football
+  position: LT
+  slug: dion-dawkins-athlete
+
+mcgovern_athlete:
+  person_slug: connor-mcgovern
+  sport: football
+  position: LG
+  slug: connor-mcgovern-athlete
+
+morse_athlete:
+  person_slug: mitch-morse
+  sport: football
+  position: C
+  slug: mitch-morse-athlete
+
+bates_athlete:
+  person_slug: ryan-bates
+  sport: football
+  position: RG
+  slug: ryan-bates-athlete
+
+brown_athlete:
+  person_slug: spencer-brown
+  sport: football
+  position: RT
+  slug: spencer-brown-athlete
+
+miller_athlete:
+  person_slug: von-miller
+  sport: football
+  position: EDGE
+  slug: von-miller-athlete
+
+rousseau_athlete:
+  person_slug: greg-rousseau
+  sport: football
+  position: EDGE
+  slug: greg-rousseau-athlete
+
+oliver_athlete:
+  person_slug: ed-oliver
+  sport: football
+  position: DT
+  slug: ed-oliver-athlete
+
+jones_athlete:
+  person_slug: daquan-jones
+  sport: football
+  position: DT
+  slug: daquan-jones-athlete
+
+settle_athlete:
+  person_slug: tim-settle
+  sport: football
+  position: DT
+  slug: tim-settle-athlete
+
+milano_athlete:
+  person_slug: matt-milano
+  sport: football
+  position: LB
+  slug: matt-milano-athlete
+
+bernard_athlete:
+  person_slug: terrel-bernard
+  sport: football
+  position: LB
+  slug: terrel-bernard-athlete
+
+douglas_athlete:
+  person_slug: rasul-douglas
+  sport: football
+  position: CB
+  slug: rasul-douglas-athlete
+
+johnson_athlete:
+  person_slug: taron-johnson
+  sport: football
+  position: CB
+  slug: taron-johnson-athlete
+
+benford_athlete:
+  person_slug: christian-benford
+  sport: football
+  position: CB
+  slug: christian-benford-athlete
+
+poyer_athlete:
+  person_slug: jordan-poyer
+  sport: football
+  position: S
+  slug: jordan-poyer-athlete
+
+rapp_athlete:
+  person_slug: taylor-rapp
+  sport: football
+  position: S
+  slug: taylor-rapp-athlete
+
+epenesa_athlete:
+  person_slug: aj-epenesa
+  sport: football
+  position: EDGE
+  slug: aj-epenesa-athlete

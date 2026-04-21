@@ -27,3 +27,149 @@ josh_allen:
   last_name: Allen
   slug: josh-allen
   athlete: true
+
+# Offense starters for Bills
+james_cook:
+  first_name: James
+  last_name: Cook
+  slug: james-cook
+  athlete: true
+
+ray_davis:
+  first_name: Ray
+  last_name: Davis
+  slug: ray-davis
+  athlete: true
+
+khalil_shakir:
+  first_name: Khalil
+  last_name: Shakir
+  slug: khalil-shakir
+  athlete: true
+
+keon_coleman:
+  first_name: Keon
+  last_name: Coleman
+  slug: keon-coleman
+  athlete: true
+
+curtis_samuel:
+  first_name: Curtis
+  last_name: Samuel
+  slug: curtis-samuel
+  athlete: true
+
+dalton_kincaid:
+  first_name: Dalton
+  last_name: Kincaid
+  slug: dalton-kincaid
+  athlete: true
+
+dion_dawkins:
+  first_name: Dion
+  last_name: Dawkins
+  slug: dion-dawkins
+  athlete: true
+
+connor_mcgovern:
+  first_name: Connor
+  last_name: McGovern
+  slug: connor-mcgovern
+  athlete: true
+
+mitch_morse:
+  first_name: Mitch
+  last_name: Morse
+  slug: mitch-morse
+  athlete: true
+
+ryan_bates:
+  first_name: Ryan
+  last_name: Bates
+  slug: ryan-bates
+  athlete: true
+
+spencer_brown:
+  first_name: Spencer
+  last_name: Brown
+  slug: spencer-brown
+  athlete: true
+
+# Defense starters for Bills
+von_miller:
+  first_name: Von
+  last_name: Miller
+  slug: von-miller
+  athlete: true
+
+greg_rousseau:
+  first_name: Greg
+  last_name: Rousseau
+  slug: greg-rousseau
+  athlete: true
+
+ed_oliver:
+  first_name: Ed
+  last_name: Oliver
+  slug: ed-oliver
+  athlete: true
+
+daquan_jones:
+  first_name: DaQuan
+  last_name: Jones
+  slug: daquan-jones
+  athlete: true
+
+tim_settle:
+  first_name: Tim
+  last_name: Settle
+  slug: tim-settle
+  athlete: true
+
+matt_milano:
+  first_name: Matt
+  last_name: Milano
+  slug: matt-milano
+  athlete: true
+
+terrel_bernard:
+  first_name: Terrel
+  last_name: Bernard
+  slug: terrel-bernard
+  athlete: true
+
+rasul_douglas:
+  first_name: Rasul
+  last_name: Douglas
+  slug: rasul-douglas
+  athlete: true
+
+taron_johnson:
+  first_name: Taron
+  last_name: Johnson
+  slug: taron-johnson
+  athlete: true
+
+christian_benford:
+  first_name: Christian
+  last_name: Benford
+  slug: christian-benford
+  athlete: true
+
+jordan_poyer:
+  first_name: Jordan
+  last_name: Poyer
+  slug: jordan-poyer
+  athlete: true
+
+taylor_rapp:
+  first_name: Taylor
+  last_name: Rapp
+  slug: taylor-rapp
+  athlete: true
+
+aj_epenesa:
+  first_name: AJ
+  last_name: Epenesa
+  slug: aj-epenesa
+  athlete: true

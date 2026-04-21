@@ -1,6 +1,176 @@
+# Offense starters
 allen_qb:
   roster: bills_offseason
   person_slug: josh-allen
   position: QB
   side: offense
   depth: 1
+
+cook_rb:
+  roster: bills_offseason
+  person_slug: james-cook
+  position: RB
+  side: offense
+  depth: 1
+
+davis_rb:
+  roster: bills_offseason
+  person_slug: ray-davis
+  position: RB
+  side: offense
+  depth: 2
+
+shakir_wr:
+  roster: bills_offseason
+  person_slug: khalil-shakir
+  position: WR
+  side: offense
+  depth: 1
+
+coleman_wr:
+  roster: bills_offseason
+  person_slug: keon-coleman
+  position: WR
+  side: offense
+  depth: 2
+
+samuel_wr:
+  roster: bills_offseason
+  person_slug: curtis-samuel
+  position: WR
+  side: offense
+  depth: 3
+
+kincaid_te:
+  roster: bills_offseason
+  person_slug: dalton-kincaid
+  position: TE
+  side: offense
+  depth: 1
+
+dawkins_lt:
+  roster: bills_offseason
+  person_slug: dion-dawkins
+  position: LT
+  side: offense
+  depth: 1
+
+mcgovern_lg:
+  roster: bills_offseason
+  person_slug: connor-mcgovern
+  position: LG
+  side: offense
+  depth: 1
+
+morse_c:
+  roster: bills_offseason
+  person_slug: mitch-morse
+  position: C
+  side: offense
+  depth: 1
+
+bates_rg:
+  roster: bills_offseason
+  person_slug: ryan-bates
+  position: RG
+  side: offense
+  depth: 1
+
+brown_rt:
+  roster: bills_offseason
+  person_slug: spencer-brown
+  position: RT
+  side: offense
+  depth: 1
+
+# Defense starters
+miller_edge:
+  roster: bills_offseason
+  person_slug: von-miller
+  position: EDGE
+  side: defense
+  depth: 1
+
+rousseau_edge:
+  roster: bills_offseason
+  person_slug: greg-rousseau
+  position: EDGE
+  side: defense
+  depth: 2
+
+oliver_dt:
+  roster: bills_offseason
+  person_slug: ed-oliver
+  position: DT
+  side: defense
+  depth: 1
+
+jones_dt:
+  roster: bills_offseason
+  person_slug: daquan-jones
+  position: DT
+  side: defense
+  depth: 2
+
+settle_dt:
+  roster: bills_offseason
+  person_slug: tim-settle
+  position: DT
+  side: defense
+  depth: 3
+
+milano_lb:
+  roster: bills_offseason
+  person_slug: matt-milano
+  position: LB
+  side: defense
+  depth: 1
+
+bernard_lb:
+  roster: bills_offseason
+  person_slug: terrel-bernard
+  position: LB
+  side: defense
+  depth: 2
+
+douglas_cb:
+  roster: bills_offseason
+  person_slug: rasul-douglas
+  position: CB
+  side: defense
+  depth: 1
+
+johnson_cb:
+  roster: bills_offseason
+  person_slug: taron-johnson
+  position: CB
+  side: defense
+  depth: 2
+
+benford_cb:
+  roster: bills_offseason
+  person_slug: christian-benford
+  position: CB
+  side: defense
+  depth: 3
+
+poyer_s:
+  roster: bills_offseason
+  person_slug: jordan-poyer
+  position: S
+  side: defense
+  depth: 1
+
+rapp_s:
+  roster: bills_offseason
+  person_slug: taylor-rapp
+  position: S
+  side: defense
+  depth: 2
+
+epenesa_edge:
+  roster: bills_offseason
+  person_slug: aj-epenesa
+  position: EDGE
+  side: defense
+  depth: 3
