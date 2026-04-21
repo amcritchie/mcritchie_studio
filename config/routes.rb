@@ -58,6 +58,15 @@ Rails.application.routes.draw do
   end
   resources :teams, only: [:index], param: :slug
   resources :people, only: [:index], param: :slug
+
+  # NFL hub + rankings (SEO-friendly URLs)
+  get "nfl", to: "nfl#index", as: :nfl_hub
+  get "nfl-quarterback-rankings", to: "rankings#quarterback", as: :nfl_quarterback_rankings
+  get "nfl-offensive-line-rankings", to: "rankings#offensive_line", as: :nfl_offensive_line_rankings
+
+  # NFL game slate pages
+  get "games/:year/week/:week", to: "games#week", as: :games_week
+  get "games/:year/week/:week/:slug", to: "games#show", as: :game_show
   get "people/search", to: "people#search", as: :search_people
   resources :activities, only: [:index]
   resources :usages, only: [:index]

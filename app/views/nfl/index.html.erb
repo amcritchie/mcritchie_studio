@@ -1,0 +1,63 @@
+<section class="max-w-5xl mx-auto px-4 py-10">
+  <div class="text-center mb-10">
+    <h1 class="text-3xl font-bold text-heading mb-2">NFL Hub</h1>
+    <p class="text-secondary">2025 Season</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <%= link_to games_week_path(2025, 1), class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">📅</span>
+        <% if @game_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @game_count %> games</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Schedule</h2>
+      <p class="text-secondary text-sm">Week 1 games and matchups</p>
+    <% end %>
+
+    <%= link_to nfl_quarterback_rankings_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🏈</span>
+        <% if @qb_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @qb_count %> QBs</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">QB Rankings</h2>
+      <p class="text-secondary text-sm">Quarterback performance grades</p>
+    <% end %>
+
+    <%= link_to nfl_offensive_line_rankings_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🛡️</span>
+        <% if @oline_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @oline_count %> linemen</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">OLine Rankings</h2>
+      <p class="text-secondary text-sm">Offensive line pass and run blocking</p>
+    <% end %>
+
+    <%= link_to teams_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🏟️</span>
+        <% if @team_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @team_count %> teams</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Teams</h2>
+      <p class="text-secondary text-sm">All 32 NFL franchises</p>
+    <% end %>
+
+    <%= link_to people_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">👤</span>
+        <% if @person_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @person_count %> players</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">People</h2>
+      <p class="text-secondary text-sm">Players, coaches, and personnel</p>
+    <% end %>
+  </div>
+</section>
