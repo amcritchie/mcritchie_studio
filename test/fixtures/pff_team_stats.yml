@@ -1,0 +1,13 @@
+bills_blocking:
+  team_slug: buffalo-bills
+  season_slug: 2025-nfl
+  stat_type: line_pass_blocking_efficiency
+  data:
+    team_name: "BUF"
+    franchise_id: 4
+    player_game_count: 17
+    attempts: 600
+    pbe: 88.5
+    pressures_allowed: 150
+    sacks_allowed: 25
+  slug: buffalo-bills-2025-nfl-line_pass_blocking_efficiency

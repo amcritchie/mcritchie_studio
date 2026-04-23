@@ -1,0 +1,34 @@
+<% content_for :title, "NFL Week #{@week} — #{@year} Season" %>
+
+<section class="py-6">
+  <%# Hero %>
+  <div class="text-center mb-8">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-heading tracking-tight">
+      NFL Week <%= @week %>
+    </h1>
+    <p class="text-lg text-secondary mt-1"><%= @year %> Season</p>
+    <p class="text-sm text-muted mt-2"><%= @games.size %> games</p>
+  </div>
+
+  <% if @games.empty? %>
+    <div class="text-center py-12">
+      <p class="text-muted">No games scheduled for this week.</p>
+    </div>
+  <% else %>
+    <% @games_by_day.each do |day, games| %>
+      <div class="mb-8">
+        <h2 class="text-lg font-bold text-heading mb-3 border-b border-subtle pb-2"><%= day %></h2>
+
+        <%# Group by kickoff time within the day %>
+        <% games.group_by { |g| g.display_time_short }.each do |time_slot, slot_games| %>
+          <p class="text-xs font-semibold text-muted uppercase tracking-wider mt-4 mb-2"><%= time_slot %></p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+            <% slot_games.each do |game| %>
+              <%= render "games/game_card", game: game, year: @year, week: @week %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</section>

@@ -20,10 +20,136 @@ prospect_college:
   position: QB
   contract_type: college
 
+ward_draft:
+  person_slug: cam-ward
+  team_slug: buffalo-bills
+  slug: cam-ward-buffalo-bills
+  position: QB
+  contract_type: draft_pick
+
+bailey_mock:
+  person_slug: david-bailey
+  team_slug: buffalo-bills
+  slug: david-bailey-buffalo-bills
+  position: EDGE
+  contract_type: mock_pick
+
+bailey_college:
+  person_slug: david-bailey
+  team_slug: michigan-wolverines
+  slug: david-bailey-michigan-wolverines
+  position: EDGE
+  contract_type: college
+
 nfl_star:
   person_slug: josh-allen
   team_slug: buffalo-bills
   slug: josh-allen-buffalo-bills
   annual_value_cents: 5500000000
   position: QB
+  contract_type: active
+
+dawkins_contract:
+  person_slug: dion-dawkins
+  team_slug: buffalo-bills
+  slug: dion-dawkins-buffalo-bills
+  position: LT
+  contract_type: active
+
+mcgovern_contract:
+  person_slug: connor-mcgovern
+  team_slug: buffalo-bills
+  slug: connor-mcgovern-buffalo-bills
+  position: LG
+  contract_type: active
+
+morse_contract:
+  person_slug: mitch-morse
+  team_slug: buffalo-bills
+  slug: mitch-morse-buffalo-bills
+  position: C
+  contract_type: active
+
+bates_contract:
+  person_slug: ryan-bates
+  team_slug: buffalo-bills
+  slug: ryan-bates-buffalo-bills
+  position: RG
+  contract_type: active
+
+brown_contract:
+  person_slug: spencer-brown
+  team_slug: buffalo-bills
+  slug: spencer-brown-buffalo-bills
+  position: RT
+  contract_type: active
+
+cook_contract:
+  person_slug: james-cook
+  team_slug: buffalo-bills
+  slug: james-cook-buffalo-bills
+  position: RB
+  contract_type: active
+
+davis_contract:
+  person_slug: ray-davis
+  team_slug: buffalo-bills
+  slug: ray-davis-buffalo-bills
+  position: RB
+  contract_type: active
+
+shakir_contract:
+  person_slug: khalil-shakir
+  team_slug: buffalo-bills
+  slug: khalil-shakir-buffalo-bills
+  position: WR
+  contract_type: active
+
+coleman_contract:
+  person_slug: keon-coleman
+  team_slug: buffalo-bills
+  slug: keon-coleman-buffalo-bills
+  position: WR
+  contract_type: active
+
+kincaid_contract:
+  person_slug: dalton-kincaid
+  team_slug: buffalo-bills
+  slug: dalton-kincaid-buffalo-bills
+  position: TE
+  contract_type: active
+
+miller_contract:
+  person_slug: von-miller
+  team_slug: buffalo-bills
+  slug: von-miller-buffalo-bills
+  position: EDGE
+  contract_type: active
+
+rousseau_contract:
+  person_slug: greg-rousseau
+  team_slug: buffalo-bills
+  slug: greg-rousseau-buffalo-bills
+  position: EDGE
+  contract_type: active
+
+oliver_contract:
+  person_slug: ed-oliver
+  team_slug: buffalo-bills
+  slug: ed-oliver-buffalo-bills
+  position: DT
+  contract_type: active
+
+douglas_contract:
+  person_slug: rasul-douglas
+  team_slug: buffalo-bills
+  slug: rasul-douglas-buffalo-bills
+  position: CB
+  contract_type: active
+
+poyer_contract:
+  person_slug: jordan-poyer
+  team_slug: buffalo-bills
+  slug: jordan-poyer-buffalo-bills
+  position: S
   contract_type: active

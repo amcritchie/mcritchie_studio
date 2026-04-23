@@ -22,27 +22,10 @@ class RosterTest < ActiveSupport::TestCase
     assert_equal slates(:nfl_offseason), roster.slate
   end
 
-  test "starters returns depth 1 spots" do
-    roster = rosters(:bills_offseason)
-    starters = roster.starters
-    assert starters.all? { |s| s.depth == 1 }
-  end
-
   test "offense_starters returns offense depth 1" do
     roster = rosters(:bills_offseason)
     starters = roster.offense_starters
     assert starters.all? { |s| s.depth == 1 && s.side == "offense" }
-  end
-
-  test "person_at returns the person at a position" do
-    roster = rosters(:bills_offseason)
-    person = roster.person_at("QB")
-    assert_equal people(:josh_allen), person
-  end
-
-  test "person_at returns nil for empty position" do
-    roster = rosters(:bills_offseason)
-    assert_nil roster.person_at("K")
   end
 
   # offense_starting_12 tests

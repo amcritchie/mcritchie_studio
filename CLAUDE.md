@@ -178,6 +178,15 @@ end
 - `/contents/:slug/edit` — Edit content (admin required)
 - `/contents/reorder` — POST reorder within column
 - `/contents/:slug/{hook,script,assets,assemble,post,review}_step` — POST stage transition actions (admin-only)
+- `/nfl` — NFL hub index
+- `/nfl-quarterback-rankings`, `/nfl-offensive-line-rankings`, `/nfl-receiving-rankings`, `/nfl-rushing-rankings`, `/nfl-defense-rankings`, `/nfl-pass-rush-rankings`, `/nfl-coverage-rankings` — Position ranking pages (sortable, searchable)
+- `/nfl-pass-first-rankings` — Coach pass-first/pass-heavy rankings
+- `/nfl-team-rankings/:id` — Team unit rankings (offense + defense breakdown)
+- `/nfl-player-impact/:player_id/to/:team_id` — Player impact simulator (lineup comparison + ranking deltas)
+- `/nfl-player-impact/:player_id/to/:team_id/confirm` — POST confirm draft pick (admin-only). Creates/converts contract to `draft_pick`, expires college contracts, recomputes rankings, creates News at refined stage. Checkbox: bench_rookie skips ranking recompute.
+- `/nfl-prospects` — Draft prospects (2025 draft_pick / 2026 mock_pick, sortable)
+- `/nfl-coaches` — NFL coaches list (sortable, searchable)
+- `/nfl-contracts` — Contract index
 - `/people/search` — GET JSON people search (ILIKE on first_name, last_name, slug, aliases). Used by News edit sidebar.
 - `/activities` — Activity feed
 - `/usages` — Usage table
@@ -219,6 +228,7 @@ Every write action MUST use `rescue_and_log` with target/parent context. See top
 - HTML TasksController: all 8 write actions wrapped with `target: @task`
 - API TasksController: all 8 write actions wrapped with `target: task`
 - API AgentsController#update, ActivitiesController#create, UsagesController#create: all wrapped
+- RankingsController#confirm_draft_pick: wrapped with `target: contract`
 - RegistrationsController#create: wrapped with `target: @user`
 - ChatController#create: uses `create_error_log(e)` directly (no ActiveRecord target — API-only action)
 
@@ -241,28 +251,37 @@ Public-facing chat interface powered by Claude API. Users can chat with an AI Al
 
 Seeds are split into `db/seeds/` directory, loaded in order by `db/seeds.rb`:
 
-| File | Contents |
-|------|----------|
-| `01_users.rb` | 4 admin users |
-| `02_agents.rb` | 4 agents with avatars |
-| `03_skills.rb` | 9 skills + 15 assignments |
-| `04_tasks.rb` | 8 sample tasks |
-| `05_activities.rb` | 6 sample activities |
-| `06_news.rb` | 5 world cup articles + 34 NFL Draft tweets (@AdamSchefter) |
-| `07_contents.rb` | 4 content items across stages |
-| `10_teams_nfl.rb` | 32 NFL teams (sport/league/conference/division) |
-| `11_teams_ncaa.rb` | 71 NCAA teams (schools from 2025 draft picks) |
-| `12_teams_fifa.rb` | 48 FIFA World Cup 2026 teams (sport/league/group) |
-| `20_people_nfl_prospects.rb` | 100 draft prospects → Person + Athlete + college Contract |
-| `21_people_nfl_stars.rb` | 32 NFL stars (one per team) → Person + Athlete + Contract w/ salary |
-| `22_people_fifa_stars.rb` | 48 FIFA stars (one per team) → Person + Athlete + Contract |
-| `30_contracts.rb` | Summary (contracts created inline by 20-22 files) |
+Each file only depends on files above it. Teams → Seasons → People → Grades → Rosters → Games → Demo data.
 
-**Totals:** 151 teams, 180 people, 180 athletes, 180 contracts. All idempotent via `find_or_create_by!`.
+| Phase | File | Contents |
+|-------|------|----------|
+| 1. Infrastructure | `01_users.rb` | 4 admin users |
+| | `02_agents.rb` | 4 agents with avatars |
+| | `03_skills.rb` | 9 skills + 15 assignments |
+| 2. Leagues | `10_teams_nfl.rb` | 32 NFL teams (sport/league/conference/division) |
+| | `11_teams_ncaa.rb` | 71 NCAA teams (schools from 2025 draft picks) |
+| | `12_teams_fifa.rb` | 48 FIFA World Cup 2026 teams (sport/league/group) |
+| | `15_seasons.rb` | 3 seasons (1 active) |
+| | `16_slates.rb` | 29 slates across seasons |
+| 3. People | `20_coaches_nfl.rb` | 128 NFL coaches (HC + coordinators) |
+| | `21_coaches_fifa.rb` | 48 FIFA coaches (one per team) |
+| | `22_nfl_contracts.rb` | ~2420 NFL star contracts (Person + Athlete + Contract w/ salary) |
+| | `23_nfl_prospects.rb` | 102 draft prospects + 1 hypothetical → Person + Athlete + college Contract + NFL draft_pick Contract |
+| | `25_fifa_players.rb` | 48 FIFA stars → Person + Athlete + Contract (`contract_type: "active"`) |
+| 4. Evaluation | `30_athlete_grades.rb` | ~2520 athlete grades (tier-based for prospects with grade_ranges JSONB) |
+| | `31_rosters.rb` | 64 rosters, ~5038 roster spots |
+| 5. Schedule | `40_games.rb` | Games across slates |
+| 6. Demo Content | `50_news.rb` | 5 world cup articles + 34 NFL Draft tweets (@AdamSchefter) |
+| | `51_contents.rb` | 4 content items across stages |
+| | `52_tasks.rb` | 8 sample tasks |
+| | `53_activities.rb` | 6 sample activities |
+
+**Totals:** 151 teams, ~2741 people, ~2566 athletes, ~2740 contracts (103 college, ~2535 active, 102 draft). All idempotent via `find_or_create_by!`.
 
 - Admin: `alex@mcritchie.studio` / `password`
 - NFL Draft tweets: oldest→newest in array, `.reverse` before seeding so oldest = top of kanban. Deduped by `x_post_id`.
 - College contracts expire `2026-04-01`. NFL star contracts have `annual_value_cents` (bigint).
+- `contract_type` set correctly at creation (no backfill hack needed).
 
 ## Docs
 
@@ -275,12 +294,12 @@ Agent system documentation at `docs/agents/`:
 ## Testing
 
 ### Rails Tests
-- `bin/rails test` — 182 tests total
+- `bin/rails test` — 421 tests total
 - Test fixtures for users, agents, tasks, news, contents, skills, teams, people, contracts, athletes (in `test/fixtures/`)
 - Test password: "password" for all fixtures
 - `log_in_as(user)` helper for integration tests
 - **Model tests**: task transitions (valid/invalid), news transitions/slug/position/validations, content slug/stages/position/source_news, user (display_name, admin?, avatar_initials, avatar_color, OAuth/`from_omniauth`), slug generation, team/person/contract associations and validations, athlete slug/validations/person association
-- **Controller tests**: sessions (login/logout), registrations (signup), news (CRUD, stage moves, reorder, refine, conclude, create_content, auth enforcement), contents (CRUD, step actions, stage guards, auth enforcement), tasks (CRUD, stage moves, reorder, auth enforcement)
+- **Controller tests**: sessions (login/logout), registrations (signup), news (CRUD, stage moves, reorder, refine, conclude, create_content, auth enforcement), contents (CRUD, step actions, stage guards, auth enforcement), tasks (CRUD, stage moves, reorder, auth enforcement), rankings (all position pages, sorting, search, team unit, player impact, confirm draft pick with auth/mock conversion/bench rookie/college expiry)
 
 ### Playwright E2E Tests
 - `npm test` — runs all Playwright tests (13 smoke tests)

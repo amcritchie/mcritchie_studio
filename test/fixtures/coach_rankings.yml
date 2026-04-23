@@ -1,0 +1,15 @@
+bills_pass_first:
+  coach_slug: sean-mcdermott-buffalo-bills-head_coach
+  season_slug: 2025-nfl
+  rank_type: pass_first
+  rank: 3
+  tier: "Air Raid"
+  slug: sean-mcdermott-buffalo-bills-head_coach-pass_first-2025-nfl
+
+bills_pass_heavy:
+  coach_slug: sean-mcdermott-buffalo-bills-head_coach
+  season_slug: 2025-nfl
+  rank_type: pass_heavy
+  rank: 19
+  tier: "True Balance"
+  slug: sean-mcdermott-buffalo-bills-head_coach-pass_heavy-2025-nfl

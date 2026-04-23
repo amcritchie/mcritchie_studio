@@ -28,10 +28,6 @@ class Roster < ApplicationRecord
 
   FLEX_DL_POSITIONS = %w[EDGE DE DT NT DL DI].freeze
 
-  def starters
-    roster_spots.where(depth: 1)
-  end
-
   def offense_starters
     roster_spots.where(depth: 1, side: "offense")
   end
@@ -46,11 +42,6 @@ class Roster < ApplicationRecord
 
   def defense_starting_12
     pick_starters("defense", DEFENSE_COMPOSITION)
-  end
-
-  def person_at(position, depth: 1)
-    spot = roster_spots.find_by(position: position, depth: depth)
-    spot&.person
   end
 
   def name_slug

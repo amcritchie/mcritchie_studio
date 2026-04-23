@@ -4,6 +4,11 @@ class Team < ApplicationRecord
   has_many :contracts, foreign_key: :team_slug, primary_key: :slug
   has_many :people, through: :contracts
   has_many :rosters, foreign_key: :team_slug, primary_key: :slug
+  has_many :home_games, class_name: "Game", foreign_key: :home_team_slug, primary_key: :slug
+  has_many :away_games, class_name: "Game", foreign_key: :away_team_slug, primary_key: :slug
+  has_many :pff_team_stats, foreign_key: :team_slug, primary_key: :slug
+  has_many :coaches, foreign_key: :team_slug, primary_key: :slug
+  has_many :team_rankings, foreign_key: :team_slug, primary_key: :slug
 
   validates :name, presence: true
 

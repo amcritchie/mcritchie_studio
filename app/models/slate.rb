@@ -4,6 +4,7 @@ class Slate < ApplicationRecord
   belongs_to :season, foreign_key: :season_slug, primary_key: :slug
 
   has_many :rosters, foreign_key: :slate_slug, primary_key: :slug
+  has_many :games, foreign_key: :slate_slug, primary_key: :slug
 
   validates :season_slug, presence: true
   validates :sequence, presence: true, uniqueness: { scope: :season_slug }

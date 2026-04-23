@@ -21,36 +21,48 @@ cook_2025:
   athlete_slug: james-cook-athlete
   season_slug: 2025-nfl
   overall_grade: 78.5
+  offense_grade: 77.0
+  run_grade: 82.0
   slug: james-cook-athlete-2025-nfl
 
 davis_2025:
   athlete_slug: ray-davis-athlete
   season_slug: 2025-nfl
   overall_grade: 68.2
+  offense_grade: 67.0
+  run_grade: 70.5
   slug: ray-davis-athlete-2025-nfl
 
 shakir_2025:
   athlete_slug: khalil-shakir-athlete
   season_slug: 2025-nfl
   overall_grade: 75.0
+  offense_grade: 74.5
+  pass_route_grade: 78.0
   slug: khalil-shakir-athlete-2025-nfl
 
 coleman_2025:
   athlete_slug: keon-coleman-athlete
   season_slug: 2025-nfl
   overall_grade: 71.3
+  offense_grade: 70.0
+  pass_route_grade: 73.5
   slug: keon-coleman-athlete-2025-nfl
 
 samuel_2025:
   athlete_slug: curtis-samuel-athlete
   season_slug: 2025-nfl
   overall_grade: 65.8
+  offense_grade: 64.0
+  pass_route_grade: 68.0
   slug: curtis-samuel-athlete-2025-nfl
 
 kincaid_2025:
   athlete_slug: dalton-kincaid-athlete
   season_slug: 2025-nfl
   overall_grade: 80.1
+  offense_grade: 79.0
+  pass_route_grade: 82.5
   slug: dalton-kincaid-athlete-2025-nfl
 
 dawkins_2025:
@@ -102,76 +114,133 @@ miller_2025:
   athlete_slug: von-miller-athlete
   season_slug: 2025-nfl
   overall_grade: 85.0
+  defense_grade: 85.0
+  pass_rush_grade: 88.5
+  coverage_grade: 60.0
+  rush_defense_grade: 72.0
   slug: von-miller-athlete-2025-nfl
 
 rousseau_2025:
   athlete_slug: greg-rousseau-athlete
   season_slug: 2025-nfl
   overall_grade: 79.0
+  defense_grade: 79.0
+  pass_rush_grade: 82.0
+  coverage_grade: 55.0
+  rush_defense_grade: 70.0
   slug: greg-rousseau-athlete-2025-nfl
 
 oliver_2025:
   athlete_slug: ed-oliver-athlete
   season_slug: 2025-nfl
   overall_grade: 88.0
+  defense_grade: 88.0
+  pass_rush_grade: 86.0
+  rush_defense_grade: 90.0
   slug: ed-oliver-athlete-2025-nfl
 
 jones_2025:
   athlete_slug: daquan-jones-athlete
   season_slug: 2025-nfl
   overall_grade: 72.5
+  defense_grade: 72.5
+  pass_rush_grade: 68.0
+  rush_defense_grade: 76.0
   slug: daquan-jones-athlete-2025-nfl
 
 settle_2025:
   athlete_slug: tim-settle-athlete
   season_slug: 2025-nfl
   overall_grade: 66.0
+  defense_grade: 66.0
+  pass_rush_grade: 62.0
+  rush_defense_grade: 68.5
   slug: tim-settle-athlete-2025-nfl
 
 milano_2025:
   athlete_slug: matt-milano-athlete
   season_slug: 2025-nfl
   overall_grade: 82.0
+  defense_grade: 82.0
+  pass_rush_grade: 65.0
+  coverage_grade: 85.0
+  rush_defense_grade: 80.0
   slug: matt-milano-athlete-2025-nfl
 
 bernard_2025:
   athlete_slug: terrel-bernard-athlete
   season_slug: 2025-nfl
   overall_grade: 76.0
+  defense_grade: 76.0
+  pass_rush_grade: 60.0
+  coverage_grade: 78.0
+  rush_defense_grade: 74.0
   slug: terrel-bernard-athlete-2025-nfl
 
 douglas_2025:
   athlete_slug: rasul-douglas-athlete
   season_slug: 2025-nfl
   overall_grade: 77.0
+  defense_grade: 77.0
+  coverage_grade: 80.0
+  rush_defense_grade: 62.0
   slug: rasul-douglas-athlete-2025-nfl
 
 johnson_2025:
   athlete_slug: taron-johnson-athlete
   season_slug: 2025-nfl
   overall_grade: 74.5
+  defense_grade: 74.5
+  coverage_grade: 76.0
+  rush_defense_grade: 58.0
   slug: taron-johnson-athlete-2025-nfl
 
 benford_2025:
   athlete_slug: christian-benford-athlete
   season_slug: 2025-nfl
   overall_grade: 73.0
+  defense_grade: 73.0
+  coverage_grade: 75.5
+  rush_defense_grade: 60.0
   slug: christian-benford-athlete-2025-nfl
 
 poyer_2025:
   athlete_slug: jordan-poyer-athlete
   season_slug: 2025-nfl
   overall_grade: 81.0
+  defense_grade: 81.0
+  coverage_grade: 83.0
+  rush_defense_grade: 72.0
   slug: jordan-poyer-athlete-2025-nfl
 
 rapp_2025:
   athlete_slug: taylor-rapp-athlete
   season_slug: 2025-nfl
   overall_grade: 70.0
+  defense_grade: 70.0
+  coverage_grade: 68.0
+  rush_defense_grade: 71.0
   slug: taylor-rapp-athlete-2025-nfl
 
 epenesa_2025:
   athlete_slug: aj-epenesa-athlete
   season_slug: 2025-nfl
   overall_grade: 70.0
+  defense_grade: 70.0
+  pass_rush_grade: 72.0
+  coverage_grade: 52.0
+  rush_defense_grade: 66.0
   slug: aj-epenesa-athlete-2025-nfl
+
+bailey_2025:
+  athlete_slug: david-bailey-athlete
+  season_slug: 2025-nfl
+  overall_grade: 82.2
+  defense_grade: 82.2
+  pass_rush_grade: 84.0
+  coverage_grade: 62.0
+  rush_defense_grade: 75.0
+  games_played: 13
+  snaps: 700
+  grade_ranges: '{"overall_grade": [78.2, 86.2], "pass_rush_grade": [80.0, 88.0], "rush_defense_grade": [72.0, 80.0], "coverage_grade": [58.0, 66.0]}'
+  slug: david-bailey-athlete-2025-nfl

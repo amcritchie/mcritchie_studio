@@ -1,0 +1,118 @@
+<% content_for :title, "#{@game.away_team.short_name} @ #{@game.home_team.short_name} — NFL Week #{@week}" %>
+
+<section class="py-6">
+  <%# Back link %>
+  <div class="mb-4">
+    <%= link_to games_week_path(@year, @week), class: "text-sm text-secondary hover:text-primary transition" do %>
+      &larr; Week <%= @week %> Games
+    <% end %>
+  </div>
+
+  <%# Hero section with team gradient %>
+  <div class="rounded-xl overflow-hidden mb-8" style="<%= @game.hero_gradient_style %>">
+    <div class="relative py-8 px-6" style="background: rgba(0,0,0,0.3);">
+      <div class="flex items-center justify-center gap-6 md:gap-12">
+        <%# Away team %>
+        <div class="text-center">
+          <span class="text-4xl md:text-5xl block mb-2"><%= @game.away_team.emoji %></span>
+          <p class="text-white/80 text-xs uppercase tracking-wider"><%= @game.away_team.location %></p>
+          <p class="text-white font-extrabold text-lg md:text-2xl"><%= @game.away_team.name.sub(@game.away_team.location.to_s, "").strip %></p>
+          <p class="text-white/60 text-xs font-mono"><%= @game.away_team.short_name %></p>
+        </div>
+
+        <%# @ %>
+        <div class="text-center">
+          <p class="text-white/40 text-2xl font-bold">@</p>
+        </div>
+
+        <%# Home team %>
+        <div class="text-center">
+          <span class="text-4xl md:text-5xl block mb-2"><%= @game.home_team.emoji %></span>
+          <p class="text-white/80 text-xs uppercase tracking-wider"><%= @game.home_team.location %></p>
+          <p class="text-white font-extrabold text-lg md:text-2xl"><%= @game.home_team.name.sub(@game.home_team.location.to_s, "").strip %></p>
+          <p class="text-white/60 text-xs font-mono"><%= @game.home_team.short_name %></p>
+        </div>
+      </div>
+
+      <p class="text-center text-white/60 text-sm mt-4"><%= @game.display_time %></p>
+      <% if @game.venue.present? %>
+        <p class="text-center text-white/40 text-xs mt-1"><%= @game.venue %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Matchup lineups with favorite toggle %>
+  <% if @home_roster || @away_roster %>
+    <div x-data="{ favorite: 'away' }">
+      <%# Favorite toggle %>
+      <div class="card p-3 mb-6 flex items-center justify-center gap-3 flex-wrap">
+        <span class="text-xs text-muted uppercase tracking-wider font-semibold">Favorite:</span>
+        <button @click="favorite = 'away'"
+                class="px-4 py-2 rounded-lg text-sm font-bold transition"
+                :class="favorite === 'away' ? 'btn btn-primary' : 'bg-surface-alt text-secondary hover:text-heading'">
+          <%= @game.away_team.emoji %> <%= @game.away_team.short_name %>
+        </button>
+        <button @click="favorite = 'home'"
+                class="px-4 py-2 rounded-lg text-sm font-bold transition"
+                :class="favorite === 'home' ? 'btn btn-primary' : 'bg-surface-alt text-secondary hover:text-heading'">
+          <%= @game.home_team.emoji %> <%= @game.home_team.short_name %>
+        </button>
+      </div>
+
+      <%# === Away team is favorite === %>
+      <div x-show="favorite === 'away'" x-cloak>
+        <%# Row 1: Home OFF (dog, pass) | Away DEF (fav, pin ears back) %>
+        <h2 class="text-heading font-bold text-lg mb-4 flex items-center gap-2">
+          <span>🎯</span>
+          <span><%= @game.home_team.short_name %> Air It Out vs <%= @game.away_team.short_name %> Pin Ears Back</span>
+        </h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <%= render "games/offensive_lineup", team: @game.home_team, roster: @home_roster, rankings: @home_rankings, mode: "pass" %>
+          <%= render "games/defensive_lineup", team: @game.away_team, roster: @away_roster, rankings: @away_rankings, mode: "stop_pass" %>
+        </div>
+
+        <%# Row 2: Home DEF (dog, stop the run) | Away OFF (fav, establish the run) %>
+        <h2 class="text-heading font-bold text-lg mb-4 flex items-center gap-2">
+          <span>🏃</span>
+          <span><%= @game.home_team.short_name %> Stop the Run vs <%= @game.away_team.short_name %> Establish the Run</span>
+        </h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <%= render "games/defensive_lineup", team: @game.home_team, roster: @home_roster, rankings: @home_rankings, mode: "stop_run" %>
+          <%= render "games/offensive_lineup", team: @game.away_team, roster: @away_roster, rankings: @away_rankings, mode: "run" %>
+        </div>
+      </div>
+
+      <%# === Home team is favorite === %>
+      <div x-show="favorite === 'home'" x-cloak>
+        <%# Row 1: Home OFF (fav, establish the run) | Away DEF (dog, stop the run) %>
+        <h2 class="text-heading font-bold text-lg mb-4 flex items-center gap-2">
+          <span>🏃</span>
+          <span><%= @game.home_team.short_name %> Establish the Run vs <%= @game.away_team.short_name %> Stop the Run</span>
+        </h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <%= render "games/offensive_lineup", team: @game.home_team, roster: @home_roster, rankings: @home_rankings, mode: "run" %>
+          <%= render "games/defensive_lineup", team: @game.away_team, roster: @away_roster, rankings: @away_rankings, mode: "stop_run" %>
+        </div>
+
+        <%# Row 2: Home DEF (fav, pin ears back) | Away OFF (dog, air it out) %>
+        <h2 class="text-heading font-bold text-lg mb-4 flex items-center gap-2">
+          <span>🎯</span>
+          <span><%= @game.home_team.short_name %> Pin Ears Back vs <%= @game.away_team.short_name %> Air It Out</span>
+        </h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <%= render "games/defensive_lineup", team: @game.home_team, roster: @home_roster, rankings: @home_rankings, mode: "stop_pass" %>
+          <%= render "games/offensive_lineup", team: @game.away_team, roster: @away_roster, rankings: @away_rankings, mode: "pass" %>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <div class="text-center py-12">
+      <p class="text-muted">No roster data available for this matchup.</p>
+    </div>
+  <% end %>
+
+  <%# JSON debug %>
+  <div class="json-debug mt-8">
+    <pre><%= JSON.pretty_generate(@game.as_json(include: { home_team: { only: [:name, :short_name, :slug] }, away_team: { only: [:name, :short_name, :slug] } })) %></pre>
+  </div>
+</section>

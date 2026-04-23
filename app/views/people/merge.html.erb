@@ -1,0 +1,136 @@
+<% content_for(:title, "Merge People — McRitchie Studio") %>
+
+<section class="max-w-4xl mx-auto" x-data="{
+  keepQuery: '<%= params[:keep].to_s.gsub("'", "\\\\'") %>',
+  mergeQuery: '<%= params[:merge].to_s.gsub("'", "\\\\'") %>',
+  keepResults: [],
+  mergeResults: [],
+  keepSelected: null,
+  mergeSelected: null,
+  keepLoading: false,
+  mergeLoading: false,
+
+  async search(query, side) {
+    if (query.length < 2) { this[side + 'Results'] = []; return; }
+    this[side + 'Loading'] = true;
+    try {
+      const res = await fetch('/people/search?q=' + encodeURIComponent(query));
+      this[side + 'Results'] = await res.json();
+    } finally {
+      this[side + 'Loading'] = false;
+    }
+  },
+
+  select(person, side) {
+    this[side + 'Selected'] = person;
+    this[side + 'Query'] = person.full_name;
+    this[side + 'Results'] = [];
+  }
+}">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-heading">Merge People</h2>
+    <a href="/people/duplicates" class="btn btn-outline btn-sm">Scan Duplicates</a>
+  </div>
+
+  <p class="text-secondary text-sm mb-6">
+    Merge one person into another. All contracts, roster spots, coaches, and athlete data from the
+    <strong class="text-heading">source</strong> will be moved to the <strong class="text-heading">target</strong>,
+    and the source will be deleted.
+  </p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <%# Keep (target) %>
+    <div class="card p-4">
+      <label class="label-upper mb-2">Keep this person (target)</label>
+      <div class="relative">
+        <input type="text"
+               x-model="keepQuery"
+               @input.debounce.300ms="search(keepQuery, 'keep')"
+               @focus="if (keepQuery.length >= 2) search(keepQuery, 'keep')"
+               placeholder="Search by name..."
+               class="input-field w-full">
+        <div x-show="keepResults.length > 0" @click.outside="keepResults = []"
+             class="absolute z-10 w-full mt-1 bg-surface border border-subtle rounded-lg shadow-lg max-h-60 overflow-y-auto" style="display:none;">
+          <template x-for="p in keepResults" :key="p.slug">
+            <button @click="select(p, 'keep')"
+                    class="block w-full text-left px-4 py-2 text-sm hover:bg-surface-alt transition">
+              <span class="text-heading font-medium" x-text="p.full_name"></span>
+              <span class="text-muted text-xs ml-1" x-text="p.slug"></span>
+              <template x-if="p.teams.length > 0">
+                <span class="text-secondary text-xs ml-1" x-text="'(' + p.teams.join(', ') + ')'"></span>
+              </template>
+            </button>
+          </template>
+        </div>
+      </div>
+      <template x-if="keepSelected">
+        <div class="mt-3 p-3 bg-surface-alt rounded-lg border border-subtle">
+          <p class="text-heading font-semibold" x-text="keepSelected.full_name"></p>
+          <p class="text-muted text-xs" x-text="keepSelected.slug"></p>
+          <template x-if="keepSelected.aliases && keepSelected.aliases.length > 0">
+            <p class="text-secondary text-xs mt-1">Aliases: <span x-text="keepSelected.aliases.join(', ')"></span></p>
+          </template>
+          <template x-if="keepSelected.teams.length > 0">
+            <p class="text-secondary text-xs mt-1" x-text="keepSelected.teams.join(', ')"></p>
+          </template>
+        </div>
+      </template>
+    </div>
+
+    <%# Merge (source) %>
+    <div class="card p-4">
+      <label class="label-upper mb-2">Merge this person (source — will be deleted)</label>
+      <div class="relative">
+        <input type="text"
+               x-model="mergeQuery"
+               @input.debounce.300ms="search(mergeQuery, 'merge')"
+               @focus="if (mergeQuery.length >= 2) search(mergeQuery, 'merge')"
+               placeholder="Search by name..."
+               class="input-field w-full">
+        <div x-show="mergeResults.length > 0" @click.outside="mergeResults = []"
+             class="absolute z-10 w-full mt-1 bg-surface border border-subtle rounded-lg shadow-lg max-h-60 overflow-y-auto" style="display:none;">
+          <template x-for="p in mergeResults" :key="p.slug">
+            <button @click="select(p, 'merge')"
+                    class="block w-full text-left px-4 py-2 text-sm hover:bg-surface-alt transition">
+              <span class="text-heading font-medium" x-text="p.full_name"></span>
+              <span class="text-muted text-xs ml-1" x-text="p.slug"></span>
+              <template x-if="p.teams.length > 0">
+                <span class="text-secondary text-xs ml-1" x-text="'(' + p.teams.join(', ') + ')'"></span>
+              </template>
+            </button>
+          </template>
+        </div>
+      </div>
+      <template x-if="mergeSelected">
+        <div class="mt-3 p-3 bg-surface-alt rounded-lg border border-subtle">
+          <p class="text-heading font-semibold" x-text="mergeSelected.full_name"></p>
+          <p class="text-muted text-xs" x-text="mergeSelected.slug"></p>
+          <template x-if="mergeSelected.aliases && mergeSelected.aliases.length > 0">
+            <p class="text-secondary text-xs mt-1">Aliases: <span x-text="mergeSelected.aliases.join(', ')"></span></p>
+          </template>
+          <template x-if="mergeSelected.teams.length > 0">
+            <p class="text-secondary text-xs mt-1" x-text="mergeSelected.teams.join(', ')"></p>
+          </template>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template x-if="keepSelected && mergeSelected">
+    <form method="post" action="/people/merge" class="mt-4">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" name="keep_slug" :value="keepSelected.slug">
+      <input type="hidden" name="merge_slug" :value="mergeSelected.slug">
+
+      <div class="card p-4 border-warning/50 bg-warning/5">
+        <p class="text-heading font-semibold mb-2">Confirm Merge</p>
+        <p class="text-secondary text-sm">
+          All associations from <strong class="text-heading" x-text="mergeSelected.full_name"></strong>
+          will be moved to <strong class="text-heading" x-text="keepSelected.full_name"></strong>,
+          and <span class="text-danger" x-text="mergeSelected.full_name"></span> will be permanently deleted.
+        </p>
+        <button type="submit" class="btn btn-danger btn-sm mt-4">Merge &amp; Delete Source</button>
+      </div>
+    </form>
+  </template>
+</section>

@@ -1,0 +1,83 @@
+<% content_for(:title, "Duplicate Scanner — McRitchie Studio") %>
+
+<section class="max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-heading">Duplicate Scanner</h2>
+    <a href="/people/merge" class="btn btn-outline btn-sm">Merge Tool</a>
+  </div>
+
+  <% if @duplicate_groups.empty? %>
+    <div class="empty-state">
+      <p class="text-lg font-semibold text-heading">No duplicates found</p>
+      <p class="text-secondary mt-1">All people records have unique names.</p>
+    </div>
+  <% else %>
+    <p class="text-secondary text-sm mb-4">
+      Found <strong class="text-heading"><%= @duplicate_groups.size %></strong> potential duplicate
+      <%= "pair".pluralize(@duplicate_groups.size) %> (same last name, first name Levenshtein distance &le; 2).
+    </p>
+
+    <div class="space-y-4">
+      <% @duplicate_groups.each do |group| %>
+        <% a, b = group[:people] %>
+        <% a_athlete = a.athlete_profile %>
+        <% b_athlete = b.athlete_profile %>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="badge bg-warning/10 text-warning border-warning/20 text-xs">
+              Distance: <%= group[:distance] %>
+            </span>
+            <a href="/people/merge?keep=<%= a.slug %>&merge=<%= b.slug %>"
+               class="btn btn-outline btn-sm">Merge</a>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <%# Person A %>
+            <div class="p-3 bg-surface-alt rounded-lg border border-subtle">
+              <p class="text-heading font-semibold"><%= a.full_name %></p>
+              <p class="text-muted text-xs"><%= a.slug %></p>
+              <% if a_athlete %>
+                <div class="flex gap-1.5 mt-1">
+                  <span class="badge bg-primary/10 text-primary border-primary/20 text-xs"><%= a_athlete.position %></span>
+                  <span class="badge bg-surface-alt text-secondary border-subtle text-xs"><%= a_athlete.sport.capitalize %></span>
+                </div>
+              <% end %>
+              <% if a.teams.any? %>
+                <p class="text-secondary text-xs mt-1"><%= a.teams.map(&:name).join(", ") %></p>
+              <% end %>
+              <% if a.aliases.any? %>
+                <p class="text-muted text-xs mt-1">Aliases: <%= a.aliases.join(", ") %></p>
+              <% end %>
+              <p class="text-muted text-xs mt-1">
+                <%= a.contracts.count %> contracts,
+                <%= a.roster_spots.count %> roster spots
+              </p>
+            </div>
+
+            <%# Person B %>
+            <div class="p-3 bg-surface-alt rounded-lg border border-subtle">
+              <p class="text-heading font-semibold"><%= b.full_name %></p>
+              <p class="text-muted text-xs"><%= b.slug %></p>
+              <% if b_athlete %>
+                <div class="flex gap-1.5 mt-1">
+                  <span class="badge bg-primary/10 text-primary border-primary/20 text-xs"><%= b_athlete.position %></span>
+                  <span class="badge bg-surface-alt text-secondary border-subtle text-xs"><%= b_athlete.sport.capitalize %></span>
+                </div>
+              <% end %>
+              <% if b.teams.any? %>
+                <p class="text-secondary text-xs mt-1"><%= b.teams.map(&:name).join(", ") %></p>
+              <% end %>
+              <% if b.aliases.any? %>
+                <p class="text-muted text-xs mt-1">Aliases: <%= b.aliases.join(", ") %></p>
+              <% end %>
+              <p class="text-muted text-xs mt-1">
+                <%= b.contracts.count %> contracts,
+                <%= b.roster_spots.count %> roster spots
+              </p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</section>

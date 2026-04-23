@@ -1,0 +1,31 @@
+bills_quarterback:
+  team_slug: buffalo-bills
+  season_slug: 2025-nfl
+  rank_type: quarterback
+  rank: 3
+  score: 92.00
+  slug: buffalo-bills-quarterback-2025-nfl
+
+bills_offense:
+  team_slug: buffalo-bills
+  season_slug: 2025-nfl
+  rank_type: offense
+  rank: 5
+  score: 450.50
+  slug: buffalo-bills-offense-2025-nfl
+
+bills_power:
+  team_slug: buffalo-bills
+  season_slug: 2025-nfl
+  rank_type: power
+  rank: 4
+  score: 890.25
+  slug: buffalo-bills-power-2025-nfl
+
+dolphins_quarterback:
+  team_slug: miami-dolphins
+  season_slug: 2025-nfl
+  rank_type: quarterback
+  rank: 12
+  score: 78.50
+  slug: miami-dolphins-quarterback-2025-nfl

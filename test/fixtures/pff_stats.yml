@@ -1,0 +1,40 @@
+allen_passing:
+  athlete_slug: josh-allen-athlete
+  season_slug: 2025-nfl
+  stat_type: passing_summary
+  team_slug: buffalo-bills
+  pff_player_id: 11765
+  games_played: 17
+  data:
+    player: "Josh Allen"
+    player_id: 11765
+    position: "QB"
+    team_name: "BUF"
+    player_game_count: 17
+    grades_pass: 92.0
+    grades_offense: 91.2
+    grades_run: 78.5
+    attempts: 550
+    completions: 365
+    yards: 4200
+    touchdowns: 35
+  slug: josh-allen-athlete-2025-nfl-passing_summary
+
+allen_rushing:
+  athlete_slug: josh-allen-athlete
+  season_slug: 2025-nfl
+  stat_type: rushing_summary
+  team_slug: buffalo-bills
+  pff_player_id: 11765
+  games_played: 17
+  data:
+    player: "Josh Allen"
+    player_id: 11765
+    position: "QB"
+    team_name: "BUF"
+    player_game_count: 17
+    grades_run: 78.5
+    grades_offense: 91.2
+    attempts: 120
+    yards: 580
+  slug: josh-allen-athlete-2025-nfl-rushing_summary

@@ -162,3 +162,12 @@ epenesa_athlete:
   sport: football
   position: EDGE
   slug: aj-epenesa-athlete
+
+bailey_athlete:
+  person_slug: david-bailey
+  sport: football
+  position: EDGE
+  draft_year: 2025
+  draft_round: 1
+  draft_pick: 15
+  slug: david-bailey-athlete

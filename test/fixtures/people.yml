@@ -173,3 +173,17 @@ aj_epenesa:
   last_name: Epenesa
   slug: aj-epenesa
   athlete: true
+
+# Prospects
+david_bailey:
+  first_name: David
+  last_name: Bailey
+  slug: david-bailey
+  athlete: true
+
+# Coaches
+sean_mcdermott:
+  first_name: Sean
+  last_name: McDermott
+  slug: sean-mcdermott
+  coach: true

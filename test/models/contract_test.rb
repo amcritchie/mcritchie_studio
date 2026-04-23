@@ -33,7 +33,7 @@ class ContractTest < ActiveSupport::TestCase
     assert_equal "active", contract.contract_type
   end
 
-  test "CONTRACT_TYPES includes college active draft_pick" do
-    assert_equal %w[college active draft_pick], Contract::CONTRACT_TYPES
+  test "CONTRACT_TYPES includes college active draft_pick mock_pick" do
+    assert_equal %w[college active draft_pick mock_pick], Contract::CONTRACT_TYPES
   end
 end

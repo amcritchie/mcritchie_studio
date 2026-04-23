@@ -1,18 +1,64 @@
 <%# Defensive lineup for a team
-    Locals: team, roster %>
+    Locals: team, roster, rankings (hash), mode ('stop_run'/'stop_pass'/nil) %>
 <%
+  rankings  = local_assigns.fetch(:rankings, {})
+  mode      = local_assigns.fetch(:mode, nil)
   groups    = roster&.defense_starting_12 || {}
-  d_line    = (groups[:edge] || []) + (groups[:dl] || []) + (groups[:flex_dl] || [])
+  edges     = groups[:edge] || []
+  dl_int    = groups[:dl] || []
+  flex_dl   = groups[:flex_dl] || []
   lbs       = groups[:lb] || []
-  secondary = (groups[:cb] || []) + (groups[:s] || [])
-  total     = d_line.size + lbs.size + secondary.size
+  cbs       = groups[:cb] || []
+  safeties  = groups[:s] || []
+  total     = edges.size + dl_int.size + flex_dl.size + lbs.size + cbs.size + safeties.size
+
+  mode_label = case mode
+               when "stop_run"  then "Stop the Run"
+               when "stop_pass" then "Pin Ears Back"
+               end
+
+  # Grade keys per position group based on mode
+  dl_grade = case mode
+             when "stop_run"  then :rush_defense_grade
+             when "stop_pass" then :pass_rush_grade
+             else :overall_grade
+             end
+  lb_grade = case mode
+             when "stop_run"  then :rush_defense_grade
+             when "stop_pass" then :coverage_grade
+             else :overall_grade
+             end
+  db_grade = case mode
+             when "stop_run"  then :rush_defense_grade
+             when "stop_pass" then :coverage_grade
+             else :overall_grade
+             end
+
+  # Front 5: edges + DL + flex, sorted by defense grade DESC
+  front5 = (edges + dl_int + flex_dl).sort_by do |s|
+    grade = s.person&.athlete_profile&.grades&.first&.defense_grade
+    -(grade || 0)
+  end
+
+  # Normalize safety positions: assign FS and SS labels
+  safety_display = safeties.each_with_index.map do |spot, i|
+    label = case spot.position
+            when "FS" then "FS"
+            when "SS" then "SS"
+            else i == 0 ? "FS" : "SS"
+            end
+    [label, spot]
+  end
 %>
 
 <div class="card p-4">
   <%# Header %>
   <div class="flex items-center gap-2 mb-4 pb-2 border-b border-subtle">
     <span class="text-lg"><%= team.emoji %></span>
-    <h3 class="font-bold text-heading text-sm"><%= team.short_name %> Defense</h3>
+    <h3 class="font-bold text-heading text-sm"><%= team.location %> <span class="font-extrabold">Defense</span></h3>
+    <% if mode_label %>
+      <span class="text-xs text-muted italic ml-1">— <%= mode_label %></span>
+    <% end %>
     <div class="ml-auto rounded-full px-2 py-0.5 text-xs font-bold" style="background: linear-gradient(135deg, #ea580c, #dc2626); color: white;">
       DEF
     </div>
@@ -21,32 +67,64 @@
   <% if total == 0 %>
     <p class="text-muted text-sm text-center py-4">No defensive roster data</p>
   <% else %>
-    <%# D-Line (EDGE + DL Interior) %>
-    <% if d_line.any? %>
-      <p class="text-xs text-muted uppercase tracking-wider mb-2 font-semibold">Defensive Line</p>
-      <div class="grid grid-cols-3 md:grid-cols-5 gap-1 mb-4">
-        <% d_line.each do |spot| %>
-          <%= render "games/player_card", spot: spot %>
+    <%# Aggregate rank banner %>
+    <% if mode == "stop_pass" %>
+      <div class="mb-3">
+        <%= render "games/rank_badge", label: "Pass Defense", ranking: rankings["pass_defense"], highlight: true %>
+      </div>
+    <% elsif mode == "stop_run" %>
+      <div class="mb-3">
+        <%= render "games/rank_badge", label: "Overall Defense", ranking: rankings["defense"], highlight: true %>
+      </div>
+    <% end %>
+
+    <%# Pass Rush rank %>
+    <div class="mb-3">
+      <%= render "games/rank_badge", label: "Pass Rush Rank", ranking: rankings["pass_rush"], highlight: mode == "stop_pass" %>
+    </div>
+
+    <%# Front 5: all in one row, sorted by defense grade %>
+    <% if front5.any? %>
+      <div class="grid grid-cols-5 gap-1 mb-4">
+        <% front5.each do |spot| %>
+          <%= render "games/player_card", spot: spot, grade_key: dl_grade %>
         <% end %>
       </div>
     <% end %>
 
-    <%# Linebackers %>
+    <%# Run Defense rank %>
+    <div class="mb-3">
+      <%= render "games/rank_badge", label: "Run Defense Rank", ranking: rankings["run_defense"], highlight: mode == "stop_run" %>
+    </div>
+
+    <%# Row 3: LB 1 & 2 %>
     <% if lbs.any? %>
-      <p class="text-xs text-muted uppercase tracking-wider mb-2 font-semibold">Linebackers</p>
       <div class="grid grid-cols-2 gap-1 mb-4">
         <% lbs.each do |spot| %>
-          <%= render "games/player_card", spot: spot %>
+          <%= render "games/player_card", spot: spot, grade_key: lb_grade %>
         <% end %>
       </div>
     <% end %>
 
-    <%# Secondary (CB + S) %>
-    <% if secondary.any? %>
-      <p class="text-xs text-muted uppercase tracking-wider mb-2 font-semibold">Secondary</p>
-      <div class="grid grid-cols-3 md:grid-cols-5 gap-1">
-        <% secondary.each do |spot| %>
-          <%= render "games/player_card", spot: spot %>
+    <%# Coverage rank %>
+    <div class="mb-3">
+      <%= render "games/rank_badge", label: "Coverage Rank", ranking: rankings["coverage"], highlight: mode == "stop_pass" %>
+    </div>
+
+    <%# Row 4: FS & SS %>
+    <% if safety_display.any? %>
+      <div class="grid grid-cols-2 gap-1 mb-1">
+        <% safety_display.each do |display_pos, spot| %>
+          <%= render "games/player_card", spot: spot, grade_key: db_grade, display_position: display_pos %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Row 5: CB 1, 2, 3 %>
+    <% if cbs.any? %>
+      <div class="grid grid-cols-3 gap-1">
+        <% cbs.each do |spot| %>
+          <%= render "games/player_card", spot: spot, grade_key: db_grade %>
         <% end %>
       </div>
     <% end %>

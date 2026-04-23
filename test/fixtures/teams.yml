@@ -47,6 +47,19 @@ buffalo_bills:
   conference: AFC
   division: East
 
+miami_dolphins:
+  name: Miami Dolphins
+  short_name: MIA
+  slug: miami-dolphins
+  location: Miami
+  emoji: "🐬"
+  color_primary: "#008E97"
+  color_secondary: "#FC4C02"
+  sport: football
+  league: nfl
+  conference: AFC
+  division: East
+
 michigan:
   name: Michigan Wolverines
   short_name: MICH

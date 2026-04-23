@@ -13,6 +13,7 @@ class NflControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", games_week_path(2025, 1)
     assert_select "a[href=?]", nfl_quarterback_rankings_path
     assert_select "a[href=?]", nfl_offensive_line_rankings_path
+    assert_select "a[href=?]", nfl_pass_first_rankings_path
     assert_select "a[href=?]", teams_path
     assert_select "a[href=?]", people_path
   end

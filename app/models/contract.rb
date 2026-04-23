@@ -1,7 +1,7 @@
 class Contract < ApplicationRecord
   include Sluggable
 
-  CONTRACT_TYPES = %w[college active draft_pick].freeze
+  CONTRACT_TYPES = %w[college active draft_pick mock_pick].freeze
 
   belongs_to :person, foreign_key: :person_slug, primary_key: :slug
   belongs_to :team, foreign_key: :team_slug, primary_key: :slug

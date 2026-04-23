@@ -74,22 +74,16 @@ FIFA_STARS = [
 ]
 
 FIFA_STARS.each do |data|
-  slug = "#{data[:first_name]} #{data[:last_name]}".parameterize
+  person = Person.find_or_create_by_name!(data[:first_name], data[:last_name], athlete: true)
 
-  person = Person.find_or_create_by!(slug: slug) do |p|
-    p.first_name = data[:first_name]
-    p.last_name = data[:last_name]
-    p.athlete = true
-  end
-  person.update!(athlete: true) unless person.athlete?
-
-  Athlete.find_or_create_by!(person_slug: slug) do |a|
+  Athlete.find_or_create_by!(person_slug: person.slug) do |a|
     a.sport = "soccer"
     a.position = data[:position]
   end
 
-  Contract.find_or_create_by!(person_slug: slug, team_slug: data[:team_slug]) do |c|
+  Contract.find_or_create_by!(person_slug: person.slug, team_slug: data[:team_slug]) do |c|
     c.position = data[:position]
+    c.contract_type = "active"
   end
 
   puts "FIFA Star: #{person.full_name} (#{data[:position]}) - #{data[:team_slug]}"

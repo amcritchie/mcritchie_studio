@@ -38,6 +38,124 @@
       <p class="text-secondary text-sm">Offensive line pass and run blocking</p>
     <% end %>
 
+    <%= link_to nfl_receiving_rankings_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🧤</span>
+        <% if @wr_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @wr_count %> receivers</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Receiving Rankings</h2>
+      <p class="text-secondary text-sm">WR and TE route running grades</p>
+    <% end %>
+
+    <%= link_to nfl_rushing_rankings_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🏃</span>
+        <% if @rb_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @rb_count %> backs</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Rushing Rankings</h2>
+      <p class="text-secondary text-sm">Running back rushing grades</p>
+    <% end %>
+
+    <%= link_to nfl_defense_rankings_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🛡️</span>
+        <% if @def_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @def_count %> defenders</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Defense Rankings</h2>
+      <p class="text-secondary text-sm">All defensive player grades</p>
+    <% end %>
+
+    <%= link_to nfl_pass_rush_rankings_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">💥</span>
+        <% if @pass_rush_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @pass_rush_count %> rushers</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Pass Rush Rankings</h2>
+      <p class="text-secondary text-sm">Edge and interior pass rush grades</p>
+    <% end %>
+
+    <%= link_to nfl_coverage_rankings_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🔒</span>
+        <% if @coverage_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @coverage_count %> DBs</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Coverage Rankings</h2>
+      <p class="text-secondary text-sm">CB and safety coverage grades</p>
+    <% end %>
+
+    <%= link_to nfl_contracts_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">📋</span>
+        <% if @contract_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @contract_count %> contracts</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Contracts</h2>
+      <p class="text-secondary text-sm">Player contracts and salaries</p>
+    <% end %>
+
+    <%= link_to nfl_team_rankings_path("buffalo-bills"), class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">📊</span>
+        <% if @team_ranking_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @team_ranking_count %> rankings</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Team Unit Rankings</h2>
+      <p class="text-secondary text-sm">Per-team offense and defense breakdowns</p>
+    <% end %>
+
+    <%= link_to nfl_prospects_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🎓</span>
+        <% if @prospect_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @prospect_count %> prospects</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Draft Prospects</h2>
+      <p class="text-secondary text-sm">2025 NFL Draft scouting grades</p>
+    <% end %>
+
+    <%= link_to nfl_player_impact_path(player_id: "david-bailey", team_id: "new-york-jets"), class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🔮</span>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Player Impact Simulator</h2>
+      <p class="text-secondary text-sm">What if a prospect joined your team?</p>
+    <% end %>
+
+    <%= link_to nfl_pass_first_rankings_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">✈️</span>
+        <% if @pass_first_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @pass_first_count %> coaches</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Pass-First Rankings</h2>
+      <p class="text-secondary text-sm">Coaching scheme pass tendency rankings</p>
+    <% end %>
+
+    <%= link_to nfl_coaches_path, class: "card-hover p-6 block" do %>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">🎙️</span>
+        <% if @coach_count > 0 %>
+          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @coach_count %> coaches</span>
+        <% end %>
+      </div>
+      <h2 class="text-heading font-bold text-lg mb-1">Coaches</h2>
+      <p class="text-secondary text-sm">NFL head coaches and coordinators</p>
+    <% end %>
+
     <%= link_to teams_path, class: "card-hover p-6 block" do %>
       <div class="flex items-center justify-between mb-3">
         <span class="text-2xl">🏟️</span>

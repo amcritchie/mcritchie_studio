@@ -57,12 +57,30 @@ Rails.application.routes.draw do
     end
   end
   resources :teams, only: [:index], param: :slug
-  resources :people, only: [:index], param: :slug
+  resources :people, only: [:index], param: :slug do
+    collection do
+      get :merge
+      post :merge, action: :merge_execute
+      get :duplicates
+    end
+  end
 
   # NFL hub + rankings (SEO-friendly URLs)
   get "nfl", to: "nfl#index", as: :nfl_hub
   get "nfl-quarterback-rankings", to: "rankings#quarterback", as: :nfl_quarterback_rankings
   get "nfl-offensive-line-rankings", to: "rankings#offensive_line", as: :nfl_offensive_line_rankings
+  get "nfl-receiving-rankings",      to: "rankings#receiving",      as: :nfl_receiving_rankings
+  get "nfl-rushing-rankings",        to: "rankings#rushing",        as: :nfl_rushing_rankings
+  get "nfl-defense-rankings",        to: "rankings#defense",        as: :nfl_defense_rankings
+  get "nfl-pass-rush-rankings",      to: "rankings#pass_rush",      as: :nfl_pass_rush_rankings
+  get "nfl-coverage-rankings",       to: "rankings#coverage",       as: :nfl_coverage_rankings
+  get "nfl-prospects",                 to: "rankings#prospects",      as: :nfl_prospects
+  get "nfl-coaches",                  to: "rankings#coaches",        as: :nfl_coaches
+  get "nfl-pass-first-rankings",       to: "rankings#pass_first",     as: :nfl_pass_first_rankings
+  get "nfl-team-rankings/:id",         to: "rankings#team_unit",      as: :nfl_team_rankings
+  get "nfl-player-impact/:player_id/to/:team_id", to: "rankings#player_impact", as: :nfl_player_impact
+  post "nfl-player-impact/:player_id/to/:team_id/confirm", to: "rankings#confirm_draft_pick", as: :confirm_draft_pick
+  get "nfl-contracts",                to: "contracts#index",         as: :nfl_contracts
 
   # NFL game slate pages
   get "games/:year/week/:week", to: "games#week", as: :games_week

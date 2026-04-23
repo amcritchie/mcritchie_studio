@@ -1,0 +1,189 @@
+<%# Offensive lineup for a team
+    Locals: team, roster, rankings (hash), mode ('run'/'pass'/nil) %>
+<%
+  rankings = local_assigns.fetch(:rankings, {})
+  mode     = local_assigns.fetch(:mode, nil)
+  groups   = roster&.offense_starting_12 || {}
+  o_line   = groups[:oline] || []
+  qbs      = groups[:qb] || []
+  rbs      = groups[:rb] || []
+  wrs      = groups[:wr] || []
+  tes      = groups[:te] || []
+  total    = o_line.size + qbs.size + rbs.size + wrs.size + tes.size
+
+  mode_label = case mode
+               when "run"  then "Establish the Run"
+               when "pass" then "Air It Out"
+               end
+
+  # Grade keys per position group based on mode
+  ol_grade = case mode
+             when "run"  then :run_block_grade
+             when "pass" then :pass_block_grade
+             else :overall_grade
+             end
+  qb_grade = case mode
+             when "run"  then :offense_grade
+             when "pass" then :pass_grade
+             else :overall_grade
+             end
+  rb_grade = case mode
+             when "run"  then :run_grade
+             else :overall_grade
+             end
+  wr_grade = case mode
+             when "pass" then :pass_route_grade
+             else :overall_grade
+             end
+
+  # Detect left-handed QB from roster
+  lefty_slugs = %w[tua-tagovailoa]
+  qb_person = qbs.first&.person
+  lefty = qb_person && lefty_slugs.include?(qb_person.slug)
+
+  # Normalize generic OL positions (OG/G → LG or RG, OT/T → LT or RT)
+  # Build a slot map, fill specific positions first, then assign generics to empty slots
+  slots = { "LT" => nil, "LG" => nil, "C" => nil, "RG" => nil, "RT" => nil }
+  generics = []
+  o_line.each do |spot|
+    if slots.key?(spot.position) && slots[spot.position].nil?
+      slots[spot.position] = spot
+    else
+      generics << spot
+    end
+  end
+  # Assign generics to empty slots by type preference
+  generics.each do |spot|
+    assigned = false
+    case spot.position
+    when "OT", "T"
+      %w[LT RT].each { |s| if slots[s].nil?; slots[s] = spot; assigned = true; break; end }
+    when "OG", "G"
+      %w[LG RG].each { |s| if slots[s].nil?; slots[s] = spot; assigned = true; break; end }
+    end
+    # Fallback: any empty slot
+    unless assigned
+      slots.each { |k, v| if v.nil?; slots[k] = spot; break; end }
+    end
+  end
+
+  # Build sorted OL with display positions (use slot key, not original position)
+  ol_display = %w[LT LG C RG RT].filter_map do |pos|
+    spot = slots[pos]
+    next unless spot
+    # Create a simple struct to override display position
+    [pos, spot]
+  end
+
+  # Split for mobile: blind-side pair first
+  if lefty
+    blind_keys = %w[RT RG]
+    rest_keys  = %w[C LG LT]
+  else
+    blind_keys = %w[LT LG]
+    rest_keys  = %w[C RG RT]
+  end
+  blind_side = ol_display.select { |pos, _| blind_keys.include?(pos) }
+  rest_ol    = ol_display.select { |pos, _| rest_keys.include?(pos) }
+
+  # Skill position splits
+  rb1 = rbs.first(1)
+  flex = rbs.drop(1) + tes
+%>
+
+<div class="card p-4">
+  <%# Header %>
+  <div class="flex items-center gap-2 mb-4 pb-2 border-b border-subtle">
+    <span class="text-lg"><%= team.emoji %></span>
+    <h3 class="font-bold text-heading text-sm"><%= team.location %> <span class="font-extrabold">Offense</span></h3>
+    <% if mode_label %>
+      <span class="text-xs text-muted italic ml-1">— <%= mode_label %></span>
+    <% end %>
+    <div class="ml-auto rounded-full px-2 py-0.5 text-xs font-bold" style="background: linear-gradient(135deg, #16a34a, #059669); color: white;">
+      OFF
+    </div>
+  </div>
+
+  <% if total == 0 %>
+    <p class="text-muted text-sm text-center py-4">No offensive roster data</p>
+  <% else %>
+    <%# Aggregate rank banner %>
+    <% if mode == "run" %>
+      <div class="mb-3">
+        <%= render "games/rank_badge", label: "Run Offense", ranking: rankings["run_offense"], highlight: true %>
+      </div>
+    <% elsif mode == "pass" %>
+      <div class="mb-3">
+        <%= render "games/rank_badge", label: "Pass Offense", ranking: rankings["pass_offense"], highlight: true %>
+      </div>
+    <% end %>
+
+    <%# Pass Block + Run Block ranks %>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <%= render "games/rank_badge", label: "Pass Block Rank", ranking: rankings["pass_block"], highlight: mode == "pass" %>
+      <%= render "games/rank_badge", label: "Run Block Rank", ranking: rankings["run_block"], highlight: mode == "run" %>
+    </div>
+
+    <%# O-Line: mobile 2+3 rows, md+ single row of 5 %>
+    <% if ol_display.any? %>
+      <%# Mobile: blind-side pair %>
+      <div class="grid grid-cols-2 gap-1 mb-1 md:hidden">
+        <% blind_side.each do |display_pos, spot| %>
+          <%= render "games/player_card", spot: spot, grade_key: ol_grade, display_position: display_pos %>
+        <% end %>
+      </div>
+      <%# Mobile: center + strong-side %>
+      <div class="grid grid-cols-3 gap-1 mb-4 md:hidden">
+        <% rest_ol.each do |display_pos, spot| %>
+          <%= render "games/player_card", spot: spot, grade_key: ol_grade, display_position: display_pos %>
+        <% end %>
+      </div>
+      <%# Tablet+: all 5 in one row %>
+      <div class="hidden md:grid grid-cols-5 gap-1 mb-4">
+        <% ol_display.each do |display_pos, spot| %>
+          <%= render "games/player_card", spot: spot, grade_key: ol_grade, display_position: display_pos %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Passing + Rushing ranks %>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <%= render "games/rank_badge", label: "Passing Rank", ranking: rankings["quarterback"], highlight: mode == "pass" %>
+      <%= render "games/rank_badge", label: "Rushing Rank", ranking: rankings["rushing"], highlight: mode == "run" %>
+    </div>
+
+    <%# QB + RB1 %>
+    <div class="grid grid-cols-2 gap-1 mb-1">
+      <% qbs.each do |spot| %>
+        <%= render "games/player_card", spot: spot, grade_key: qb_grade %>
+      <% end %>
+      <% rb1.each do |spot| %>
+        <%= render "games/player_card", spot: spot, grade_key: rb_grade %>
+      <% end %>
+    </div>
+
+    <%# Receiving rank %>
+    <div class="mb-3 mt-3">
+      <%= render "games/rank_badge", label: "Receiving Rank", ranking: rankings["receiving"], highlight: mode == "pass" %>
+    </div>
+
+    <%# WR row %>
+    <% if wrs.any? %>
+      <div class="grid grid-cols-3 gap-1 mb-1">
+        <% wrs.each do |spot| %>
+          <%= render "games/player_card", spot: spot, grade_key: wr_grade %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# TE + Flex (RB2, etc.) %>
+    <% if flex.any? %>
+      <% flex_cols = flex.size >= 3 ? "grid-cols-3" : flex.size == 2 ? "grid-cols-2" : "grid-cols-1" %>
+      <div class="grid <%= flex_cols %> gap-1">
+        <% flex.each do |spot| %>
+          <%= render "games/player_card", spot: spot, grade_key: wr_grade %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

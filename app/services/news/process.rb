@@ -8,13 +8,11 @@ class News
     end
 
     def call
-      # Generate slugs
-      primary_person_slug = @news.primary_person&.parameterize
+      # Generate team slugs
       primary_team_slug = @news.primary_team&.parameterize
-      secondary_person_slug = @news.secondary_person&.parameterize
       secondary_team_slug = @news.secondary_team&.parameterize
 
-      # Find or create Person records
+      # Find or create Person records (smart name matching)
       primary_person_record = find_or_create_person(@news.primary_person, "primary_person") if @news.primary_person.present?
       secondary_person_record = find_or_create_person(@news.secondary_person, "secondary_person") if @news.secondary_person.present?
 
@@ -26,11 +24,11 @@ class News
       create_contract(primary_person_record, primary_team_record) if primary_person_record && primary_team_record
       create_contract(secondary_person_record, secondary_team_record) if secondary_person_record && secondary_team_record
 
-      # Update slugs on News record
+      # Update slugs on News record — use actual person slug (may differ from parameterized name)
       @news.update!(
-        primary_person_slug: primary_person_slug,
+        primary_person_slug: primary_person_record&.slug,
         primary_team_slug: primary_team_slug,
-        secondary_person_slug: secondary_person_slug,
+        secondary_person_slug: secondary_person_record&.slug,
         secondary_team_slug: secondary_team_slug
       )
       @news.process_news!
@@ -43,17 +41,24 @@ class News
       parts = full_name.strip.split(/\s+/, 2)
       first_name = parts[0]
       last_name = parts[1] || parts[0]
-      slug = full_name.parameterize
 
-      existing = Person.find_by(slug: slug)
-      if existing
-        @created_records << { role: role, type: "Person", slug: slug, status: "found" }
-        existing
+      was_new = false
+      person = Person.find_by_name(first_name, last_name)
+      if person
+        # Auto-add alias if incoming name differs
+        incoming = "#{first_name} #{last_name}".strip
+        if incoming != person.full_name && !person.aliases.include?(incoming)
+          person.aliases << incoming
+          person.save!
+        end
+        person.update!(athlete: true) unless person.athlete?
       else
-        person = Person.create!(first_name: first_name, last_name: last_name, slug: slug, athlete: true)
-        @created_records << { role: role, type: "Person", slug: slug, status: "created" }
-        person
+        person = Person.create!(first_name: first_name, last_name: last_name, athlete: true)
+        was_new = true
       end
+
+      @created_records << { role: role, type: "Person", slug: person.slug, status: was_new ? "created" : "found" }
+      person
     end
 
     def find_team(slug, role)

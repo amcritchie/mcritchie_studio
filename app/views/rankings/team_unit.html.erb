@@ -1,0 +1,148 @@
+<% content_for :title, "#{@team.name} Unit Rankings — 2025 Season" %>
+<% content_for :full_width, true %>
+
+<%
+  # Helper to render a rank card
+  def rank_card(label, rank_type, rankings_by_type, emoji: nil)
+    ranking = rankings_by_type[rank_type]
+    rank = ranking&.rank
+    score = ranking&.score
+    capture do
+      concat(content_tag(:div, class: "card p-4 flex items-center justify-between") do
+        left = content_tag(:div) do
+          title = content_tag(:p, class: "text-xs text-muted uppercase tracking-wide mb-1") { "#{emoji} #{label}".strip.html_safe }
+          score_line = if score && score > 0
+            content_tag(:p, class: "text-xs text-secondary mt-1") { "Score: #{score}" }
+          else
+            "".html_safe
+          end
+          title + score_line
+        end
+        right = if rank
+          content_tag(:div, class: "text-center") do
+            badge = content_tag(:span, rank, class: "inline-flex items-center justify-center w-10 h-10 rounded-full text-lg font-bold text-white", style: "background: #{rank_color(rank)};")
+            tier = content_tag(:p, rank_label(rank), class: "text-xs mt-1 font-semibold", style: "color: #{rank_color(rank)};")
+            badge + tier
+          end
+        else
+          content_tag(:span, "—", class: "text-muted text-lg")
+        end
+        left + right
+      end)
+    end
+  end
+%>
+
+<section class="py-6 px-4">
+  <div class="max-w-4xl mx-auto">
+    <%= link_to nfl_hub_path, class: "inline-flex items-center gap-1 text-sm text-secondary hover:text-heading transition mb-4" do %>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      NFL Hub
+    <% end %>
+
+    <%# Hero %>
+    <div class="rounded-xl overflow-hidden mb-8" style="background: linear-gradient(135deg, <%= @team.color_primary %>, <%= @team.color_secondary || @team.color_primary %>);">
+      <div class="py-8 px-6 text-center">
+        <span class="text-4xl block mb-2"><%= @team.emoji %></span>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white"><%= @team.name %></h1>
+        <p class="text-white/70 text-sm mt-1">2025 Unit Rankings</p>
+      </div>
+    </div>
+
+    <%# Power Ranking %>
+    <div class="mb-8">
+      <% power = @rankings_by_type["power"] %>
+      <div class="card p-6 text-center">
+        <p class="text-xs text-muted uppercase tracking-wide mb-2">Overall Power Rank</p>
+        <% if power %>
+          <span class="inline-flex items-center justify-center w-16 h-16 rounded-full text-2xl font-bold text-white mb-2" style="background: <%= rank_color(power.rank) %>;">
+            #<%= power.rank %>
+          </span>
+          <p class="text-sm font-semibold" style="color: <%= rank_color(power.rank) %>;"><%= rank_label(power.rank) %></p>
+          <p class="text-xs text-muted mt-1">Score: <%= power.score %></p>
+        <% else %>
+          <span class="text-muted text-lg">No data</span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <%# Offense section %>
+      <div>
+        <h2 class="text-heading font-bold text-lg mb-4 flex items-center gap-2">
+          <span class="text-xl">⚔️</span> Offense
+        </h2>
+
+        <%# Overall Offense %>
+        <div class="mb-4">
+          <%= rank_card("Overall Offense", "offense", @rankings_by_type) %>
+        </div>
+
+        <%# Aggregate sub-ranks %>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div><%= rank_card("Pass Offense", "pass_offense", @rankings_by_type, emoji: "🎯") %></div>
+          <div><%= rank_card("Run Offense", "run_offense", @rankings_by_type, emoji: "🏃") %></div>
+        </div>
+
+        <%# Unit ranks %>
+        <div class="space-y-3">
+          <%= rank_card("Quarterback", "quarterback", @rankings_by_type, emoji: "🏈") %>
+          <%= rank_card("Receiving", "receiving", @rankings_by_type, emoji: "🧤") %>
+          <%= rank_card("Rushing", "rushing", @rankings_by_type, emoji: "💨") %>
+          <%= rank_card("Pass Block", "pass_block", @rankings_by_type, emoji: "🛡️") %>
+          <%= rank_card("Run Block", "run_block", @rankings_by_type, emoji: "🔨") %>
+        </div>
+      </div>
+
+      <%# Defense section %>
+      <div>
+        <h2 class="text-heading font-bold text-lg mb-4 flex items-center gap-2">
+          <span class="text-xl">🛡️</span> Defense
+        </h2>
+
+        <%# Overall Defense %>
+        <div class="mb-4">
+          <%= rank_card("Overall Defense", "defense", @rankings_by_type) %>
+        </div>
+
+        <%# Aggregate sub-rank %>
+        <div class="mb-4">
+          <%= rank_card("Pass Defense", "pass_defense", @rankings_by_type, emoji: "🔒") %>
+        </div>
+
+        <%# Unit ranks %>
+        <div class="space-y-3">
+          <%= rank_card("Pass Rush", "pass_rush", @rankings_by_type, emoji: "💥") %>
+          <%= rank_card("Coverage", "coverage", @rankings_by_type, emoji: "🔒") %>
+          <%= rank_card("Run Defense", "run_defense", @rankings_by_type, emoji: "🧱") %>
+        </div>
+      </div>
+    </div>
+
+    <%# Player Impact Simulator %>
+    <div class="mt-10 mb-8">
+      <h3 class="text-heading font-bold text-sm mb-3">Player Impact Simulator</h3>
+      <p class="text-secondary text-xs mb-3">See how a prospect would change this team's rankings.</p>
+      <div class="flex flex-wrap gap-2">
+        <% Person.where(athlete: true).joins("INNER JOIN athletes ON athletes.person_slug = people.slug").where(athletes: { draft_pick: 1..32 }).order("athletes.draft_pick ASC").limit(10).each do |prospect| %>
+          <%= link_to nfl_player_impact_path(player_id: prospect.slug, team_id: @team.slug), class: "inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-alt text-secondary hover:text-heading transition" do %>
+            <%= prospect.full_name %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Team selector %>
+    <div class="mt-10">
+      <h3 class="text-heading font-bold text-sm mb-3">View Other Teams</h3>
+      <div class="flex flex-wrap gap-2">
+        <% Team.nfl.order(:name).each do |team| %>
+          <%= link_to nfl_team_rankings_path(team), class: "inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition #{team.slug == @team.slug ? 'bg-primary text-white' : 'bg-surface-alt text-secondary hover:text-heading'}" do %>
+            <span><%= team.emoji %></span>
+            <span><%= team.short_name %></span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>

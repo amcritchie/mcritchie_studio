@@ -1,0 +1,333 @@
+<% content_for :title, "What if #{@person.full_name} joined #{@team.name}?" %>
+<% content_for :full_width, true %>
+
+<%
+  rank_labels = {
+    "quarterback" => ["Quarterback", "🏈"], "receiving" => ["Receiving", "🧤"],
+    "rushing" => ["Rushing", "💨"], "pass_block" => ["Pass Block", "🛡️"],
+    "run_block" => ["Run Block", "🔨"], "pass_rush" => ["Pass Rush", "💥"],
+    "coverage" => ["Coverage", "🔒"], "run_defense" => ["Run Defense", "🧱"],
+    "pass_offense" => ["Pass Offense", "🎯"], "run_offense" => ["Run Offense", "🏃"],
+    "offense" => ["Offense", "⚔️"], "pass_defense" => ["Pass Defense", "🔒"],
+    "defense" => ["Defense", "🛡️"], "power" => ["Power", "⚡"]
+  }
+
+  # Render a single lineup column (offense or defense)
+  def lineup_column(groups, side, highlight_slug: nil)
+    capture do
+      if side == :offense
+        # O-Line (5)
+        if groups[:oline]&.any?
+          concat(content_tag(:p, "O-Line", class: "text-xs text-muted uppercase tracking-wide mb-1"))
+          concat(content_tag(:div, class: "grid grid-cols-5 gap-1 mb-3") {
+            safe_join(groups[:oline].map { |s| render_impact_card(s, :pass_block_grade, highlight_slug) })
+          })
+        end
+        # QB + RB
+        qb_rb = (groups[:qb] || []) + (groups[:rb] || [])
+        if qb_rb.any?
+          concat(content_tag(:p, "Backfield", class: "text-xs text-muted uppercase tracking-wide mb-1"))
+          cols = qb_rb.size >= 3 ? "grid-cols-3" : "grid-cols-#{qb_rb.size}"
+          concat(content_tag(:div, class: "grid #{cols} gap-1 mb-3") {
+            safe_join(qb_rb.map { |s|
+              key = s.position == "QB" ? :pass_grade : :run_grade
+              render_impact_card(s, key, highlight_slug)
+            })
+          })
+        end
+        # WR + TE
+        receivers = (groups[:wr] || []) + (groups[:te] || [])
+        if receivers.any?
+          concat(content_tag(:p, "Receivers", class: "text-xs text-muted uppercase tracking-wide mb-1"))
+          cols = receivers.size >= 4 ? "grid-cols-4" : "grid-cols-#{[receivers.size, 1].max}"
+          concat(content_tag(:div, class: "grid #{cols} gap-1") {
+            safe_join(receivers.map { |s| render_impact_card(s, :pass_route_grade, highlight_slug) })
+          })
+        end
+      else
+        # Front 5 (edge + dl + flex)
+        front = (groups[:edge] || []) + (groups[:dl] || []) + (groups[:flex] || [])
+        if front.any?
+          concat(content_tag(:p, "Front", class: "text-xs text-muted uppercase tracking-wide mb-1"))
+          concat(content_tag(:div, class: "grid grid-cols-5 gap-1 mb-3") {
+            safe_join(front.first(5).map { |s| render_impact_card(s, :pass_rush_grade, highlight_slug) })
+          })
+        end
+        # LB
+        if groups[:lb]&.any?
+          concat(content_tag(:p, "Linebackers", class: "text-xs text-muted uppercase tracking-wide mb-1"))
+          concat(content_tag(:div, class: "grid grid-cols-2 gap-1 mb-3") {
+            safe_join(groups[:lb].map { |s| render_impact_card(s, :overall_grade, highlight_slug) })
+          })
+        end
+        # CB + S
+        secondary = (groups[:s] || []) + (groups[:cb] || [])
+        if secondary.any?
+          concat(content_tag(:p, "Secondary", class: "text-xs text-muted uppercase tracking-wide mb-1"))
+          cols = secondary.size >= 5 ? "grid-cols-5" : "grid-cols-#{[secondary.size, 1].max}"
+          concat(content_tag(:div, class: "grid #{cols} gap-1") {
+            safe_join(secondary.map { |s| render_impact_card(s, :coverage_grade, highlight_slug) })
+          })
+        end
+      end
+    end
+  end
+
+  def render_impact_card(spot, grade_key, highlight_slug)
+    person  = spot.person
+    profile = person&.athlete_profile
+    grade_rec = profile&.grades&.first
+    value   = grade_rec&.send(grade_key)
+    value ||= grade_rec&.overall_grade
+
+    is_new = person&.slug == highlight_slug
+
+    gc = if value.nil? then "#6b7280"
+         elsif value >= 90 then "#16a34a"
+         elsif value >= 80 then "#22c55e"
+         elsif value >= 70 then "#84cc16"
+         elsif value >= 60 then "#eab308"
+         else "#ef4444"
+         end
+
+    ring_class = is_new ? "ring-2 ring-offset-1" : ""
+    ring_style = is_new ? "ring-color: #16a34a; --tw-ring-color: #16a34a;" : ""
+
+    content_tag(:div, class: "rounded-lg p-2 bg-surface-alt text-center #{ring_class}", style: ring_style) do
+      top = content_tag(:div, class: "flex items-center justify-between mb-1") do
+        pos_tag = content_tag(:span, spot.position, class: "text-xs font-bold text-muted uppercase")
+        grade_tag = if value
+          content_tag(:span, value.round(1), class: "text-xs font-bold rounded px-1", style: "background: #{gc}; color: white;")
+        else
+          "".html_safe
+        end
+        pos_tag + grade_tag
+      end
+
+      name = if person
+        fn = content_tag(:p, person.first_name, class: "text-xs text-muted leading-tight")
+        ln = content_tag(:p, person.last_name, class: "text-sm font-bold text-heading leading-tight truncate")
+        new_badge = is_new ? content_tag(:span, "NEW", class: "text-xs font-bold rounded px-1 mt-1 inline-block", style: "background: #16a34a; color: white;") : "".html_safe
+        fn + ln + new_badge
+      else
+        content_tag(:p, "—", class: "text-xs text-muted")
+      end
+
+      top + name
+    end
+  end
+%>
+
+<section class="py-6 px-4">
+  <div class="max-w-5xl mx-auto">
+    <%= link_to nfl_team_rankings_path(@team), class: "inline-flex items-center gap-1 text-sm text-secondary hover:text-heading transition mb-4" do %>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      <%= @team.short_name %> Rankings
+    <% end %>
+
+    <%# Hero %>
+    <div class="rounded-xl overflow-hidden mb-8" style="background: linear-gradient(135deg, <%= @team.color_primary %>, <%= @team.color_secondary || @team.color_primary %>);">
+      <div class="py-8 px-6 text-center">
+        <span class="text-4xl block mb-2"><%= @team.emoji %></span>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white">What if <%= @person.full_name %> joined the <%= @team.name %>?</h1>
+        <p class="text-white/70 text-sm mt-1">Player Impact Simulator — 2025 Season</p>
+        <div class="mt-4 inline-block">
+          <select onchange="if(this.value) window.location = '<%= nfl_player_impact_path(player_id: @person.slug, team_id: '__TEAM__') %>'.replace('__TEAM__', this.value);"
+                  class="input-field text-sm px-4 py-2 rounded-lg" style="min-width: 200px;">
+            <% Team.nfl.order(:name).each do |team| %>
+              <option value="<%= team.slug %>" <%= 'selected' if team.slug == @team.slug %>><%= team.emoji %> <%= team.name %></option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <% if @athlete && @grade %>
+      <%# Prospect card %>
+      <div class="card p-5 mb-8">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-heading font-bold text-lg"><%= @person.full_name %></h2>
+            <p class="text-secondary text-sm"><%= @athlete.position %> <span class="text-muted">|</span> Overall: <span class="font-semibold" style="color: <%= grade_color(@grade.overall_grade) %>;"><%= @grade.overall_grade %></span></p>
+          </div>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-surface-alt text-secondary"><%= @athlete.position %></span>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <% grade_fields = case @athlete.position
+               when "QB" then [["Pass", @grade.pass_grade], ["Run", @grade.run_grade], ["Overall", @grade.overall_grade]]
+               when "WR", "TE" then [["Route", @grade.pass_route_grade], ["Run", @grade.run_grade], ["Overall", @grade.overall_grade]]
+               when "RB", "FB", "HB" then [["Run", @grade.run_grade], ["Route", @grade.pass_route_grade], ["Overall", @grade.overall_grade]]
+               when "OT", "OG", "C", "LT", "LG", "RT", "RG" then [["Pass Block", @grade.pass_block_grade], ["Run Block", @grade.run_block_grade], ["Overall", @grade.overall_grade]]
+               when "EDGE", "DE" then [["Pass Rush", @grade.pass_rush_grade], ["Rush Def", @grade.rush_defense_grade], ["Coverage", @grade.coverage_grade]]
+               when "DT", "NT", "DL" then [["Rush Def", @grade.rush_defense_grade], ["Pass Rush", @grade.pass_rush_grade], ["Coverage", @grade.coverage_grade]]
+               when "LB", "ILB", "OLB", "MLB" then [["Coverage", @grade.coverage_grade], ["Rush Def", @grade.rush_defense_grade], ["Pass Rush", @grade.pass_rush_grade]]
+               when "CB" then [["Coverage", @grade.coverage_grade], ["Rush Def", @grade.rush_defense_grade], ["Overall", @grade.overall_grade]]
+               when "S", "FS", "SS" then [["Coverage", @grade.coverage_grade], ["Rush Def", @grade.rush_defense_grade], ["Pass Rush", @grade.pass_rush_grade]]
+               else [["Overall", @grade.overall_grade], ["Pass", @grade.pass_grade], ["Run", @grade.run_grade]]
+             end
+          %>
+          <% grade_fields.each do |label, value| %>
+            <div class="text-center p-2 rounded-lg bg-surface-alt">
+              <p class="text-xs text-muted uppercase tracking-wide"><%= label %></p>
+              <p class="text-lg font-bold" style="color: <%= value && value > 0 ? grade_color(value) : 'inherit' %>;"><%= value && value > 0 ? value : "—" %></p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Confirm draft pick card %>
+      <% if @draft_confirmed %>
+        <div class="card p-5 mb-8 flex items-center gap-3" style="border: 2px solid #16a34a;">
+          <span class="inline-flex items-center justify-center w-8 h-8 rounded-full" style="background: #16a34a; color: white;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </span>
+          <div>
+            <p class="text-heading font-bold">Draft Confirmed</p>
+            <p class="text-secondary text-sm"><%= @person.full_name %> is on the <%= @team.name %> roster.</p>
+          </div>
+        </div>
+      <% elsif logged_in? && current_user.admin? %>
+        <% mock_contract = Contract.find_by(person_slug: @person.slug, team_slug: @team.slug, contract_type: "mock_pick") %>
+        <div class="card p-5 mb-8">
+          <%= form_with url: confirm_draft_pick_path(player_id: @person.slug, team_id: @team.slug), method: :post, local: true do |f| %>
+            <% if mock_contract %>
+              <p class="text-muted text-xs mb-3">This will convert the existing mock pick to a confirmed draft pick.</p>
+            <% end %>
+            <div class="flex items-center gap-4">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Confirm Draft Pick
+              </button>
+              <label class="flex items-center gap-2 text-sm text-secondary cursor-pointer">
+                <input type="checkbox" name="bench_rookie" value="1" class="rounded">
+                Bench Rookie (don't update rankings)
+              </label>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# Side-by-side lineups %>
+      <% side_label = @affected_side == :offense ? "Offense" : "Defense" %>
+      <h2 class="text-heading font-bold text-lg mb-4"><%= side_label %> — Starting 12</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <%# Current roster %>
+        <div class="card p-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-subtle">
+            <span class="text-lg"><%= @team.emoji %></span>
+            <h3 class="font-bold text-heading text-sm">Current Roster</h3>
+            <div class="ml-auto rounded-full px-2 py-0.5 text-xs font-bold bg-surface-alt text-secondary">
+              <%= side_label.upcase %>
+            </div>
+          </div>
+          <%= lineup_column(@current_lineup, @affected_side) %>
+        </div>
+
+        <%# With player %>
+        <div class="card p-4" style="border: 1px solid #16a34a33;">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-subtle">
+            <span class="text-lg"><%= @team.emoji %></span>
+            <h3 class="font-bold text-heading text-sm">With <%= @person.last_name %></h3>
+            <div class="ml-auto rounded-full px-2 py-0.5 text-xs font-bold" style="background: #16a34a; color: white;">
+              + <%= @athlete.position %>
+            </div>
+          </div>
+          <%= lineup_column(@modified_lineup, @affected_side, highlight_slug: @person.slug) %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @impact %>
+      <%# Impact rankings %>
+      <% changed = TeamRanking::RANK_TYPES.select { |t| @impact[t][:changed] } %>
+      <% unchanged = TeamRanking::RANK_TYPES.reject { |t| @impact[t][:changed] } %>
+
+      <% if changed.any? %>
+        <h2 class="text-heading font-bold text-lg mb-4">Affected Rankings</h2>
+        <div class="space-y-3 mb-8">
+          <% changed.each do |type| %>
+            <% data = @impact[type] %>
+            <% label, emoji = rank_labels[type] %>
+            <div class="card p-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg"><%= emoji %></span>
+                  <span class="text-heading font-semibold text-sm"><%= label %></span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="text-center">
+                    <p class="text-xs text-muted mb-1">Current</p>
+                    <span class="inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold text-white" style="background: <%= rank_color(data[:current_rank]) %>;"><%= data[:current_rank] %></span>
+                  </div>
+                  <div class="flex flex-col items-center">
+                    <% if data[:delta_rank] > 0 %>
+                      <svg class="w-5 h-5" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7"/></svg>
+                      <span class="text-xs font-bold" style="color: #16a34a;">+<%= data[:delta_rank] %></span>
+                    <% elsif data[:delta_rank] < 0 %>
+                      <svg class="w-5 h-5" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 19l7-7"/></svg>
+                      <span class="text-xs font-bold" style="color: #ef4444;"><%= data[:delta_rank] %></span>
+                    <% else %>
+                      <span class="text-muted text-sm">—</span>
+                    <% end %>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-xs text-muted mb-1">With Player</p>
+                    <span class="inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold text-white" style="background: <%= rank_color(data[:modified_rank]) %>;"><%= data[:modified_rank] %></span>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-2 flex items-center gap-2 text-xs text-muted">
+                <span>Score: <%= data[:current_score] %></span>
+                <span>→</span>
+                <span><%= data[:modified_score] %></span>
+                <span class="font-semibold" style="color: <%= data[:delta_score] > 0 ? '#16a34a' : data[:delta_score] < 0 ? '#ef4444' : 'inherit' %>;">
+                  (<%= data[:delta_score] > 0 ? "+" : "" %><%= data[:delta_score] %>)
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if unchanged.any? %>
+        <div x-data="{ open: false }" class="mb-8">
+          <button @click="open = !open" class="flex items-center gap-2 text-sm text-secondary hover:text-heading transition mb-3">
+            <svg :class="open && 'rotate-90'" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            Unchanged Rankings (<%= unchanged.size %>)
+          </button>
+          <div x-show="open" x-cloak class="space-y-2">
+            <% unchanged.each do |type| %>
+              <% data = @impact[type] %>
+              <% label, emoji = rank_labels[type] %>
+              <div class="card p-3 flex items-center justify-between opacity-60">
+                <div class="flex items-center gap-2">
+                  <span><%= emoji %></span>
+                  <span class="text-secondary text-sm"><%= label %></span>
+                </div>
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold text-white" style="background: <%= rank_color(data[:current_rank]) %>;"><%= data[:current_rank] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="empty-state">
+        <p class="text-muted">Could not simulate impact — player or grade data missing.</p>
+      </div>
+    <% end %>
+
+    <%# Team selector %>
+    <div class="mt-6">
+      <h3 class="text-heading font-bold text-sm mb-3">Try Another Team</h3>
+      <div class="flex flex-wrap gap-2">
+        <% Team.nfl.order(:name).each do |team| %>
+          <%= link_to nfl_player_impact_path(player_id: @person.slug, team_id: team.slug), class: "inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition #{team.slug == @team.slug ? 'bg-primary text-white' : 'bg-surface-alt text-secondary hover:text-heading'}" do %>
+            <span><%= team.emoji %></span>
+            <span><%= team.short_name %></span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>

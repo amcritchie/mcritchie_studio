@@ -16,6 +16,8 @@
     <div class="border-t border-subtle my-1"></div>
     <a href="/teams" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Teams</a>
     <a href="/people" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">People</a>
+    <a href="/people/duplicates" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Duplicates</a>
+    <a href="/people/merge" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Merge People</a>
     <%= link_to "NFL Hub", nfl_hub_path, class: "block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition" %>
     <div class="border-t border-subtle my-1"></div>
     <% turf_url = Rails.env.production? ? "https://turf.mcritchie.studio" : "http://localhost:3001" %>

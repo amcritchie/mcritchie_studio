@@ -1,0 +1,44 @@
+<%# Player card for lineup display
+    Locals: spot (RosterSpot), grade_key (symbol, default :overall_grade), display_position (string, optional override) %>
+<%
+  grade_key        = local_assigns.fetch(:grade_key, :overall_grade)
+  display_position = local_assigns.fetch(:display_position, spot.position)
+  person           = spot.person
+  profile   = person&.athlete_profile
+  grade_rec = profile&.grades&.first
+  value     = grade_rec&.send(grade_key)
+  value   ||= grade_rec&.overall_grade  # fallback if column is nil
+%>
+
+<div class="rounded-lg p-2 bg-surface-alt text-center">
+  <%# Position + grade %>
+  <div class="flex items-center justify-between mb-1">
+    <span class="text-xs font-bold text-muted uppercase"><%= display_position %></span>
+    <% if value %>
+      <%
+        gc = if value >= 90
+               "#16a34a"
+             elsif value >= 80
+               "#22c55e"
+             elsif value >= 70
+               "#84cc16"
+             elsif value >= 60
+               "#eab308"
+             else
+               "#ef4444"
+             end
+      %>
+      <span class="text-xs font-bold rounded px-1" style="background: <%= gc %>; color: white;">
+        <%= value.round(1) %>
+      </span>
+    <% end %>
+  </div>
+
+  <%# Player name %>
+  <% if person %>
+    <p class="text-xs text-muted leading-tight"><%= person.first_name %></p>
+    <p class="text-sm font-bold text-heading leading-tight truncate"><%= person.last_name %></p>
+  <% else %>
+    <p class="text-xs text-muted">—</p>
+  <% end %>
+</div>

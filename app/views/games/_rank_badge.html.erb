@@ -1,0 +1,33 @@
+<%# Unit rank badge — Boodle style
+    Locals: label (string), ranking (TeamRanking or nil), highlight (boolean, default false) %>
+<%
+  highlight = local_assigns.fetch(:highlight, false)
+  rank = ranking&.rank
+  rank_bg = if rank.nil?
+              "#6b7280"
+            elsif rank <= 5
+              "#16a34a"
+            elsif rank <= 10
+              "#22c55e"
+            elsif rank <= 16
+              "#84cc16"
+            elsif rank <= 22
+              "#eab308"
+            elsif rank <= 27
+              "#f97316"
+            else
+              "#ef4444"
+            end
+%>
+
+<% if highlight %>
+  <div class="rounded-lg p-3 flex items-center gap-3 border border-transparent" style="background: <%= rank_bg %>;">
+    <span class="text-lg font-extrabold text-white"><%= rank || "—" %></span>
+    <span class="text-sm font-bold text-white/90"><%= label %></span>
+  </div>
+<% else %>
+  <div class="rounded-lg p-3 flex items-center gap-3 bg-surface-alt border border-subtle">
+    <span class="text-lg font-extrabold" style="color: <%= rank_bg %>;"><%= rank || "—" %></span>
+    <span class="text-sm font-bold text-secondary"><%= label %></span>
+  </div>
+<% end %>

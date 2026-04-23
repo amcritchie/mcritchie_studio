@@ -18,7 +18,7 @@ module Pff
       offseason = season.slates.find_by(sequence: 0)
       raise "Offseason slate not found for #{season_slug}" unless offseason
 
-      depth_tracker = Hash.new { |h, k| h[k] = Hash.new(0) }
+      depth_tracker = Hash.new(0)
 
       CSV.foreach(csv_path, headers: true) do |row|
         team_name = EncodingSanitizer.sanitize_utf8(row["Team"]&.strip)
@@ -40,27 +40,21 @@ module Pff
         parts = player.split(/\s+/, 2)
         first_name = parts[0]
         last_name  = parts[1] || ""
-        person_slug = "#{first_name} #{last_name}".parameterize
 
-        # Find or create Person
-        person = Person.find_or_create_by!(slug: person_slug) do |p|
-          p.first_name = first_name
-          p.last_name  = last_name
-          p.athlete    = true
-        end
-        person.update!(athlete: true) unless person.athlete?
+        # Find or create Person (smart name matching)
+        person = Person.find_or_create_by_name!(first_name, last_name, athlete: true)
         @stats[:people] += 1
 
         # Find or create Athlete
         normalized_pos = PositionConcern.normalize_position(position)
-        athlete = Athlete.find_or_create_by!(person_slug: person_slug) do |a|
+        athlete = Athlete.find_or_create_by!(person_slug: person.slug) do |a|
           a.sport    = "football"
           a.position = normalized_pos
         end
         @stats[:athletes] += 1
 
         # Find or create Contract (active)
-        Contract.find_or_create_by!(person_slug: person_slug, team_slug: team.slug) do |c|
+        Contract.find_or_create_by!(person_slug: person.slug, team_slug: team.slug) do |c|
           c.contract_type = "active"
           c.position      = normalized_pos
         end
@@ -86,7 +80,7 @@ module Pff
         depth = depth_tracker[roster_key]
 
         RosterSpot.find_or_create_by!(roster: roster, position: normalized_pos, depth: depth) do |rs|
-          rs.person_slug = person_slug
+          rs.person_slug = person.slug
           rs.side        = side
         end
         @stats[:roster_spots] += 1
