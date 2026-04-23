@@ -143,11 +143,19 @@ class NewsController < ApplicationController
     rescue_and_log(target: @news) do
       raise "News must be in concluded stage" unless @news.stage == "concluded"
 
+      # Auto-set rival team from primary team's first rival
+      rival_slug = nil
+      if @news.primary_team_slug.present?
+        team = Team.find_by(slug: @news.primary_team_slug)
+        rival_slug = team&.rivals&.first
+      end
+
       content = Content.create!(
         title: "#{@news.title_short.presence || @news.title} — TikTok",
         description: @news.summary,
         source_type: "news",
-        source_news_slug: @news.slug
+        source_news_slug: @news.slug,
+        rival_team_slug: rival_slug
       )
       redirect_to content_path(content.slug), notice: "Content idea created from news."
     end

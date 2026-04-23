@@ -54,6 +54,11 @@ Rails.application.routes.draw do
       post :assemble_step
       post :post_step
       post :review_step
+      post :script_agent_step
+      post :assets_agent_step
+      post :assemble_agent_step
+      post :finalize_step
+      post :metadata_step
     end
   end
   resources :teams, only: [:index], param: :slug
