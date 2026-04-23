@@ -113,4 +113,119 @@ namespace :content do
     puts "  Views: #{content.views}, Likes: #{content.likes}"
     puts "Done — stage is now '#{content.stage}'"
   end
+
+  # --- AI Agent Tasks ---
+
+  desc "AI-generate script from hook content (Claude Opus) — SLUG=content-xxx"
+  task script_agent: :environment do
+    content = if ENV["SLUG"]
+      Content::ScriptAgent.new(Content.find_by!(slug: ENV["SLUG"])).call
+    else
+      Content::ScriptAgent.script_latest
+    end
+
+    puts "Script generated: #{content.title.truncate(80)} (#{content.slug})"
+    puts "  Duration: #{content.duration_seconds}s"
+    puts "  Scenes: #{content.scenes&.size || 0}"
+    puts "Done — stage is now '#{content.stage}'"
+  end
+
+  desc "AI-generate scene images (Nano Banana) — SLUG=content-xxx"
+  task assets_agent: :environment do
+    content = if ENV["SLUG"]
+      Content::AssetsAgent.new(Content.find_by!(slug: ENV["SLUG"])).call
+    else
+      Content::AssetsAgent.assets_latest
+    end
+
+    puts "Assets generated: #{content.title.truncate(80)} (#{content.slug})"
+    puts "  Scene assets: #{content.scene_assets&.size || 0}"
+    puts "Done — stage is now '#{content.stage}'"
+  end
+
+  desc "AI-assemble video from images (Kling 3) — SLUG=content-xxx"
+  task assemble_agent: :environment do
+    content = if ENV["SLUG"]
+      Content::AssembleAgent.new(Content.find_by!(slug: ENV["SLUG"])).call
+    else
+      Content::AssembleAgent.assemble_latest
+    end
+
+    puts "Video assembled: #{content.title.truncate(80)} (#{content.slug})"
+    puts "  Video URL: #{content.final_video_url}"
+    puts "Done — stage is now '#{content.stage}'"
+  end
+
+  desc "Apply watermark to assembled video (FFmpeg) — SLUG=content-xxx"
+  task finalize: :environment do
+    content = if ENV["SLUG"]
+      Content::Finalize.new(Content.find_by!(slug: ENV["SLUG"])).call
+    else
+      Content::Finalize.finalize_latest
+    end
+
+    puts "Finalized: #{content.title.truncate(80)} (#{content.slug})"
+    puts "  Video URL: #{content.final_video_url}"
+    puts "  Watermark: #{content.logo_overlay ? 'yes' : 'no'}"
+  end
+
+  desc "AI-generate TikTok metadata (Claude Haiku) — SLUG=content-xxx"
+  task metadata: :environment do
+    content = if ENV["SLUG"]
+      Content::MetadataAgent.new(Content.find_by!(slug: ENV["SLUG"])).call
+    else
+      Content::MetadataAgent.metadata_latest
+    end
+
+    puts "Metadata generated: #{content.title.truncate(80)} (#{content.slug})"
+    puts "  Caption: #{content.captions&.truncate(100)}"
+    puts "  Hashtags: #{content.hashtags&.size || 0}"
+    puts "  Music: #{content.music_suggestions&.size || 0}"
+  end
+
+  desc "Run full AI pipeline on one content item — SLUG=content-xxx"
+  task generate: :environment do
+    slug = ENV["SLUG"]
+    raise "SLUG= required for content:generate" unless slug
+
+    content = Content.find_by!(slug: slug)
+    puts "Starting full pipeline: #{content.title.truncate(80)} (#{content.slug})"
+    puts "  Current stage: #{content.stage}"
+
+    if content.stage == "hook"
+      puts "\n--- Script Agent (Claude Opus) ---"
+      Content::ScriptAgent.new(content).call
+      content.reload
+      puts "  Stage: #{content.stage}, Duration: #{content.duration_seconds}s, Scenes: #{content.scenes&.size}"
+    end
+
+    if content.stage == "script"
+      puts "\n--- Assets Agent (Nano Banana) ---"
+      Content::AssetsAgent.new(content).call
+      content.reload
+      puts "  Stage: #{content.stage}, Assets: #{content.scene_assets&.size}"
+    end
+
+    if content.stage == "assets"
+      puts "\n--- Assemble Agent (Kling 3) ---"
+      Content::AssembleAgent.new(content).call
+      content.reload
+      puts "  Stage: #{content.stage}, Video: #{content.final_video_url}"
+    end
+
+    if content.stage == "assembly"
+      puts "\n--- Finalize (FFmpeg) ---"
+      Content::Finalize.new(content).call
+      content.reload
+      puts "  Stage: #{content.stage}, Watermark: #{content.logo_overlay}"
+    end
+
+    puts "\n--- Metadata Agent (Claude Haiku) ---"
+    Content::MetadataAgent.new(content).call
+    content.reload
+    puts "  Caption: #{content.captions&.truncate(80)}"
+    puts "  Hashtags: #{content.hashtags&.join(', ')}"
+
+    puts "\nPipeline complete! Final stage: #{content.stage}"
+  end
 end
