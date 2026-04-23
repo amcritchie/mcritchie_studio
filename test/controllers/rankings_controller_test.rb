@@ -355,7 +355,7 @@ class RankingsControllerTest < ActionDispatch::IntegrationTest
   test "team unit rankings redirects when no season" do
     Season.find_by(year: 2025, league: "nfl").destroy
     get nfl_team_rankings_path("buffalo-bills")
-    assert_redirected_to nfl_hub_path
+    assert_redirected_to root_path
   end
 
   # --- Player impact ---

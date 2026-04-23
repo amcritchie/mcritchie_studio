@@ -1,13 +1,11 @@
 class RankingsController < ApplicationController
   skip_before_action :require_authentication
   before_action :require_admin, only: [:confirm_draft_pick]
+  before_action :set_season, only: [:quarterback, :offensive_line, :receiving, :rushing, :defense, :pass_rush, :coverage, :pass_first, :team_unit, :prospects]
   before_action :set_impact_context, only: [:player_impact, :confirm_draft_pick]
 
   # GET /nfl-quarterback-rankings
   def quarterback
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @sort_by = params[:sort].presence || "overall"
 
     grade_column = case @sort_by
@@ -21,9 +19,6 @@ class RankingsController < ApplicationController
 
   # GET /nfl-offensive-line-rankings
   def offensive_line
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @sort_by = params[:sort].presence || "pass_block"
 
     grade_column = case @sort_by
@@ -37,9 +32,6 @@ class RankingsController < ApplicationController
 
   # GET /nfl-receiving-rankings
   def receiving
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @sort_by = params[:sort].presence || "route"
 
     grade_column = case @sort_by
@@ -52,9 +44,6 @@ class RankingsController < ApplicationController
 
   # GET /nfl-rushing-rankings
   def rushing
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @sort_by = params[:sort].presence || "rushing"
 
     grade_column = case @sort_by
@@ -67,9 +56,6 @@ class RankingsController < ApplicationController
 
   # GET /nfl-defense-rankings
   def defense
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @sort_by = params[:sort].presence || "overall"
 
     grade_column = case @sort_by
@@ -87,9 +73,6 @@ class RankingsController < ApplicationController
 
   # GET /nfl-pass-rush-rankings
   def pass_rush
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @sort_by = params[:sort].presence || "pass_rush"
 
     grade_column = case @sort_by
@@ -102,9 +85,6 @@ class RankingsController < ApplicationController
 
   # GET /nfl-coverage-rankings
   def coverage
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @sort_by = params[:sort].presence || "coverage"
 
     grade_column = case @sort_by
@@ -117,9 +97,6 @@ class RankingsController < ApplicationController
 
   # GET /nfl-pass-first-rankings
   def pass_first
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @sort_by = params[:sort].presence || "pass_first"
     rank_type = @sort_by == "pass_heavy" ? "pass_heavy" : "pass_first"
 
@@ -150,9 +127,6 @@ class RankingsController < ApplicationController
   def team_unit
     @team = Team.find_by(slug: params[:id])
     return redirect_to nfl_hub_path, alert: "Team not found" unless @team
-
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to nfl_hub_path, alert: "Season not found" unless @season
 
     rankings = TeamRanking.where(team_slug: @team.slug, season_slug: @season.slug, week: nil)
     @rankings_by_type = rankings.index_by(&:rank_type)
@@ -205,16 +179,12 @@ class RankingsController < ApplicationController
 
     rescue_and_log(target: contract) do
       ActiveRecord::Base.transaction do
-        # Create or convert contract to draft_pick
-        contract.contract_type = "draft_pick"
-        contract.position = athlete&.position
-        contract.save!
-
-        # Expire college contracts for this person
-        Contract.where(person_slug: @person.slug, contract_type: "college")
-                .where(expires_at: nil)
-                .or(Contract.where(person_slug: @person.slug, contract_type: "college").where("expires_at > ?", Date.current))
-                .update_all(expires_at: Date.current)
+        # Delegate contract creation + college expiry to service
+        Draft::CreateContract.new(
+          person_slug: @person.slug,
+          team_slug: @team.slug,
+          position: athlete&.position
+        ).call
 
         # Recompute rankings unless bench_rookie
         unless params[:bench_rookie] == "1"
@@ -251,9 +221,6 @@ class RankingsController < ApplicationController
 
   # GET /nfl-prospects
   def prospects
-    @season = Season.find_by(year: 2025, league: "nfl")
-    return redirect_to root_path, alert: "Season not found" unless @season
-
     @draft_year = params[:year].to_i
     @draft_year = 2025 unless [2025, 2026].include?(@draft_year)
     @sort_by = params[:sort].presence || "pick"
@@ -328,6 +295,11 @@ class RankingsController < ApplicationController
   end
 
   private
+
+  def set_season
+    @season = Season.find_by(year: 2025, league: "nfl")
+    return redirect_to root_path, alert: "Season not found" unless @season
+  end
 
   def set_impact_context
     @person = Person.find_by(slug: params[:player_id])

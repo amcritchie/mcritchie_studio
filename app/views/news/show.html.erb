@@ -149,7 +149,7 @@
                 <p class="text-[10px] text-muted uppercase tracking-wider">Primary Person</p>
                 <p class="text-heading text-sm"><%= @news.primary_person %></p>
                 <% if @news.primary_person_slug.present? %>
-                  <% person_record = Person.find_by(slug: @news.primary_person_slug) %>
+                  <% person_record = @people_by_slug[@news.primary_person_slug] %>
                   <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="inline-block w-1.5 h-1.5 rounded-full <%= person_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
                     <% if person_record %>
@@ -167,7 +167,7 @@
                 <p class="text-[10px] text-muted uppercase tracking-wider">Primary Team</p>
                 <p class="text-heading text-sm"><%= @news.primary_team %></p>
                 <% if @news.primary_team_slug.present? %>
-                  <% team_record = Team.find_by(slug: @news.primary_team_slug) %>
+                  <% team_record = @teams_by_slug[@news.primary_team_slug] %>
                   <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="inline-block w-1.5 h-1.5 rounded-full <%= team_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
                     <% if team_record %>
@@ -185,7 +185,7 @@
                 <p class="text-[10px] text-muted uppercase tracking-wider">Secondary Person</p>
                 <p class="text-heading text-sm"><%= @news.secondary_person %></p>
                 <% if @news.secondary_person_slug.present? %>
-                  <% person_record = Person.find_by(slug: @news.secondary_person_slug) %>
+                  <% person_record = @people_by_slug[@news.secondary_person_slug] %>
                   <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="inline-block w-1.5 h-1.5 rounded-full <%= person_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
                     <% if person_record %>
@@ -203,7 +203,7 @@
                 <p class="text-[10px] text-muted uppercase tracking-wider">Secondary Team</p>
                 <p class="text-heading text-sm"><%= @news.secondary_team %></p>
                 <% if @news.secondary_team_slug.present? %>
-                  <% team_record = Team.find_by(slug: @news.secondary_team_slug) %>
+                  <% team_record = @teams_by_slug[@news.secondary_team_slug] %>
                   <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="inline-block w-1.5 h-1.5 rounded-full <%= team_record ? 'bg-green-400' : 'bg-red-400' %>"></span>
                     <% if team_record %>

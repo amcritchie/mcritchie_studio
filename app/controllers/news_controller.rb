@@ -10,6 +10,11 @@ class NewsController < ApplicationController
   end
 
   def show
+    # Batch-load person/team records for slug validation dots
+    person_slugs = [@news.primary_person_slug, @news.secondary_person_slug].compact
+    team_slugs = [@news.primary_team_slug, @news.secondary_team_slug].compact
+    @people_by_slug = person_slugs.any? ? Person.where(slug: person_slugs).index_by(&:slug) : {}
+    @teams_by_slug = team_slugs.any? ? Team.where(slug: team_slugs).index_by(&:slug) : {}
   end
 
   def workflow

@@ -26,10 +26,14 @@ module Draft
         end
       end
 
-      # Create draft contract
+      # Create or convert to draft_pick contract
       contract = Contract.find_or_create_by!(person_slug: person.slug, team_slug: team.slug) do |c|
         c.contract_type = "draft_pick"
         c.position      = resolved_position
+      end
+      # Convert existing contract (e.g. mock_pick) to draft_pick
+      if contract.contract_type != "draft_pick"
+        contract.update!(contract_type: "draft_pick", position: resolved_position)
       end
       puts "Draft contract: #{person.full_name} → #{team.name} (#{resolved_position}) [#{contract.slug}]"
 
