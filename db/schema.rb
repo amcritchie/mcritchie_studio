@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_23_224015) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_23_224757) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -119,6 +119,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224015) do
     t.integer "pff_id"
     t.index ["person_slug"], name: "index_athletes_on_person_slug", unique: true
     t.index ["pff_id"], name: "index_athletes_on_pff_id", unique: true
+    t.index ["position"], name: "index_athletes_on_position"
     t.index ["slug"], name: "index_athletes_on_slug", unique: true
     t.index ["sport"], name: "index_athletes_on_sport"
   end
@@ -150,6 +151,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224015) do
     t.index ["person_slug", "team_slug", "role"], name: "index_coaches_unique_role", unique: true
     t.index ["person_slug"], name: "index_coaches_on_person_slug"
     t.index ["slug"], name: "index_coaches_on_slug", unique: true
+    t.index ["sport"], name: "index_coaches_on_sport"
     t.index ["team_slug"], name: "index_coaches_on_team_slug"
   end
 
@@ -206,6 +208,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224015) do
     t.string "position"
     t.string "contract_type", default: "active"
     t.index ["contract_type"], name: "index_contracts_on_contract_type"
+    t.index ["expires_at"], name: "index_contracts_on_expires_at"
     t.index ["person_slug", "team_slug"], name: "index_contracts_on_person_slug_and_team_slug", unique: true
     t.index ["person_slug"], name: "index_contracts_on_person_slug"
     t.index ["slug"], name: "index_contracts_on_slug", unique: true
@@ -282,6 +285,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224015) do
     t.jsonb "callback_ideas", default: []
     t.index ["primary_person_slug"], name: "index_news_on_primary_person_slug"
     t.index ["primary_team_slug"], name: "index_news_on_primary_team_slug"
+    t.index ["secondary_person_slug"], name: "index_news_on_secondary_person_slug"
+    t.index ["secondary_team_slug"], name: "index_news_on_secondary_team_slug"
     t.index ["slug"], name: "index_news_on_slug", unique: true
     t.index ["stage", "position"], name: "index_news_on_stage_and_position"
     t.index ["stage"], name: "index_news_on_stage"
@@ -296,6 +301,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224015) do
     t.datetime "updated_at", null: false
     t.jsonb "aliases", default: []
     t.boolean "coach", default: false
+    t.index ["last_name", "first_name"], name: "index_people_on_last_name_and_first_name"
     t.index ["slug"], name: "index_people_on_slug", unique: true
   end
 
