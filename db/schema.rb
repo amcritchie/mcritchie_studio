@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_23_224015) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -95,6 +95,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
     t.string "slug", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.float "fg_grade"
+    t.float "kickoff_grade"
+    t.float "punting_grade"
+    t.float "return_grade"
+    t.jsonb "grade_ranges"
     t.index ["athlete_slug", "season_slug"], name: "index_athlete_grades_on_athlete_slug_and_season_slug", unique: true
     t.index ["athlete_slug"], name: "index_athlete_grades_on_athlete_slug"
     t.index ["season_slug"], name: "index_athlete_grades_on_season_slug"
@@ -111,9 +116,41 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
     t.string "slug", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "pff_id"
     t.index ["person_slug"], name: "index_athletes_on_person_slug", unique: true
+    t.index ["pff_id"], name: "index_athletes_on_pff_id", unique: true
     t.index ["slug"], name: "index_athletes_on_slug", unique: true
     t.index ["sport"], name: "index_athletes_on_sport"
+  end
+
+  create_table "coach_rankings", force: :cascade do |t|
+    t.string "coach_slug", null: false
+    t.string "season_slug", null: false
+    t.string "rank_type", null: false
+    t.integer "rank", null: false
+    t.string "tier"
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["coach_slug", "rank_type", "season_slug"], name: "index_coach_rankings_unique_type_season", unique: true
+    t.index ["coach_slug"], name: "index_coach_rankings_on_coach_slug"
+    t.index ["season_slug"], name: "index_coach_rankings_on_season_slug"
+    t.index ["slug"], name: "index_coach_rankings_on_slug", unique: true
+  end
+
+  create_table "coaches", force: :cascade do |t|
+    t.string "person_slug", null: false
+    t.string "team_slug", null: false
+    t.string "role", null: false
+    t.string "lean"
+    t.string "sport", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["person_slug", "team_slug", "role"], name: "index_coaches_unique_role", unique: true
+    t.index ["person_slug"], name: "index_coaches_on_person_slug"
+    t.index ["slug"], name: "index_coaches_on_slug", unique: true
+    t.index ["team_slug"], name: "index_coaches_on_team_slug"
   end
 
   create_table "contents", force: :cascade do |t|
@@ -193,54 +230,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
     t.index ["target_type", "target_id"], name: "index_error_logs_on_target_type_and_target_id"
   end
 
-  create_table "expense_transactions", force: :cascade do |t|
+  create_table "games", force: :cascade do |t|
     t.string "slug", null: false
-    t.bigint "expense_upload_id", null: false
-    t.date "transaction_date", null: false
-    t.string "raw_description", null: false
-    t.string "normalized_description"
-    t.integer "amount_cents", null: false
-    t.string "payment_method"
-    t.string "status", default: "unreviewed"
-    t.string "classification"
-    t.string "category"
-    t.string "deduction_type"
-    t.string "account"
-    t.string "vendor"
-    t.text "business_description"
-    t.text "business_purpose"
-    t.text "ai_question"
-    t.text "user_answer"
-    t.boolean "manually_overridden", default: false
-    t.boolean "excluded", default: false
+    t.string "slate_slug", null: false
+    t.string "home_team_slug", null: false
+    t.string "away_team_slug", null: false
+    t.datetime "kickoff_at"
+    t.string "venue"
+    t.string "status", default: "scheduled"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["expense_upload_id"], name: "index_expense_transactions_on_expense_upload_id"
-    t.index ["payment_method", "amount_cents", "transaction_date"], name: "idx_expense_txn_duplicate_detection"
-    t.index ["slug"], name: "index_expense_transactions_on_slug", unique: true
-  end
-
-  create_table "expense_uploads", force: :cascade do |t|
-    t.string "filename", null: false
-    t.string "slug", null: false
-    t.string "card_type"
-    t.string "status", default: "pending"
-    t.integer "transaction_count", default: 0
-    t.integer "duplicates_skipped", default: 0
-    t.integer "credits_skipped", default: 0
-    t.jsonb "processing_summary", default: {}
-    t.datetime "processed_at"
-    t.datetime "evaluated_at"
-    t.bigint "user_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.integer "unique_transactions", default: 0
-    t.date "first_transaction_at"
-    t.date "last_transaction_at"
-    t.bigint "payment_method_id"
-    t.index ["payment_method_id"], name: "index_expense_uploads_on_payment_method_id"
-    t.index ["slug"], name: "index_expense_uploads_on_slug", unique: true
-    t.index ["user_id"], name: "index_expense_uploads_on_user_id"
+    t.index ["away_team_slug"], name: "index_games_on_away_team_slug"
+    t.index ["home_team_slug"], name: "index_games_on_home_team_slug"
+    t.index ["slate_slug"], name: "index_games_on_slate_slug"
+    t.index ["slug"], name: "index_games_on_slug", unique: true
   end
 
   create_table "news", force: :cascade do |t|
@@ -269,7 +272,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
     t.string "feeling_emoji"
     t.string "what_happened"
     t.text "opinion"
-    t.text "callback"
     t.datetime "reviewed_at"
     t.datetime "processed_at"
     t.datetime "refined_at"
@@ -285,23 +287,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
     t.index ["stage"], name: "index_news_on_stage"
   end
 
-  create_table "payment_methods", force: :cascade do |t|
-    t.string "name", null: false
-    t.string "slug", null: false
-    t.string "last_four"
-    t.string "parser_key"
-    t.string "color"
-    t.string "logo"
-    t.integer "position", default: 0
-    t.string "status", default: "active"
-    t.bigint "user_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "color_secondary"
-    t.index ["slug"], name: "index_payment_methods_on_slug", unique: true
-    t.index ["user_id"], name: "index_payment_methods_on_user_id"
-  end
-
   create_table "people", force: :cascade do |t|
     t.string "first_name", null: false
     t.string "last_name", null: false
@@ -310,7 +295,39 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.jsonb "aliases", default: []
+    t.boolean "coach", default: false
     t.index ["slug"], name: "index_people_on_slug", unique: true
+  end
+
+  create_table "pff_stats", force: :cascade do |t|
+    t.string "athlete_slug", null: false
+    t.string "season_slug", null: false
+    t.string "stat_type", null: false
+    t.string "team_slug"
+    t.integer "pff_player_id"
+    t.integer "games_played"
+    t.jsonb "data", default: {}, null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["athlete_slug", "season_slug", "stat_type"], name: "idx_pff_stats_unique", unique: true
+    t.index ["data"], name: "index_pff_stats_on_data", using: :gin
+    t.index ["pff_player_id"], name: "index_pff_stats_on_pff_player_id"
+    t.index ["slug"], name: "index_pff_stats_on_slug", unique: true
+    t.index ["stat_type"], name: "index_pff_stats_on_stat_type"
+  end
+
+  create_table "pff_team_stats", force: :cascade do |t|
+    t.string "team_slug", null: false
+    t.string "season_slug", null: false
+    t.string "stat_type", null: false
+    t.jsonb "data", default: {}, null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["data"], name: "index_pff_team_stats_on_data", using: :gin
+    t.index ["slug"], name: "index_pff_team_stats_on_slug", unique: true
+    t.index ["team_slug", "season_slug", "stat_type"], name: "idx_pff_team_stats_unique", unique: true
   end
 
   create_table "roster_spots", force: :cascade do |t|
@@ -417,6 +434,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
     t.index ["stage"], name: "index_tasks_on_stage"
   end
 
+  create_table "team_rankings", force: :cascade do |t|
+    t.string "team_slug", null: false
+    t.string "season_slug", null: false
+    t.string "rank_type", null: false
+    t.integer "rank", null: false
+    t.decimal "score", precision: 10, scale: 2
+    t.integer "week"
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["season_slug"], name: "index_team_rankings_on_season_slug"
+    t.index ["slug"], name: "index_team_rankings_on_slug", unique: true
+    t.index ["team_slug", "rank_type", "season_slug", "week"], name: "idx_team_rankings_unique_with_week", unique: true, where: "(week IS NOT NULL)"
+    t.index ["team_slug", "rank_type", "season_slug"], name: "idx_team_rankings_unique_preseason", unique: true, where: "(week IS NULL)"
+    t.index ["team_slug"], name: "index_team_rankings_on_team_slug"
+  end
+
   create_table "teams", force: :cascade do |t|
     t.string "name", null: false
     t.string "short_name"
@@ -483,17 +517,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_21_015006) do
     t.datetime "updated_at", null: false
     t.string "first_name"
     t.string "last_name"
-    t.date "birth_date"
-    t.integer "birth_year"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "expense_transactions", "expense_uploads"
-  add_foreign_key "expense_uploads", "payment_methods"
-  add_foreign_key "expense_uploads", "users"
-  add_foreign_key "payment_methods", "users"
   add_foreign_key "roster_spots", "rosters"
 end
