@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_23_224757) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_23_224836) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -117,6 +117,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224757) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "pff_id"
+    t.string "skin_tone"
+    t.string "hair_description"
+    t.string "build"
+    t.integer "height_inches"
+    t.integer "weight_lbs"
     t.index ["person_slug"], name: "index_athletes_on_person_slug", unique: true
     t.index ["pff_id"], name: "index_athletes_on_pff_id", unique: true
     t.index ["position"], name: "index_athletes_on_position"
@@ -191,6 +196,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224757) do
     t.datetime "reviewed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "reference_video_url"
+    t.integer "reference_video_start"
+    t.integer "reference_video_end"
+    t.string "rival_team_slug"
+    t.text "captions"
+    t.jsonb "hashtags", default: []
+    t.jsonb "music_suggestions", default: []
+    t.index ["rival_team_slug"], name: "index_contents_on_rival_team_slug"
     t.index ["slug"], name: "index_contents_on_slug", unique: true
     t.index ["source_news_slug"], name: "index_contents_on_source_news_slug"
     t.index ["stage", "position"], name: "index_contents_on_stage_and_position"
@@ -472,6 +485,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224757) do
     t.string "league"
     t.string "conference"
     t.string "division"
+    t.jsonb "rivals", default: []
     t.index ["slug"], name: "index_teams_on_slug", unique: true
     t.index ["sport", "league"], name: "index_teams_on_sport_and_league"
   end

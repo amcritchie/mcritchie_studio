@@ -178,7 +178,10 @@ class ContentsController < ApplicationController
       :script_text, :duration_seconds,
       :final_video_url, :music_track, :logo_overlay,
       :platform, :post_url, :post_id,
-      :views, :likes, :comments_count, :shares, :review_notes
+      :views, :likes, :comments_count, :shares, :review_notes,
+      :reference_video_url, :reference_video_start, :reference_video_end,
+      :rival_team_slug, :captions,
+      hashtags: [], music_suggestions: []
     )
   end
 end

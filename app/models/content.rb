@@ -6,6 +6,7 @@ class Content < ApplicationRecord
   validates :stage, inclusion: { in: STAGES }
 
   belongs_to :source_news, class_name: "News", foreign_key: :source_news_slug, primary_key: :slug, optional: true
+  belongs_to :rival_team, class_name: "Team", foreign_key: :rival_team_slug, primary_key: :slug, optional: true
 
   before_validation :generate_slug, on: :create
   before_create :set_initial_position
