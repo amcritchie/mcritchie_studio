@@ -30,6 +30,19 @@
           </div>
         <% end %>
 
+        <%# Reference Video %>
+        <% if @content.reference_video_url.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Reference Video</p>
+            <a href="<%= @content.reference_video_url %>" target="_blank" class="text-primary text-sm hover:text-primary-300"><%= @content.reference_video_url.truncate(60) %></a>
+            <% if @content.reference_video_start.present? %>
+              <span class="text-muted text-xs ml-2">
+                <%= @content.reference_video_start %>s - <%= @content.reference_video_end || "end" %>s
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+
         <% if @content.hook_ideas.present? && @content.hook_ideas.any? %>
           <div class="mb-4">
             <p class="label-upper">Hook Ideas</p>
@@ -69,16 +82,36 @@
               <% @content.scenes.each do |scene| %>
                 <div class="bg-surface-alt rounded-lg p-3">
                   <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold text-heading">Scene <%= scene["scene_number"] %></span>
-                    <% if scene["duration_seconds"] %>
-                      <span class="text-[10px] text-muted"><%= scene["duration_seconds"] %>s</span>
+                    <span class="text-xs font-bold text-heading">Scene <%= scene["number"] || scene["scene_number"] %></span>
+                    <% if scene["duration"] || scene["duration_seconds"] %>
+                      <span class="text-[10px] text-muted"><%= scene["duration"] || scene["duration_seconds"] %>s</span>
                     <% end %>
                   </div>
                   <% if scene["description"] %>
                     <p class="text-sm text-body"><%= scene["description"] %></p>
                   <% end %>
+                  <% if scene["camera"] %>
+                    <p class="text-[10px] text-secondary mt-1"><%= scene["camera"] %></p>
+                  <% end %>
                   <% if scene["screen_direction"] %>
                     <p class="text-[10px] text-secondary mt-1"><%= scene["screen_direction"] %></p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <%# Scene Assets %>
+        <% if @content.scene_assets.present? && @content.scene_assets.any? %>
+          <div class="mb-4">
+            <p class="label-upper">Scene Assets</p>
+            <div class="grid grid-cols-2 gap-2 mt-1">
+              <% @content.scene_assets.each do |asset| %>
+                <div class="bg-surface-alt rounded-lg p-3">
+                  <p class="text-xs font-bold text-heading mb-1">Scene <%= asset["scene_number"] %></p>
+                  <% if asset["image_url"] %>
+                    <img src="<%= asset["image_url"] %>" alt="Scene <%= asset["scene_number"] %>" class="w-full h-24 object-cover rounded">
                   <% end %>
                 </div>
               <% end %>
@@ -90,6 +123,36 @@
           <div class="mb-4">
             <p class="label-upper">Final Video</p>
             <a href="<%= @content.final_video_url %>" target="_blank" class="text-primary text-sm hover:text-primary-300"><%= @content.final_video_url.truncate(60) %></a>
+          </div>
+        <% end %>
+
+        <%# Captions & Hashtags %>
+        <% if @content.captions.present? %>
+          <div class="mb-4">
+            <p class="label-upper">Caption</p>
+            <p class="text-body text-sm whitespace-pre-wrap"><%= @content.captions %></p>
+          </div>
+        <% end %>
+
+        <% if @content.hashtags.present? && @content.hashtags.any? %>
+          <div class="mb-4">
+            <p class="label-upper">Hashtags</p>
+            <div class="flex flex-wrap gap-1 mt-1">
+              <% @content.hashtags.each do |tag| %>
+                <span class="bg-surface-alt text-secondary text-xs px-2 py-0.5 rounded">#<%= tag %></span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if @content.music_suggestions.present? && @content.music_suggestions.any? %>
+          <div class="mb-4">
+            <p class="label-upper">Music Suggestions</p>
+            <ul class="list-disc list-inside space-y-1 mt-1">
+              <% @content.music_suggestions.each do |track| %>
+                <li class="text-body text-sm"><%= track %></li>
+              <% end %>
+            </ul>
           </div>
         <% end %>
 
@@ -129,6 +192,13 @@
             </div>
           <% end %>
 
+          <% if @content.rival_team.present? %>
+            <div>
+              <p class="text-[10px] text-muted uppercase tracking-wider">Rival Team</p>
+              <p class="text-heading text-sm"><%= @content.rival_team.emoji %> <%= @content.rival_team.name %></p>
+            </div>
+          <% end %>
+
           <% if @content.duration_seconds.present? %>
             <div>
               <p class="text-[10px] text-muted uppercase tracking-wider">Duration</p>
@@ -136,7 +206,7 @@
             </div>
           <% end %>
 
-          <% if @content.platform.present? && @content.stage == "posted" || @content.stage == "reviewed" %>
+          <% if @content.platform.present? && (@content.stage == "posted" || @content.stage == "reviewed") %>
             <div>
               <p class="text-[10px] text-muted uppercase tracking-wider">Platform</p>
               <p class="text-heading text-sm"><%= @content.platform.humanize %></p>
@@ -218,25 +288,46 @@
 
       <!-- Actions -->
       <% if logged_in? %>
-        <div class="flex flex-wrap gap-2">
-          <% if @content.stage == "idea" %>
-            <%= button_to "Hook", hook_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
-          <% end %>
-          <% if @content.stage == "hook" %>
-            <%= button_to "Script", script_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
-          <% end %>
-          <% if @content.stage == "script" %>
-            <%= button_to "Assets", assets_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
-          <% end %>
-          <% if @content.stage == "assets" %>
-            <%= button_to "Assemble", assemble_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
-          <% end %>
-          <% if @content.stage == "assembly" %>
-            <%= button_to "Post", post_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
-          <% end %>
-          <% if @content.stage == "posted" %>
-            <%= button_to "Review", review_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
-          <% end %>
+        <div class="space-y-3">
+          <%# Manual step buttons %>
+          <div class="flex flex-wrap gap-2">
+            <% if @content.stage == "idea" %>
+              <%= button_to "Hook", hook_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+            <% end %>
+            <% if @content.stage == "hook" %>
+              <%= button_to "Script", script_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+            <% end %>
+            <% if @content.stage == "script" %>
+              <%= button_to "Assets", assets_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+            <% end %>
+            <% if @content.stage == "assets" %>
+              <%= button_to "Assemble", assemble_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+            <% end %>
+            <% if @content.stage == "assembly" %>
+              <%= button_to "Post", post_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+            <% end %>
+            <% if @content.stage == "posted" %>
+              <%= button_to "Review", review_step_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+            <% end %>
+          </div>
+
+          <%# AI Agent buttons %>
+          <div class="flex flex-wrap gap-2">
+            <% if @content.stage == "hook" %>
+              <%= button_to "Generate Script", script_agent_step_content_path(@content.slug), class: "btn btn-secondary btn-sm" %>
+            <% end %>
+            <% if @content.stage == "script" %>
+              <%= button_to "Generate Images", assets_agent_step_content_path(@content.slug), class: "btn btn-secondary btn-sm" %>
+            <% end %>
+            <% if @content.stage == "assets" %>
+              <%= button_to "Assemble Video", assemble_agent_step_content_path(@content.slug), class: "btn btn-secondary btn-sm" %>
+            <% end %>
+            <% if @content.stage == "assembly" %>
+              <%= button_to "Finalize", finalize_step_content_path(@content.slug), class: "btn btn-secondary btn-sm" %>
+            <% end %>
+            <%= button_to "Generate Metadata", metadata_step_content_path(@content.slug), class: "btn btn-outline btn-sm" %>
+          </div>
+
           <%= button_to "Delete", content_path(@content.slug), method: :delete, class: "btn btn-danger btn-sm", data: { turbo_confirm: "Delete this content?" } %>
         </div>
       <% end %>

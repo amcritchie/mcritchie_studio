@@ -32,6 +32,34 @@
       </div>
     </div>
 
+    <!-- Reference & Context -->
+    <hr class="border-subtle my-6">
+    <p class="label-upper mb-3">Reference & Context</p>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Reference Video URL</label>
+      <%= f.url_field :reference_video_url, class: "input-field", placeholder: "https://youtube.com/watch?v=..." %>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">Start Time (seconds)</label>
+        <%= f.number_field :reference_video_start, class: "input-field", min: 0, placeholder: "0" %>
+      </div>
+      <div>
+        <label class="block text-sm text-secondary mb-2 font-medium">End Time (seconds)</label>
+        <%= f.number_field :reference_video_end, class: "input-field", min: 0, placeholder: "30" %>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Rival Team</label>
+      <%= f.select :rival_team_slug,
+            Team.where(sport: "football", league: "nfl").order(:name).map { |t| ["#{t.emoji} #{t.name}", t.slug] },
+            { include_blank: "— Select rival —" },
+            class: "input-field" %>
+    </div>
+
     <% if content.persisted? %>
       <div class="mb-5">
         <label class="block text-sm text-secondary mb-2 font-medium">Stage</label>
@@ -142,6 +170,16 @@
       <div class="mb-5">
         <label class="block text-sm text-secondary mb-2 font-medium">Review Notes</label>
         <%= f.text_area :review_notes, rows: 3, class: "input-field", placeholder: "Performance analysis..." %>
+      </div>
+
+      <hr class="border-subtle my-6">
+
+      <!-- Metadata -->
+      <p class="label-upper mb-3">Metadata</p>
+
+      <div class="mb-5">
+        <label class="block text-sm text-secondary mb-2 font-medium">Caption</label>
+        <%= f.text_area :captions, rows: 3, class: "input-field", placeholder: "TikTok caption text..." %>
       </div>
     <% end %>
 
