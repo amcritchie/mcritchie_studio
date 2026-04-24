@@ -16,7 +16,7 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - **Database**: Heroku Postgres (essential-0)
 - **DNS**: Google Domains — `app` CNAME → Heroku DNS target
 - **Deploy**: `git push heroku main` (then `heroku run bin/rails db:migrate --app mcritchie-studio` if new migrations)
-- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ANTHROPIC_API_KEY` (for AI chat), `X_BEARER_TOKEN` (for News intake from X/Twitter API)
+- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ANTHROPIC_API_KEY` (for AI chat + content script/metadata agents), `X_BEARER_TOKEN` (for News intake from X/Twitter API), `HIGGSFIELD_API_KEY`, `HIGGSFIELD_API_SECRET` (for content image/video generation via Nano Banana + Kling 3)
 - **ACM**: Enabled (auto SSL via Let's Encrypt)
 
 ## Public Assets
@@ -98,10 +98,10 @@ end
 - **Activity** — agent_slug FK, activity_type, description, task_slug FK, metadata (jsonb), slug (set via after_create).
 - **Usage** — agent_slug FK, period_date, period_type, model, tokens_in/out, api_calls, cost (decimal 10,4), tasks_completed/failed, metadata (jsonb), slug.
 - **News** — title, slug (unique, random hex `news-*`, immutable), stage (new/reviewed/processed/refined/concluded/archived), url, x_post_id, x_post_url, author, published_at. Pipeline fields populated per stage: reviewed (primary/secondary person/team, primary_action, article_image_url), processed (*_slug fields linking to Person/Team/Contract records), refined (title_short, summary, feeling, feeling_emoji, what_happened), concluded (opinion, callback). Timestamps per stage. Position (integer, 100s increments DESC — highest = top of kanban = processed first by agents). Does NOT use Sluggable. Free movement between stages (like Tasks). Agent assignments: new=intake, reviewed=Mason, processed=Mack, refined=Alex, concluded=Turf Monster, archived=Alex.
-- **Content** — title, slug (unique, random hex `content-*`, immutable), stage (idea/hook/script/assets/assembly/posted/reviewed), description, source_type, source_news_slug. Pipeline fields per stage: hook (hook_image_url, hook_ideas JSONB, selected_hook_index), script (script_text, duration_seconds, scenes JSONB), assets (scene_assets JSONB), assembly (final_video_url, music_track, text_overlays JSONB, logo_overlay), posted (platform, post_url, post_id, posted_at), reviewed (views, likes, comments_count, shares, review_notes). Position (integer, 100s increments DESC). Stage timestamps set on before_save. `belongs_to :source_news` (optional, via slug FK). Transition methods: `hook!`, `script!`, `assets!`, `assemble!`, `post!`, `review!`. Does NOT use Sluggable.
-- **Team** — name, short_name, slug (unique), location, emoji, color_primary, color_secondary, color_text_light (boolean — true when primary color needs dark text), sport (`"football"`/`"soccer"`), league (`"nfl"`/`"ncaa"`/`"fifa"`), conference (AFC/NFC, SEC/Big Ten, Group A-L), division (East/North/South/West — NFL only). `include Sluggable`, `name_slug` = `name.parameterize`. Has many contracts/people. Scopes: `nfl`, `ncaa`, `fifa`, `football`, `soccer`. Seeded with 32 NFL + 71 NCAA + 48 FIFA = 151 total.
+- **Content** — title, slug (unique, random hex `content-*`, immutable), stage (idea/hook/script/assets/assembly/posted/reviewed), description, source_type, source_news_slug. Pipeline fields per stage: hook (hook_image_url, hook_ideas JSONB, selected_hook_index), script (script_text, duration_seconds, scenes JSONB), assets (scene_assets JSONB), assembly (final_video_url, music_track, text_overlays JSONB, logo_overlay), posted (platform, post_url, post_id, posted_at), reviewed (views, likes, comments_count, shares, review_notes). Video production fields: reference_video_url, reference_video_start/end (seconds), rival_team_slug (FK → Team), captions (text), hashtags (JSONB), music_suggestions (JSONB). `belongs_to :rival_team` (Team via slug FK, optional). `belongs_to :source_news` (optional, via slug FK). Position (integer, 100s increments DESC). Stage timestamps set on before_save. Transition methods: `hook!`, `script!`, `assets!`, `assemble!`, `post!`, `review!`. Does NOT use Sluggable.
+- **Team** — name, short_name, slug (unique), location, emoji, color_primary, color_secondary, color_text_light (boolean — true when primary color needs dark text), sport (`"football"`/`"soccer"`), league (`"nfl"`/`"ncaa"`/`"fifa"`), conference (AFC/NFC, SEC/Big Ten, Group A-L), division (East/North/South/West — NFL only), rivals (JSONB array of team slugs). `include Sluggable`, `name_slug` = `name.parameterize`. Has many contracts/people. Scopes: `nfl`, `ncaa`, `fifa`, `football`, `soccer`. Seeded with 32 NFL + 71 NCAA + 48 FIFA = 151 total. NFL teams seeded with 3-4 rivals each (division + historic).
 - **Person** — first_name, last_name, slug (unique), athlete (boolean), aliases (JSONB array, default `[]` — alternate name spellings). `include Sluggable`, `name_slug` = full name parameterized. Has many contracts/teams. `has_one :athlete_profile` (Athlete model via `person_slug`). Helper: `full_name`. Created automatically by `News::Process` when processing news articles.
-- **Athlete** — person_slug (unique FK to Person), sport (`"football"`/`"soccer"`), position (QB, WR, EDGE, FW, MF, GK, etc.), draft_year, draft_round, draft_pick. `include Sluggable`, `name_slug` = `"#{person_slug}-athlete"`. `belongs_to :person` via slug FK. **Note:** Person has a boolean `athlete` column AND `has_one :athlete_profile` — the association is named `athlete_profile` (not `athlete`) to avoid collision with the boolean column.
+- **Athlete** — person_slug (unique FK to Person), sport (`"football"`/`"soccer"`), position (QB, WR, EDGE, FW, MF, GK, etc.), draft_year, draft_round, draft_pick. Appearance fields: skin_tone (light/medium/dark), hair_description, build, height_inches, weight_lbs. `include Sluggable`, `name_slug` = `"#{person_slug}-athlete"`. `belongs_to :person` via slug FK. **Note:** Person has a boolean `athlete` column AND `has_one :athlete_profile` — the association is named `athlete_profile` (not `athlete`) to avoid collision with the boolean column.
 - **Contract** — person_slug, team_slug, slug (unique), expires_at (date — college contracts expire April 1, 2026), annual_value_cents (bigint — NFL star salaries in cents, e.g. $55M = 5_500_000_000), position. `include Sluggable`, `name_slug` = `"#{person_slug}-#{team_slug}"`. Join table linking Person ↔ Team via slug FKs. Unique constraint on `[person_slug, team_slug]`. Helpers: `active?` (no expiry or future), `expired?` (past expiry). Created automatically by `News::Process`.
 - **ErrorLog** — message, inspect, backtrace (JSON), polymorphic target/parent, target_name, parent_name, slug.
 
@@ -130,14 +130,21 @@ end
   - **Full pipeline**: `bin/rails news:intake news:review news:process news:refine news:conclude`
   - **SLUG= override**: All rake tasks accept `SLUG=news-abc123` to target a specific article instead of picking the next one.
   - **Agent ordering**: All `*_latest` methods use `position: :desc` to pick the top-of-kanban (highest position) article first.
-- **Content services** — `app/services/content/` contains 6 service classes (reopening the `Content` class). Stubs that accept pre-computed fields and advance stage. No AI agents yet.
+- **Content services** — `app/services/content/` contains 6 manual service classes + 5 AI agents (reopening the `Content` class). Manual services accept pre-computed fields and advance stage. AI agents call external APIs then delegate to the manual services.
   - `Content::Hook` — idea → hook (hook_image_url, hook_ideas, selected_hook_index)
   - `Content::Script` — hook → script (script_text, duration_seconds, scenes)
   - `Content::Assets` — script → assets (scene_assets)
   - `Content::Assemble` — assets → assembly (final_video_url, music_track, text_overlays, logo_overlay)
   - `Content::Post` — assembly → posted (platform, post_url, post_id, posted_at)
   - `Content::Review` — posted → reviewed (views, likes, comments_count, shares, review_notes)
-  - Rake tasks: `content:hook`, `content:script`, `content:assets`, `content:assemble`, `content:post`, `content:review`. All support `SLUG=` override.
+  - `Content::ScriptAgent` — Claude Opus generates script/scenes from player context → delegates to `Content::Script`
+  - `Content::AssetsAgent` — Higgsfield (Nano Banana) generates scene images → delegates to `Content::Assets`
+  - `Content::AssembleAgent` — Higgsfield (Kling 3) generates video from scene images → delegates to `Content::Assemble`
+  - `Content::Finalize` — FFmpeg watermark overlay (stub pending buildpack). Updates logo_overlay.
+  - `Content::MetadataAgent` — Claude Haiku generates TikTok captions, hashtags, music suggestions. Can run at any stage.
+  - `Higgsfield::Client` — Shared HTTP client (`app/services/higgsfield/client.rb`). Auth via `hf-api-key`/`hf-secret` headers. Submit + poll pattern with 5-min timeout.
+  - Rake tasks: `content:hook`, `content:script`, `content:assets`, `content:assemble`, `content:post`, `content:review` (manual). `content:script_agent`, `content:assets_agent`, `content:assemble_agent`, `content:finalize`, `content:metadata` (AI). `content:generate SLUG=xxx` (full pipeline). All support `SLUG=` override.
+  - **Feature status: ON ICE** — Services are built and wired up but not yet tested end-to-end with real API calls.
 - **News → Content bridge** — `NewsController#create_content` creates a Content (stage: idea) linked to a concluded News article via `source_news_slug`. Button on News show page when stage == "concluded".
 - **Pipeline progression** — Shared partial `app/views/shared/_pipeline_progression.html.erb` shows unified 12-step pipeline across News (1-6) and Content (7-12), with archived as a side step from concluded. Accepts `highlight:` param ("news" or "content") to dim the non-active pipeline. Rendered on both index pages.
 - **Kanban column focus** — Click column header to expand that column full-width (hides others). Click again to unfocus. Alpine `focusedStage` state with `toggleFocus()` method. Both News and Content boards.
@@ -177,7 +184,8 @@ end
 - `/contents/:slug` — Content detail (two-column: content + sidebar with timeline/actions)
 - `/contents/:slug/edit` — Edit content (admin required)
 - `/contents/reorder` — POST reorder within column
-- `/contents/:slug/{hook,script,assets,assemble,post,review}_step` — POST stage transition actions (admin-only)
+- `/contents/:slug/{hook,script,assets,assemble,post,review}_step` — POST manual stage transition actions (admin-only)
+- `/contents/:slug/{script_agent,assets_agent,assemble_agent,finalize,metadata}_step` — POST AI agent actions (admin-only)
 - `/nfl` — NFL hub index
 - `/nfl-quarterback-rankings`, `/nfl-offensive-line-rankings`, `/nfl-receiving-rankings`, `/nfl-rushing-rankings`, `/nfl-defense-rankings`, `/nfl-pass-rush-rankings`, `/nfl-coverage-rankings` — Position ranking pages (sortable, searchable)
 - `/nfl-pass-first-rankings` — Coach pass-first/pass-heavy rankings
