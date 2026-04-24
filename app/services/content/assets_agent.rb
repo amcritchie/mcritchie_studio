@@ -1,7 +1,7 @@
 class Content
   class AssetsAgent
-    # Nano Banana API — stub endpoint until API docs are provided
-    API_URL = ENV.fetch("NANO_BANANA_API_URL", "https://api.nanobanana.com/v1/generate")
+    # Higgsfield Soul — text-to-image generation
+    # 9:16 vertical for TikTok (1024x1792)
 
     def self.assets_latest
       content = Content.where(stage: "script").order(position: :desc, created_at: :desc).first
@@ -12,11 +12,10 @@ class Content
 
     def initialize(content)
       @content = content
-      @api_key = ENV["NANO_BANANA_API_KEY"]
+      @client = Higgsfield::Client.new
     end
 
     def call
-      raise "NANO_BANANA_API_KEY not set" if @api_key.blank?
       raise "Content must be in script stage" unless @content.stage == "script"
 
       scene_assets = generate_scene_assets
@@ -33,7 +32,16 @@ class Content
 
       key_scenes.map do |scene|
         prompt = build_image_prompt(scene)
-        image_url = call_api(prompt)
+        puts "  Generating image for scene #{scene["number"]}: #{prompt.truncate(100)}"
+
+        image_url = @client.generate_image_and_wait(
+          prompt: prompt,
+          width_and_height: "1024x1792",
+          quality: "1080p",
+          enhance_prompt: true
+        )
+
+        puts "    -> #{image_url.truncate(80)}"
 
         {
           "scene_number" => scene["number"],
@@ -45,7 +53,7 @@ class Content
 
     def build_image_prompt(scene)
       parts = []
-      parts << "Cinematic sports photograph, third-person camera behind player"
+      parts << "Cinematic sports photograph, third-person camera behind player, NFL football game"
       parts << scene["description"] if scene["description"]
       parts << "Camera: #{scene["camera"]}" if scene["camera"]
 
@@ -69,14 +77,8 @@ class Content
         parts << "Opponent uniform colors: #{@content.rival_team.color_primary}/#{@content.rival_team.color_secondary}"
       end
 
+      parts << "Vertical 9:16 aspect ratio, photorealistic, dramatic lighting"
       parts.join(". ")
-    end
-
-    def call_api(prompt)
-      # Stub — returns placeholder until Nano Banana API docs are provided
-      # Real implementation will POST to API_URL with prompt and API key
-      puts "  [STUB] Nano Banana image generation: #{prompt.truncate(100)}"
-      "https://placeholder.nanobanana.com/#{SecureRandom.hex(8)}.png"
     end
   end
 end

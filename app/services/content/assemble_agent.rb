@@ -1,7 +1,7 @@
 class Content
   class AssembleAgent
-    # Kling 3 API — stub endpoint until API docs are provided
-    API_URL = ENV.fetch("KLING_API_URL", "https://api.kling.ai/v1/video/generate")
+    # Higgsfield DoP (Director of Photography) — image-to-video generation
+    # Takes scene images and generates cinematic motion video
 
     def self.assemble_latest
       content = Content.where(stage: "assets").order(position: :desc, created_at: :desc).first
@@ -12,11 +12,10 @@ class Content
 
     def initialize(content)
       @content = content
-      @api_key = ENV["KLING_API_KEY"]
+      @client = Higgsfield::Client.new
     end
 
     def call
-      raise "KLING_API_KEY not set" if @api_key.blank?
       raise "Content must be in assets stage" unless @content.stage == "assets"
 
       video_url = generate_video
@@ -33,32 +32,46 @@ class Content
 
     def generate_video
       scene_assets = @content.scene_assets || []
-      return stub_video if scene_assets.empty?
+      raise "No scene assets to assemble into video" if scene_assets.empty?
 
-      # Generate motion video from scene image pairs
-      # Kling 3 takes adjacent images and generates video transitions
       image_urls = scene_assets.map { |a| a["image_url"] }.compact
+      raise "No image URLs in scene assets" if image_urls.empty?
 
-      if image_urls.size < 2
-        return stub_video
+      # Use the first scene image as the starting frame
+      # DoP generates a 5-second cinematic video from a single image
+      primary_image = image_urls.first
+      prompt = build_video_prompt
+
+      puts "  Generating video from #{image_urls.size} scene images"
+      puts "  Primary image: #{primary_image.truncate(80)}"
+      puts "  Prompt: #{prompt.truncate(120)}"
+
+      video_url = @client.generate_video_and_wait(
+        image_url: primary_image,
+        prompt: prompt,
+        model: "dop-turbo"
+      )
+
+      puts "  -> Video: #{video_url.truncate(80)}"
+      video_url
+    end
+
+    def build_video_prompt
+      parts = []
+      parts << "Cinematic NFL football highlight, smooth camera movement"
+
+      # Use the script narrative for motion context
+      if @content.script_text.present?
+        parts << @content.script_text.truncate(200)
       end
 
-      # Stub — real implementation will:
-      # 1. POST image pairs to Kling 3 API
-      # 2. Poll for completion (async job)
-      # 3. Concatenate resulting video segments
-      call_api(image_urls)
-    end
+      # Player/team context
+      if @content.source_news&.primary_person.present?
+        parts << "Featuring #{@content.source_news.primary_person}"
+      end
 
-    def call_api(image_urls)
-      # Stub — returns placeholder until Kling 3 API docs are provided
-      puts "  [STUB] Kling 3 video generation from #{image_urls.size} images"
-      "https://placeholder.kling.ai/#{SecureRandom.hex(8)}.mp4"
-    end
-
-    def stub_video
-      puts "  [STUB] No scene assets — generating placeholder video"
-      "https://placeholder.kling.ai/#{SecureRandom.hex(8)}.mp4"
+      parts << "Dynamic sports cinematography, dramatic slow motion, broadcast quality"
+      parts.join(". ")
     end
   end
 end
