@@ -10,4 +10,5 @@ Studio.configure do |config|
     { file: "logo-icon.svg",    title: "Navbar Logo" },
     { file: "studio-logo.svg",  title: "SSO Logo" },
   ]
+  # S3 bucket prefix uses engine default ("mcritchie-studio") — no override needed.
 end
