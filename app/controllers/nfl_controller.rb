@@ -21,4 +21,13 @@ class NflController < ApplicationController
     @contract_count = Contract.joins(:team).where(teams: { league: "nfl" }).count
     @team_ranking_count = TeamRanking.count
   end
+
+  def rosters
+    @season = Season.find_by(year: 2025, league: "nfl")
+    slate = Slate.find_by(season_slug: @season&.slug, sequence: 1)
+    @rosters = Roster.joins(:team)
+                     .where(teams: { league: "nfl" }, slate_slug: slate&.slug)
+                     .includes(:team)
+                     .order("teams.name")
+  end
 end

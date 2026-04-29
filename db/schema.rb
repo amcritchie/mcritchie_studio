@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_29_202703) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_29_212648) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -124,7 +124,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_29_202703) do
     t.integer "weight_lbs"
     t.string "espn_id"
     t.string "espn_headshot_url"
-    t.string "headshot_s3_key"
     t.index ["espn_id"], name: "index_athletes_on_espn_id"
     t.index ["person_slug"], name: "index_athletes_on_person_slug", unique: true
     t.index ["pff_id"], name: "index_athletes_on_pff_id", unique: true
@@ -264,6 +263,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_29_202703) do
     t.index ["home_team_slug"], name: "index_games_on_home_team_slug"
     t.index ["slate_slug"], name: "index_games_on_slate_slug"
     t.index ["slug"], name: "index_games_on_slug", unique: true
+  end
+
+  create_table "image_caches", force: :cascade do |t|
+    t.string "owner_type", null: false
+    t.bigint "owner_id", null: false
+    t.string "purpose", null: false
+    t.string "variant", null: false
+    t.string "s3_key", null: false
+    t.string "source_url"
+    t.integer "bytes"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "purpose", "variant"], name: "idx_image_caches_owner_purpose_variant", unique: true
+    t.index ["owner_type", "owner_id"], name: "index_image_caches_on_owner"
+    t.index ["s3_key"], name: "index_image_caches_on_s3_key", unique: true
   end
 
   create_table "news", force: :cascade do |t|

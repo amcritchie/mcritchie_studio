@@ -72,6 +72,7 @@ Rails.application.routes.draw do
 
   # NFL hub + rankings (SEO-friendly URLs)
   get "nfl", to: "nfl#index", as: :nfl_hub
+  get "nfl-rosters", to: "nfl#rosters", as: :nfl_rosters
   get "nfl-quarterback-rankings", to: "rankings#quarterback", as: :nfl_quarterback_rankings
   get "nfl-offensive-line-rankings", to: "rankings#offensive_line", as: :nfl_offensive_line_rankings
   get "nfl-receiving-rankings",      to: "rankings#receiving",      as: :nfl_receiving_rankings

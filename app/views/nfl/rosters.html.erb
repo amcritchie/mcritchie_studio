@@ -1,0 +1,89 @@
+<style>
+  .roster-spot   { position: relative; }
+  .roster-img    {
+    display: block;
+    transition: transform 0.15s ease;
+    transform-origin: center;
+  }
+  .roster-spot:hover .roster-img {
+    transform: scale(2.8);
+    z-index: 20;
+    position: relative;
+  }
+  .roster-name {
+    position: absolute;
+    top: calc(100% + 4.5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 30;
+    transition: opacity 0.15s ease;
+  }
+  .roster-spot:hover .roster-name { opacity: 1; }
+</style>
+
+<script>
+  document.addEventListener("mouseover", (e) => {
+    const img = e.target.closest(".roster-img[data-hover-src]");
+    if (!img) return;
+    if (!img.dataset.defaultSrc) img.dataset.defaultSrc = img.src;
+    if (img.src !== img.dataset.hoverSrc) img.src = img.dataset.hoverSrc;
+  });
+  document.addEventListener("mouseout", (e) => {
+    const img = e.target.closest(".roster-img[data-hover-src]");
+    if (!img || !img.dataset.defaultSrc) return;
+    if (img.src !== img.dataset.defaultSrc) img.src = img.dataset.defaultSrc;
+  });
+</script>
+
+<section class="max-w-7xl mx-auto px-4 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-heading mb-2">NFL Rosters</h1>
+    <p class="text-secondary text-sm">Each team's starting offense (12) above defense (12). Headshots only — for spot-checking ESPN sources.</p>
+  </div>
+
+  <div class="space-y-4">
+    <% @rosters.each do |roster| %>
+      <% team = roster.team %>
+      <div class="card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <% if team.color_primary.present? %>
+            <span class="inline-block w-3 h-3 rounded-full flex-shrink-0" style="background-color: <%= team.color_primary %>"></span>
+          <% end %>
+          <h2 class="text-heading font-semibold"><%= team.emoji %> <%= team.name %></h2>
+        </div>
+
+        <% [["O", roster.offense_starting_12], ["D", roster.defense_starting_12]].each do |label, groups| %>
+          <div class="flex items-start gap-2 mb-2 last:mb-0">
+            <span class="w-5 text-xs text-muted font-mono uppercase pt-3"><%= label %></span>
+            <div class="flex flex-wrap gap-1">
+              <% groups.values.flatten.each do |spot| %>
+                <% athlete = spot.person.athlete_profile %>
+                <% small = athlete&.headshot_url(width: 100) %>
+                <% large = athlete&.headshot_url(width: 400) %>
+                <div class="roster-spot relative">
+                  <% if small %>
+                    <img src="<%= small %>"
+                         data-hover-src="<%= large %>"
+                         alt="<%= spot.person.full_name %>"
+                         loading="lazy"
+                         class="roster-img w-12 h-12 rounded-full object-cover bg-surface-alt">
+                  <% else %>
+                    <div class="roster-img w-12 h-12 rounded-full bg-surface-alt flex items-center justify-center text-[10px] text-muted font-mono">
+                      <%= spot.position %>
+                    </div>
+                  <% end %>
+                  <span class="roster-name px-2 py-1 bg-inset text-heading text-[11px] font-medium rounded shadow-lg">
+                    <%= spot.person.full_name %><span class="text-muted ml-1">· <%= spot.position %></span>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</section>

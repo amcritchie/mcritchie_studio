@@ -51,7 +51,7 @@ class Roster < ApplicationRecord
   private
 
   def pick_starters(side, composition)
-    spots = roster_spots.includes(person: { athlete_profile: :grades })
+    spots = roster_spots.includes(person: { athlete_profile: [:grades, :image_caches] })
                         .where(side: side)
                         .to_a
 

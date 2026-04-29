@@ -5,6 +5,7 @@ class Athlete < ApplicationRecord
 
   has_many :grades, class_name: "AthleteGrade", foreign_key: :athlete_slug, primary_key: :slug
   has_many :pff_stats, foreign_key: :athlete_slug, primary_key: :slug
+  has_many :image_caches, as: :owner, class_name: "ImageCache"
 
   validates :person_slug, presence: true, uniqueness: true
   validates :sport, presence: true
@@ -13,8 +14,8 @@ class Athlete < ApplicationRecord
     "#{person_slug}-athlete"
   end
 
-  def headshot_url
-    return nil unless headshot_s3_key.present?
-    Studio::S3.url(key: headshot_s3_key)
+  def headshot_url(width: 400)
+    cache = image_caches.detect { |c| c.purpose == "headshot" && c.variant == width.to_s }
+    cache&.url
   end
 end

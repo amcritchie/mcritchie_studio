@@ -49,6 +49,16 @@
              data-name="<%= "#{person.full_name} #{person.teams.map(&:name).join(' ')}".downcase %>"
              data-sport="<%= athlete&.sport %>">
           <div class="flex items-start gap-3">
+            <% if (headshot = athlete&.headshot_url(width: 400)) %>
+              <img src="<%= headshot %>"
+                   alt="<%= person.full_name %>"
+                   loading="lazy"
+                   class="w-16 h-16 rounded-full object-cover bg-surface-alt flex-shrink-0">
+            <% else %>
+              <div class="w-16 h-16 rounded-full bg-surface-alt flex items-center justify-center flex-shrink-0 text-secondary text-sm font-semibold">
+                <%= person.full_name.split.map(&:first).first(2).join.upcase %>
+              </div>
+            <% end %>
             <div class="flex-1 min-w-0">
               <p class="text-heading font-semibold truncate"><%= person.full_name %></p>
               <div class="flex flex-wrap items-center gap-1.5 mt-1">
