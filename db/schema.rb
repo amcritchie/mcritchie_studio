@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_23_224836) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_29_202703) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -122,6 +122,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_23_224836) do
     t.string "build"
     t.integer "height_inches"
     t.integer "weight_lbs"
+    t.string "espn_id"
+    t.string "espn_headshot_url"
+    t.string "headshot_s3_key"
+    t.index ["espn_id"], name: "index_athletes_on_espn_id"
     t.index ["person_slug"], name: "index_athletes_on_person_slug", unique: true
     t.index ["pff_id"], name: "index_athletes_on_pff_id", unique: true
     t.index ["position"], name: "index_athletes_on_position"

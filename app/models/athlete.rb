@@ -12,4 +12,9 @@ class Athlete < ApplicationRecord
   def name_slug
     "#{person_slug}-athlete"
   end
+
+  def headshot_url
+    return nil unless headshot_s3_key.present?
+    Studio::S3.url(key: headshot_s3_key)
+  end
 end
