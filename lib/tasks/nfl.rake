@@ -372,4 +372,14 @@ namespace :nfl do
     puts "skipped (no ESPN img):  #{without_url}"
     puts "failed:                 #{failed}"
   end
+
+  desc "Seed Person + Athlete from nflverse players.csv (cross-ref IDs + ESPN headshots → S3). VERBOSE=1 SKIP_HEADSHOTS=1 MIN_SEASON=2024 STATUS=ACT"
+  task players_seed: :environment do
+    Nflverse::SeedPlayers.new(
+      verbose:          ENV["VERBOSE"] == "1",
+      upload_headshots: ENV["SKIP_HEADSHOTS"] != "1",
+      min_season:       ENV["MIN_SEASON"] || Nflverse::SeedPlayers::DEFAULT_MIN_SEASON,
+      status_filter:    ENV.fetch("STATUS", "ACT")
+    ).call
+  end
 end
