@@ -155,34 +155,44 @@ class Espn::ScrapeDepthCharts
   end
 
   # Apply ESPN's depth ranking to a canonical (position, side):
-  # 1. Each player has at most one entry in the chart. If ESPN places them at
+  # 1. ESPN's order is preserved verbatim. If ESPN lists a brand-new player
+  #    above an existing one, the new player gets the higher slot — this is
+  #    the whole point of the weekly scrape (overwrite starters).
+  # 2. Each player has at most one entry on the chart. If ESPN places them at
   #    a different position than their existing entry, MOVE the entry.
-  # 2. Locked entries at this position keep their fixed depth.
-  # 3. Existing entries at this position not in ESPN's list keep their relative
-  #    order, slotting in after ESPN-listed entries.
+  # 3. Locked entries at this position keep their fixed depth.
+  # 4. Existing entries at this position not in ESPN's list keep their
+  #    relative order, slotting in BELOW ESPN's listed players.
   def apply_row(chart, position, side, athletes, team_slug)
     espn_persons = athletes.map { |a| match_person(a, team_slug, position: position) }.compact
 
-    # Existing entry per ESPN-listed person (might be at any position)
+    # Existing entry per ESPN-listed person (might be at any position on the chart)
     existing_for_espn = chart.depth_chart_entries
                              .where(person_slug: espn_persons.map(&:slug))
                              .index_by(&:person_slug)
 
     position_entries = chart.depth_chart_entries.where(position: position).to_a
     locked = position_entries.select(&:locked).sort_by(&:depth)
+    locked_persons = locked.map(&:person_slug).to_set
 
-    espn_listed = espn_persons.map { |p| existing_for_espn[p.slug] }.compact
-    espn_unlocked = espn_listed.reject(&:locked)
+    # Build the ordered list in ESPN's exact order. For each ESPN-listed
+    # player, either reuse their existing entry (so we MOVE them here from
+    # wherever they were) or build a new entry. Skip anyone whose entry is
+    # already locked (manual overrides win).
+    espn_ordered = espn_persons.map do |person|
+      next nil if locked_persons.include?(person.slug)
+      existing = existing_for_espn[person.slug]
+      next nil if existing&.locked
+      existing || chart.depth_chart_entries.build(person_slug: person.slug, position: position, side: side)
+    end.compact
 
-    unlisted = position_entries.reject { |e| e.locked || espn_listed.include?(e) }
+    new_count = espn_ordered.count(&:new_record?)
+
+    # Existing players at this position whom ESPN didn't mention slot in below.
+    unlisted = position_entries.reject { |e| e.locked || espn_ordered.include?(e) }
                                .sort_by(&:depth)
 
-    new_persons = espn_persons.reject { |p| existing_for_espn.key?(p.slug) }
-    new_entries = new_persons.map do |person|
-      chart.depth_chart_entries.build(person_slug: person.slug, position: position, side: side)
-    end
-
-    ordered = espn_unlocked + new_entries + unlisted
+    ordered = espn_ordered + unlisted
     total = ordered.size + locked.size
     free_depths = (1..total).to_a - locked.map(&:depth)
 
@@ -194,7 +204,7 @@ class Espn::ScrapeDepthCharts
 
     @stats[:rows_applied] += 1
     @stats[:athletes_matched] += espn_persons.size
-    @stats[:athletes_added] += new_entries.size
+    @stats[:athletes_added] += new_count
   end
 
   # After moves, the source position may have depth gaps (1,2,4,5 with 3 missing).

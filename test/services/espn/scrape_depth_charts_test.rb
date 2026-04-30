@@ -112,4 +112,63 @@ class Espn::ScrapeDepthChartsTest < ActiveSupport::TestCase
     assert DepthChart.exists?(team_slug: @bills.slug)
     assert_equal 1, @service.stats[:depth_charts_created]
   end
+
+  # ─── apply_row preserves ESPN's verbatim order ───────────────────────────────
+
+  test "apply_row preserves ESPN order even when interleaving new and existing players" do
+    # Reproduces the NE Patriots LT bug: ESPN published [Campbell, Hudson, Lomu, Metz]
+    # but the old logic bucketed existing entries before new ones, producing
+    # [Hudson, Metz, Campbell, Lomu]. With the fix, ESPN's order is preserved.
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+
+    # Pre-existing: Hudson + Metz both at LT from a previous seed pass
+    hudson = Person.create!(first_name: "James", last_name: "Hudson", athlete: true)
+    Athlete.create!(person_slug: hudson.slug, sport: "football", espn_id: "h-1")
+    Contract.create!(person_slug: hudson.slug, team_slug: @bills.slug, contract_type: "active")
+    chart.depth_chart_entries.create!(person_slug: hudson.slug, position: "LT", side: "offense", depth: 1)
+
+    metz = Person.create!(first_name: "Lorenz", last_name: "Metz", athlete: true)
+    Athlete.create!(person_slug: metz.slug, sport: "football", espn_id: "m-1")
+    Contract.create!(person_slug: metz.slug, team_slug: @bills.slug, contract_type: "active")
+    chart.depth_chart_entries.create!(person_slug: metz.slug, position: "LT", side: "offense", depth: 2)
+
+    # Brand-new: Campbell + Lomu have Athletes but no DepthChartEntry yet
+    campbell = Person.create!(first_name: "Will", last_name: "Campbell", athlete: true)
+    Athlete.create!(person_slug: campbell.slug, sport: "football", espn_id: "c-1")
+    lomu = Person.create!(first_name: "Caleb", last_name: "Lomu", athlete: true)
+    Athlete.create!(person_slug: lomu.slug, sport: "football", espn_id: "l-1")
+
+    # Mimic ESPN's row format — espn_id is parsed out of href via /id/(\d+)/
+    espn_athletes = [
+      { "name" => "Will Campbell",      "href" => "/nfl/player/_/id/c-1/" },
+      { "name" => "James Hudson",       "href" => "/nfl/player/_/id/h-1/" },
+      { "name" => "Caleb Lomu",         "href" => "/nfl/player/_/id/l-1/" },
+      { "name" => "Lorenz Metz",        "href" => "/nfl/player/_/id/m-1/" }
+    ]
+
+    @service.send(:apply_row, chart, "LT", "offense", espn_athletes, @bills.slug)
+
+    ordered = chart.depth_chart_entries.where(position: "LT").order(:depth).pluck(:person_slug)
+    assert_equal [campbell.slug, hudson.slug, lomu.slug, metz.slug], ordered,
+                 "ESPN's order [Campbell, Hudson, Lomu, Metz] must be preserved verbatim"
+  end
+
+  test "apply_row respects locked entries even when ESPN places someone in the locked depth" do
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+
+    starter = Person.create!(first_name: "Locked", last_name: "Starter", athlete: true)
+    Athlete.create!(person_slug: starter.slug, sport: "football", espn_id: "s-1")
+    Contract.create!(person_slug: starter.slug, team_slug: @bills.slug, contract_type: "active")
+    chart.depth_chart_entries.create!(person_slug: starter.slug, position: "QB", side: "offense", depth: 1, locked: true)
+
+    backup = Person.create!(first_name: "Espn", last_name: "Newcomer", athlete: true)
+    Athlete.create!(person_slug: backup.slug, sport: "football", espn_id: "n-1")
+
+    espn_athletes = [{ "name" => "Espn Newcomer", "href" => "/nfl/player/_/id/n-1/" }]
+    @service.send(:apply_row, chart, "QB", "offense", espn_athletes, @bills.slug)
+
+    # Locked starter held depth 1; backup got the next free slot.
+    assert_equal starter.slug, chart.depth_chart_entries.find_by(position: "QB", depth: 1).person_slug
+    assert_equal backup.slug,  chart.depth_chart_entries.find_by(position: "QB", depth: 2).person_slug
+  end
 end
