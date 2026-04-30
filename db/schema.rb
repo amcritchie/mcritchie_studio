@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_30_013440) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_30_055236) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -124,12 +124,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_30_013440) do
     t.integer "weight_lbs"
     t.string "espn_id"
     t.string "espn_headshot_url"
+    t.string "team_slug"
+    t.string "gsis_id"
+    t.string "otc_id"
+    t.string "sleeper_id"
+    t.string "pfr_id"
+    t.string "nflverse_id"
     t.index ["espn_id"], name: "index_athletes_on_espn_id"
+    t.index ["gsis_id"], name: "index_athletes_on_gsis_id", unique: true
+    t.index ["nflverse_id"], name: "index_athletes_on_nflverse_id", unique: true
+    t.index ["otc_id"], name: "index_athletes_on_otc_id", unique: true
     t.index ["person_slug"], name: "index_athletes_on_person_slug", unique: true
     t.index ["pff_id"], name: "index_athletes_on_pff_id", unique: true
+    t.index ["pfr_id"], name: "index_athletes_on_pfr_id", unique: true
     t.index ["position"], name: "index_athletes_on_position"
+    t.index ["sleeper_id"], name: "index_athletes_on_sleeper_id", unique: true
     t.index ["slug"], name: "index_athletes_on_slug", unique: true
     t.index ["sport"], name: "index_athletes_on_sport"
+    t.index ["team_slug"], name: "index_athletes_on_team_slug"
   end
 
   create_table "coach_rankings", force: :cascade do |t|

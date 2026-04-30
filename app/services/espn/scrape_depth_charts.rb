@@ -36,19 +36,6 @@ class Espn::ScrapeDepthCharts
     "sf"  => "san-francisco-49ers", "sea" => "seattle-seahawks"
   }.freeze
 
-  # ESPN position labels → our dominant contract forms.
-  # Most contracts use generic "LB", "EDGE", "S" rather than ESPN's formation-
-  # specific WLB/LILB/RILB/SLB/LDE/RDE/FS/SS — collapse to match.
-  ESPN_POSITION_MAP = {
-    "LDE" => "EDGE", "RDE" => "EDGE", "DE" => "EDGE",
-    "OLB" => "LB", "ILB" => "LB", "MLB" => "LB",
-    "WLB" => "LB", "SLB" => "LB", "LILB" => "LB", "RILB" => "LB",
-    "MIKE" => "LB", "WILL" => "LB", "SAM" => "LB",
-    "LCB" => "CB", "RCB" => "CB", "NB" => "CB", "NCB" => "CB", "SCB" => "CB",
-    "FS"  => "S",  "SS"  => "S",
-    "PK"  => "K"
-  }.freeze
-
   # ESPN ST rows we ignore: holders, returners, gunners are derived from other positions
   IGNORED_POSITIONS = %w[H KR PR LH PH].freeze
 
@@ -150,8 +137,7 @@ class Espn::ScrapeDepthCharts
   end
 
   def normalize_position(espn_pos)
-    mapped = ESPN_POSITION_MAP[espn_pos] || espn_pos
-    PositionConcern.normalize_position(mapped)
+    PositionConcern.normalize_position(espn_pos, source: :espn)
   end
 
   # Round-robin flatten: row0[0], row1[0], row2[0], row0[1], row1[1], ...

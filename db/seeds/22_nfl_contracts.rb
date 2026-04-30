@@ -11,8 +11,8 @@ if File.exist?(json_path)
   skipped = 0
 
   entries.each do |data|
-    # Normalize position via PositionConcern
-    position = PositionConcern.normalize_position(data[:position])
+    # Normalize position via PositionConcern (Spotrac source vocabulary)
+    position = PositionConcern.normalize_position(data[:position], source: :spotrac)
 
     # Person — smart name matching (handles J.T. vs JT, Cam vs Cameron, etc.)
     person = Person.find_or_create_by_name!(data[:first_name], data[:last_name], athlete: true)

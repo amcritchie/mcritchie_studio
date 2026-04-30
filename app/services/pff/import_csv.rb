@@ -168,7 +168,7 @@ module Pff
         # Position filter — skip rows whose position isn't a primary fit for this stat_type
         # (e.g. a WR who threw a trick pass shows up in passing_summary; ignore those rows).
         allowed = POSITION_FILTER[stat_type]
-        normalized = PositionConcern.normalize_position(position)
+        normalized = PositionConcern.normalize_position(position, source: :pff)
         if allowed && !allowed.include?(normalized)
           @stats[:skipped] += 1
           next
@@ -251,7 +251,7 @@ module Pff
 
       person = Person.find_or_create_by_name!(first_name, last_name, athlete: true)
 
-      normalized_pos = PositionConcern.normalize_position(position)
+      normalized_pos = PositionConcern.normalize_position(position, source: :pff)
       Athlete.find_or_create_by!(person_slug: person.slug) do |a|
         a.sport    = "football"
         a.position = normalized_pos

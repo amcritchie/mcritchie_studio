@@ -115,7 +115,7 @@ namespace :pff do
           next if position.blank?
           players[pff.athlete_slug] = {
             person_slug: pff.athlete.person_slug,
-            position: PositionConcern.normalize_position(position),
+            position: PositionConcern.normalize_position(position, source: :pff),
             stat_type: st
           }
         end

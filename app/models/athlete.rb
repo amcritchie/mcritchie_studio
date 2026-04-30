@@ -2,6 +2,7 @@ class Athlete < ApplicationRecord
   include Sluggable
 
   belongs_to :person, foreign_key: :person_slug, primary_key: :slug
+  belongs_to :team, foreign_key: :team_slug, primary_key: :slug, optional: true
 
   has_many :grades, class_name: "AthleteGrade", foreign_key: :athlete_slug, primary_key: :slug
   has_many :pff_stats, foreign_key: :athlete_slug, primary_key: :slug

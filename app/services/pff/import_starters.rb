@@ -46,7 +46,7 @@ module Pff
         @stats[:people] += 1
 
         # Find or create Athlete
-        normalized_pos = PositionConcern.normalize_position(position)
+        normalized_pos = PositionConcern.normalize_position(position, source: :pff)
         athlete = Athlete.find_or_create_by!(person_slug: person.slug) do |a|
           a.sport    = "football"
           a.position = normalized_pos

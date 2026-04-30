@@ -47,4 +47,17 @@ class AthleteTest < ActiveSupport::TestCase
     assert_nil athlete.draft_round
     assert_nil athlete.draft_pick
   end
+
+  test "team_slug is optional" do
+    person = Person.create!(first_name: "Free", last_name: "Agent", athlete: true)
+    athlete = Athlete.create!(person_slug: person.slug, sport: "football", position: "QB")
+    assert_nil athlete.team_slug
+    assert_nil athlete.team
+  end
+
+  test "belongs to team via team_slug" do
+    person = Person.create!(first_name: "Team", last_name: "Player", athlete: true)
+    athlete = Athlete.create!(person_slug: person.slug, sport: "football", position: "QB", team_slug: "buffalo-bills")
+    assert_equal teams(:buffalo_bills), athlete.team
+  end
 end
