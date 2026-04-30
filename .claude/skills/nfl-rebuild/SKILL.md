@@ -1,0 +1,105 @@
+---
+name: nfl-rebuild
+description: Full NFL data rebuild from scratch (house-burned-down recovery). Drops the database, reseeds teams/coaches/seasons/Spotrac/PFF, pulls nflverse master player CSV with cross-ref IDs, caches headshots to S3, then runs ESPN depth-chart scrape. Run when starting fresh.
+disable-model-invocation: true
+allowed-tools: Bash, Read
+---
+
+# NFL Rebuild — Full Recovery Pipeline
+
+End state: every NFL team has 32 active rosters with starting offense/defense lineups, depth charts, contracts, salaries, grades, and headshots. Idempotent — safe to re-run.
+
+## Preconditions
+
+Confirm before running:
+
+1. **AWS credentials present** for S3 headshot upload. Check with `op item get q6jborl22otitr5y3dzwpbzxa4 --vault txqp6ijdo3ujsfhsfzdj5h5dzq --field "AWS_ACCESS_KEY_ID" --reveal | head -c 4`. Should print 4 chars of the access key. If empty, headshots will be skipped (Athletes still seed; re-run with creds later).
+2. **Postgres running**: `pg_isready` returns `accepting connections`.
+3. **ImageMagick installed**: `which magick` returns a path. If missing, `brew install imagemagick`.
+4. **Working tree clean**: `git status --short` is empty (so seed log noise can be reverted easily if anything goes sideways).
+
+If any precondition fails, stop and report — don't try to continue.
+
+## Pipeline
+
+Run each step and report results before moving to the next. If a step fails, stop. Don't skip ahead.
+
+### Step 1 — Reset the database
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails db:drop db:create db:schema:load
+```
+
+This drops + recreates the DB and loads the current schema (faster and safer than running every migration). Confirms with no errors when fresh.
+
+### Step 2 — Run the standard seed pipeline
+
+Logs to file because seed output contains emoji + scraped strings that crash Claude Code over JSON.
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails db:seed > tmp/seed.log 2>&1
+echo "exit: $?"
+tail -40 tmp/seed.log
+```
+
+This populates: 32 NFL teams + 71 NCAA + 48 FIFA, 128 coaches, 3 seasons, 29 slates, ~2,400 Spotrac contracts, prospects, PFF grades, synthetic grade fill, depth chart shells, sample roster spots, news/content/tasks fixtures.
+
+### Step 3 — Pull nflverse master CSV (identity + cross-ref IDs + headshots)
+
+Fetches `players.csv` (~24k rows), filters to active players from 2024+, upserts Athletes with all five cross-ref IDs (`gsis_id`, `pff_id`, `otc_id`, `pfr_id`, `nflverse_id`), then caches ESPN headshots to S3.
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:players_seed > tmp/players_seed.log 2>&1
+echo "exit: $?"
+tail -20 tmp/players_seed.log
+```
+
+Expect: ~2,500 athletes upserted, ~1,500 headshots cached (ESPN has IDs for most current players). Takes ~10-25 min depending on network. The two known dead links (`sal-cannella`, `isaiah-bond`) log a `[!]` and continue.
+
+### Step 4 — ESPN depth-chart scrape
+
+Auto-creates DepthChart shells per team, places players per ESPN's published depth, creates Contracts for any active-roster players not yet in the DB (UDFAs, mid-season call-ups), expires stale contracts when players have moved teams.
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails espn:scrape_depth_charts > tmp/espn_scrape.log 2>&1
+echo "exit: $?"
+tail -25 tmp/espn_scrape.log
+```
+
+Expect: 32 teams scraped, ~2,000 athletes matched, some Contracts created/expired/revived as the scrape catches up to current rosters.
+
+## Verification
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails runner '
+  puts "Teams (NFL):     #{Team.where(league: "nfl").count}"
+  puts "Athletes:        #{Athlete.where(sport: "football").count}"
+  puts "  with espn_id:  #{Athlete.where.not(espn_id: nil).count}"
+  puts "  with gsis_id:  #{Athlete.where.not(gsis_id: nil).count}"
+  puts "  with team_slug:#{Athlete.where.not(team_slug: nil).count}"
+  puts "Contracts:       #{Contract.where(contract_type: "active").count}"
+  puts "DepthCharts:     #{DepthChart.count}"
+  puts "DepthChartEntries:#{DepthChartEntry.count}"
+  puts "ImageCaches:     #{ImageCache.where(purpose: "headshot").count}"
+  puts "AthleteGrades:   #{AthleteGrade.count}"
+'
+```
+
+Healthy targets:
+- Teams (NFL): 32
+- Athletes: 2,000–3,000 (filter is `last_season >= 2024`)
+- with team_slug: ≥ 2,000 (most active players placed)
+- Contracts active: ≥ 2,400 (Spotrac stars + ESPN-added backups)
+- DepthCharts: 32
+- DepthChartEntries: ~2,500
+- ImageCaches: ~5,000 (athletes × 3 variants when headshots ran)
+
+## Visual smoke test
+
+Open `http://localhost:3000/nfl-rosters` and confirm each team renders 12 offensive starters, 12 defensive starters, 4 special teams, 4 coaches with headshots. Spot-check 3–4 teams across divisions.
+
+## Recovery if something goes wrong
+
+- Step 2 fails partway: `bin/rails db:reset > tmp/seed.log 2>&1` re-runs the whole seed (idempotent). Inspect `tmp/seed.log` for the failing record.
+- Step 3 fails on headshot upload: re-run — idempotent, only missing variants are uploaded. Or `SKIP_HEADSHOTS=1 bin/rails nfl:players_seed` to skip headshot calls entirely if AWS is the issue.
+- Step 4 fails on a single team: `bin/rails espn:scrape_depth_charts TEAM=buf` to retry one team. ESPN occasionally rate-limits — wait a minute and retry.
