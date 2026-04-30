@@ -7,5 +7,3 @@ db/schema.rb linguist-generated
 vendor/* linguist-vendored
 config/credentials/*.yml.enc diff=rails_credentials
 config/credentials.yml.enc diff=rails_credentials
-db/seeds/data/headshots/**/*.png filter=lfs diff=lfs merge=lfs -text
-db/seeds/data/headshots/**/*.jpg filter=lfs diff=lfs merge=lfs -text
