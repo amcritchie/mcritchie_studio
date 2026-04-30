@@ -286,14 +286,16 @@ namespace :nfl do
           next
         end
 
-        # Force a known-good high-res Cloudinary transform. The "mobile" variant
-        # NFL.com renders by default is ~12KB and gets blurry on hover. The
-        # "headshot_desktop_3x" preset works on both /image/upload/ (public)
-        # and /image/private/ (auth-required without a transform) paths and
-        # gives a clean ~16KB portrait that resizes well.
+        # Force a known-good high-res Cloudinary transform. NFL.com's default
+        # mobile variant is ~12KB and gets blurry on hover. We strip whatever
+        # transform stack is present and pin "t_headshot_desktop_3x/f_auto" —
+        # works on both /image/upload/ (public) and /image/private/
+        # (auth-required without a transform) paths, and yields a clean
+        # ~80KB color portrait. Crucially do NOT include "t_lazy" — that's
+        # Cloudinary's grayscale placeholder transform.
         img_url = img_url.sub(
           %r{(/image/(?:upload|private)/)(?:[a-z]+_[^/]+/)*},
-          '\1t_headshot_desktop_3x/t_lazy/f_auto/'
+          '\1t_headshot_desktop_3x/f_auto/'
         )
 
         person_slug = href.split("/").last.parameterize
