@@ -1,33 +1,22 @@
-# NFL athlete + head-coach headshots — links ESPN identity, then caches
-# resized variants to S3 via Studio::ImageCache.
+# Link ESPN identity to Athletes + Coaches.
 #
-# - Link steps (DB-only, ~1s each): always run. Pull from nflverse roster CSV
-#   for athletes; from ESPN's per-team coaches API for head coaches.
-# - Upload steps (network + S3, ~25min full athletes / seconds for coaches):
-#   only run when AWS creds present. Skipped on fresh dev environments
-#   without `op run`; ImageCache table stays empty until manual upload.
+# - Athletes: pull nflverse roster CSV, match by name, set espn_id +
+#   espn_headshot_url (always derived from espn_id, never the nflverse
+#   headshot_url which is NFL.com 3MB hi-res).
+# - Coaches: hit ESPN's /v2/sports/football/leagues/nfl/teams/{id}/coaches
+#   per team for HCs (only ~1/3 have a usable headshot.href), then scrape
+#   each team's NFL.com /team/coaches[-roster]/ page for HC + 3 coordinators.
 #
-# Coaches: two-source pipeline. ESPN's API exposes only HCs (and only ~1/3
-# of them have a `headshot.href`). NFL.com per-team coaches pages cover all
-# 4 roles (HC + OC + DC + STC) and reach ~109/128 = 85% — the remaining
-# misses are name mismatches between our seed and current NFL.com rosters.
+# DB-only — no S3 traffic. Image upload + caching happens in
+# 33_headshot_uploads.rb from the local files committed to the repo.
 #
-# All steps are idempotent — re-seeding skips already-linked + already-cached.
+# Idempotent — re-seeds only update rows whose source URL has changed.
 
-puts "\n--- NFL headshots ---"
+puts "\n--- NFL headshot identity links ---"
 
 require "rake"
 Rails.application.load_tasks unless Rake::Task.task_defined?("nfl:link_headshots")
 
 Rake::Task["nfl:link_headshots"].invoke
-Rake::Task["nfl:link_coach_headshots"].invoke                  # ESPN: HCs only, ~11 with images
-Rake::Task["nfl:link_coach_headshots_from_team_sites"].invoke  # NFL.com: all 4 roles, ~109 covered
-
-if ENV["AWS_ACCESS_KEY_ID"].present?
-  Rake::Task["nfl:upload_headshots"].invoke
-  Rake::Task["nfl:upload_coach_headshots"].invoke
-else
-  puts ""
-  puts "  ⏭  Skipping S3 upload — AWS_ACCESS_KEY_ID not set."
-  puts "     Run later: op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:upload_headshots nfl:upload_coach_headshots"
-end
+Rake::Task["nfl:link_coach_headshots"].invoke
+Rake::Task["nfl:link_coach_headshots_from_team_sites"].invoke

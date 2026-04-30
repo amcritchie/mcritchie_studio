@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/amcritchie/studio.git
-  revision: 62bd39a6d712654faffff9cb0d89c91823eee595
+  revision: ef738ffc034fdae0f8692b5f7db5af24a691cb2b
   specs:
     studio (0.2.4)
       aws-sdk-s3 (~> 1.218)
