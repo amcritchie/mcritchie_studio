@@ -77,7 +77,7 @@ class Pff::ImportCsvTest < ActiveSupport::TestCase
   end
 
   test "creates person and athlete for unknown player" do
-    row = ["New Player", "99999", "WR", "BUF", "17", "85.5"]
+    row = ["New Player", "99999", "QB", "BUF", "17", "85.5"]
     file = write_csv("passing_summary.csv", player_csv_headers, [row])
 
     assert_difference ["Person.count", "Athlete.count"], 1 do

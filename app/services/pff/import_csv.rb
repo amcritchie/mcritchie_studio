@@ -17,10 +17,28 @@ module Pff
       "LA"  => "LAR"
     }.freeze
 
+    # Restrict each stat_type to athletes whose position belongs in that stat.
+    # Prevents trick-play passes (a WR throwing once in passing_summary) from
+    # clobbering a player's real grades. Position checked AFTER normalization.
+    POSITION_FILTER = {
+      "passing_summary"          => %w[QB],
+      "rushing_summary"          => %w[RB FB],
+      "receiving_summary"        => %w[WR TE],
+      "offense_pass_blocking"    => %w[OT OG C TE],
+      "offense_run_blockng"      => %w[OT OG C TE FB],
+      "pass_rush_summary"        => %w[EDGE DE DT NT DL LB ILB OLB MLB],
+      "run_defense_summary"      => %w[EDGE DE DT NT DL LB ILB OLB MLB S FS SS],
+      "defense_coverage_summary" => %w[CB S FS SS LB ILB OLB MLB],
+      "defense_summary"          => %w[EDGE DE DT NT DL LB ILB OLB MLB CB S FS SS],
+      "field_goal_summary"       => %w[K],
+      "return_summary"           => %w[WR RB FB CB S TE LB ILB OLB MLB]
+    }.freeze
+
     # Maps stat_type → { csv_column → AthleteGrade column }
     GRADE_BACKFILL = {
       "passing_summary" => {
         "grades_pass" => :pass_grade,
+        "grades_run" => :run_grade,
         "grades_offense" => :offense_grade
       },
       "rushing_summary" => {
@@ -147,6 +165,15 @@ module Pff
 
         next if player_name.blank?
 
+        # Position filter — skip rows whose position isn't a primary fit for this stat_type
+        # (e.g. a WR who threw a trick pass shows up in passing_summary; ignore those rows).
+        allowed = POSITION_FILTER[stat_type]
+        normalized = PositionConcern.normalize_position(position)
+        if allowed && !allowed.include?(normalized)
+          @stats[:skipped] += 1
+          next
+        end
+
         # Find or create athlete
         athlete = find_or_create_athlete(player_name, pff_id, position)
         unless athlete
@@ -259,12 +286,21 @@ module Pff
         side = PositionConcern.side_for(position)
         if side == "defense" && data["grades_defense"].is_a?(Numeric)
           grade.overall_grade = data["grades_defense"]
+        elsif side == "defense"
+          # Defense sub-CSV without grades_defense (e.g. pass_rush_summary) — derive from sub-grades
+          parts = [grade.coverage_grade, grade.pass_rush_grade, grade.rush_defense_grade].compact
+          grade.overall_grade = (parts.sum / parts.size).round(1) if parts.any?
         elsif side == "special_teams"
           # Use the primary ST grade as overall for special teamers
           st_grade = data["grades_fgep_kicker"] || data["grades_punter"] || data["grades_return"]
           grade.overall_grade = st_grade if st_grade.is_a?(Numeric)
         elsif data["grades_offense"].is_a?(Numeric)
           grade.overall_grade = data["grades_offense"]
+        elsif %w[offense_pass_blocking offense_run_blockng offense_blocking].include?(stat_type)
+          # Blocking CSVs have no grades_offense — derive overall from the block grades we have
+          pb, rb = grade.pass_block_grade, grade.run_block_grade
+          derived = pb && rb ? (pb + rb) / 2.0 : (pb || rb)
+          grade.overall_grade = derived.round(1) if derived
         end
 
         grade.save!
