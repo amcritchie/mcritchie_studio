@@ -22,12 +22,23 @@ class NflController < ApplicationController
     @team_ranking_count = TeamRanking.count
   end
 
+  COACH_ROLE_ORDER = %w[head_coach offensive_coordinator defensive_coordinator special_teams_coordinator].freeze
+
   def rosters
     @season = Season.find_by(year: 2025, league: "nfl")
-    slate = Slate.find_by(season_slug: @season&.slug, sequence: 1)
+    nfl_team_slugs = Team.where(league: "nfl").pluck(:slug)
+    slate_slug = Roster.where(team_slug: nfl_team_slugs)
+                       .joins(:slate)
+                       .where(slates: { season_slug: @season&.slug })
+                       .order("slates.sequence")
+                       .pick(:slate_slug)
     @rosters = Roster.joins(:team)
-                     .where(teams: { league: "nfl" }, slate_slug: slate&.slug)
+                     .where(teams: { league: "nfl" }, slate_slug: slate_slug)
                      .includes(:team)
                      .order("teams.name")
+    @coaches_by_team = Coach.where(sport: "football", team_slug: @rosters.map(&:team_slug))
+                            .includes(:person, :image_caches)
+                            .group_by(&:team_slug)
+                            .transform_values { |cs| cs.sort_by { |c| COACH_ROLE_ORDER.index(c.role) || 99 } }
   end
 end

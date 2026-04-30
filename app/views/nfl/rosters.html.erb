@@ -41,7 +41,7 @@
 <section class="max-w-7xl mx-auto px-4 py-8">
   <div class="mb-8">
     <h1 class="text-3xl font-bold text-heading mb-2">NFL Rosters</h1>
-    <p class="text-secondary text-sm">Each team's starting offense (12) above defense (12). Headshots only — for spot-checking ESPN sources.</p>
+    <p class="text-secondary text-sm">Each team's starting offense (12), defense (12), special teams (4), and coaching staff (4). Headshots when available.</p>
   </div>
 
   <div class="space-y-4">
@@ -55,28 +55,43 @@
           <h2 class="text-heading font-semibold"><%= team.emoji %> <%= team.name %></h2>
         </div>
 
-        <% [["O", roster.offense_starting_12], ["D", roster.defense_starting_12]].each do |label, groups| %>
+        <% rows = [
+          ["O", roster.offense_starting_12.values.flatten.compact, :spot],
+          ["D", roster.defense_starting_12.values.flatten.compact, :spot],
+          ["S", roster.special_teams_starting_4.values.flatten.compact, :spot],
+          ["C", @coaches_by_team[team.slug] || [], :coach]
+        ] %>
+        <% rows.each do |label, items, kind| %>
           <div class="flex items-start gap-2 mb-2 last:mb-0">
             <span class="w-5 text-xs text-muted font-mono uppercase pt-3"><%= label %></span>
             <div class="flex flex-wrap gap-1">
-              <% groups.values.flatten.each do |spot| %>
-                <% athlete = spot.person.athlete_profile %>
-                <% small = athlete&.headshot_url(width: 100) %>
-                <% large = athlete&.headshot_url(width: 400) %>
+              <% items.each do |item| %>
+                <% if kind == :spot %>
+                  <% person  = item.person %>
+                  <% athlete = person.athlete_profile %>
+                  <% small   = athlete&.headshot_url(width: 100) %>
+                  <% large   = athlete&.headshot_url(width: 400) %>
+                  <% sub     = item.position %>
+                <% else %>
+                  <% person = item.person %>
+                  <% small  = item.headshot_url(width: 100) %>
+                  <% large  = item.headshot_url(width: 400) %>
+                  <% sub    = item.role.split("_").map { |w| w[0].upcase }.join %>
+                <% end %>
                 <div class="roster-spot relative">
                   <% if small %>
                     <img src="<%= small %>"
                          data-hover-src="<%= large %>"
-                         alt="<%= spot.person.full_name %>"
+                         alt="<%= person.full_name %>"
                          loading="lazy"
                          class="roster-img w-12 h-12 rounded-full object-cover bg-surface-alt">
                   <% else %>
                     <div class="roster-img w-12 h-12 rounded-full bg-surface-alt flex items-center justify-center text-[10px] text-muted font-mono">
-                      <%= spot.position %>
+                      <%= sub %>
                     </div>
                   <% end %>
                   <span class="roster-name px-2 py-1 bg-inset text-heading text-[11px] font-medium rounded shadow-lg">
-                    <%= spot.person.full_name %><span class="text-muted ml-1">· <%= spot.position %></span>
+                    <%= person.full_name %><span class="text-muted ml-1">· <%= sub %></span>
                   </span>
                 </div>
               <% end %>
