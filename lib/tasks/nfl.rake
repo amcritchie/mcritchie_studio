@@ -382,4 +382,9 @@ namespace :nfl do
       status_filter:    ENV.fetch("STATUS", "ACT")
     ).call
   end
+
+  desc "Sync NFL salaries from Spotrac JSON. Annotates active Contracts (matched by otc_id, falling back to name); creates Person/Athlete/Contract for entries we don't have yet."
+  task salaries_sync: :environment do
+    Spotrac::SyncContracts.new(verbose: ENV["VERBOSE"] == "1").call
+  end
 end
