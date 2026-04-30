@@ -286,9 +286,15 @@ namespace :nfl do
           next
         end
 
-        # Strip Cloudinary transforms to get a clean source — Studio::ImageCache
-        # will resize on its own.
-        img_url = img_url.sub(%r{/image/upload/[^/]+/[^/]+/[^/]+/}, "/image/upload/")
+        # Force a known-good high-res Cloudinary transform. The "mobile" variant
+        # NFL.com renders by default is ~12KB and gets blurry on hover. The
+        # "headshot_desktop_3x" preset works on both /image/upload/ (public)
+        # and /image/private/ (auth-required without a transform) paths and
+        # gives a clean ~16KB portrait that resizes well.
+        img_url = img_url.sub(
+          %r{(/image/(?:upload|private)/)(?:[a-z]+_[^/]+/)*},
+          '\1t_headshot_desktop_3x/t_lazy/f_auto/'
+        )
 
         person_slug = href.split("/").last.parameterize
         coach = Coach.find_by(team_slug: team_slug, role: role, person_slug: person_slug)
