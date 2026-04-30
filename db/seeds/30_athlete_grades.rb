@@ -1,11 +1,12 @@
 # Athlete grades — fallback layer for athletes not in any PFF CSV.
 #
 # By the time this runs:
-#   29_pff_grades.rb has imported ~570 real PFF grades for active starters/role
+#   29_pff_grades.rb has imported ~570 real PFF grades for starters/role
 #   players. The athletes left here are backups + practice-squad — by definition
-#   non-stars without enough snaps for a meaningful PFF grade. We give them a
-#   flat baseline so the depth-chart ranking (in 31_depth_charts.rb) has a value
-#   to sort against; salary acts as the natural tiebreaker.
+#   non-stars without enough snaps for a meaningful PFF grade. They get a flat
+#   50.0 placeholder so ranking pages and the player-impact simulator have a
+#   value to sort/compute against; depth chart ordering itself comes from
+#   ESPN's scraper now (espn:scrape_depth_charts), not from grades.
 #
 # Prospects keep the tier-based grading with grade_ranges JSONB since draft
 # slot is the only signal we have for them pre-NFL.
@@ -81,7 +82,7 @@ if nfl_season
          .where(sport: "football")
          .distinct.find_each do |athlete|
     AthleteGrade.find_or_create_by!(athlete_slug: athlete.slug, season_slug: nfl_season.slug) do |g|
-      g.overall_grade = 60.0
+      g.overall_grade = 50.0
       g.games_played  = 17
     end
   end
