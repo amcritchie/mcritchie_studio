@@ -283,7 +283,7 @@ Each file only depends on files above it. Teams → Seasons → People → Grade
 | | `25_fifa_players.rb` | 48 FIFA stars → Person + Athlete + Contract (`contract_type: "active"`) |
 | 4. Evaluation | `30_athlete_grades.rb` | ~2520 athlete grades (tier-based for prospects with grade_ranges JSONB) |
 | | `31_rosters.rb` | 64 rosters, ~5038 roster spots |
-| | `32_athlete_headshots.rb` | NFL athlete + head-coach headshots: links ESPN ids (athletes from nflverse, HCs from ESPN team coaches API) + caches 100w/400w/original to S3 via `Studio::ImageCache`. Always runs link (DB-only, ~1s). Skips upload if `AWS_ACCESS_KEY_ID` blank — full athlete upload ~25min, coach upload <1min, idempotent on re-seed. ESPN exposes only HCs (no coordinators) and only ~1/3 of them have a public headshot. |
+| | `32_athlete_headshots.rb` | NFL athlete + coach headshots cached to S3 via `Studio::ImageCache` (100w/400w/original). Athletes link from nflverse, HCs from ESPN's coaches API, all 4 coaching roles (HC + OC + DC + STC) scraped from each team's NFL.com `/team/coaches/` or `/team/coaches-roster/` page (TEAM_NFL_SUBDOMAIN map in `lib/tasks/nfl.rake`). Always runs links (DB-only). Skips uploads if `AWS_ACCESS_KEY_ID` blank — athlete upload ~25min, coach upload <2min, idempotent on re-seed. Coverage: ~1,569 athletes + ~109/128 coaches; misses are seed-vs-current-roster name drift. |
 | 5. Schedule | `40_games.rb` | Games across slates |
 | 6. Demo Content | `50_news.rb` | 5 world cup articles + 34 NFL Draft tweets (@AdamSchefter) |
 | | `51_contents.rb` | 4 content items across stages |

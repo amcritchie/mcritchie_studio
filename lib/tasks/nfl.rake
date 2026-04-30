@@ -186,11 +186,144 @@ namespace :nfl do
     puts "failed:               #{failed}"
   end
 
-  desc "For Coaches with espn_id + espn_headshot_url, cache variants. Idempotent."
+  # Maps our team_slug to the team's official NFL.com subdomain.
+  # Used to scrape the team's coaches roster page when ESPN's coach API
+  # doesn't provide a headshot.href (which is the case for ~21/32 HCs and
+  # for every coordinator).
+  TEAM_NFL_SUBDOMAIN = {
+    "arizona-cardinals"     => "azcardinals",
+    "atlanta-falcons"       => "atlantafalcons",
+    "baltimore-ravens"      => "baltimoreravens",
+    "buffalo-bills"         => "buffalobills",
+    "carolina-panthers"     => "panthers",
+    "chicago-bears"         => "chicagobears",
+    "cincinnati-bengals"    => "bengals",
+    "cleveland-browns"      => "clevelandbrowns",
+    "dallas-cowboys"        => "dallascowboys",
+    "denver-broncos"        => "denverbroncos",
+    "detroit-lions"         => "detroitlions",
+    "green-bay-packers"     => "packers",
+    "houston-texans"        => "houstontexans",
+    "indianapolis-colts"    => "colts",
+    "jacksonville-jaguars"  => "jaguars",
+    "kansas-city-chiefs"    => "chiefs",
+    "las-vegas-raiders"     => "raiders",
+    "los-angeles-chargers"  => "chargers",
+    "los-angeles-rams"      => "therams",
+    "miami-dolphins"        => "miamidolphins",
+    "minnesota-vikings"     => "vikings",
+    "new-england-patriots"  => "patriots",
+    "new-orleans-saints"    => "neworleanssaints",
+    "new-york-giants"       => "giants",
+    "new-york-jets"         => "newyorkjets",
+    "philadelphia-eagles"   => "philadelphiaeagles",
+    "pittsburgh-steelers"   => "steelers",
+    "san-francisco-49ers"   => "49ers",
+    "seattle-seahawks"      => "seahawks",
+    "tampa-bay-buccaneers"  => "buccaneers",
+    "tennessee-titans"      => "tennesseetitans",
+    "washington-commanders" => "commanders"
+  }.freeze
+
+  COACH_ROLE_LABELS = {
+    "head coach"                 => "head_coach",
+    "offensive coordinator"      => "offensive_coordinator",
+    "defensive coordinator"      => "defensive_coordinator",
+    "special teams coordinator"  => "special_teams_coordinator"
+  }.freeze
+
+  desc "Scrape each team's NFL.com coaches roster page; populate Coach espn_headshot_url where missing. Covers HC + 3 coordinators per team."
+  task link_coach_headshots_from_team_sites: :environment do
+    require "open-uri"
+    require "nokogiri"
+
+    matched = 0
+    skipped_unchanged = 0
+    skipped_no_coach = 0
+    skipped_no_image = 0
+    failed_team = 0
+
+    TEAM_NFL_SUBDOMAIN.each do |team_slug, subdomain|
+      html = nil
+      ["coaches-roster", "coaches"].each do |path|
+        url = "https://www.#{subdomain}.com/team/#{path}/"
+        begin
+          html = URI.open(url, read_timeout: 15, "User-Agent" => "Mozilla/5.0").read
+          break
+        rescue OpenURI::HTTPError
+          next
+        end
+      end
+
+      unless html
+        failed_team += 1
+        puts "  [!] #{team_slug.ljust(25)} no coaches page found at #{subdomain}.com"
+        next
+      end
+
+      doc = Nokogiri::HTML(html)
+
+      # Each coach card is the smallest ancestor of a coach link that contains
+      # both a role label and an <img>.
+      doc.css("a[href*='/team/coaches/'], a[href*='/team/coaches-roster/']").each do |link|
+        href = link["href"].to_s
+        next if href.match?(/coaches(?:-roster)?\/(index|all-time)?$/)
+
+        card = link.ancestors.find { |n| n.css("img").any? }
+        next unless card
+
+        # Strip "Assistant Head Coach" / "Associate Head Coach" so they don't
+        # match the bare "head coach" label.
+        text = card.text.gsub(/(assistant|associate|interim|senior)\s+(head\s+coach|offensive\s+coordinator|defensive\s+coordinator|special\s+teams\s+coordinator)/i, "")
+        role_label = COACH_ROLE_LABELS.keys.find { |label| text.match?(/#{Regexp.escape(label)}/i) }
+        next unless role_label
+        role = COACH_ROLE_LABELS[role_label]
+
+        img = card.css("img").first
+        img_url = img["src"].to_s.start_with?("http") ? img["src"] : img["data-src"].to_s
+        if img_url.empty? || img_url.start_with?("data:")
+          skipped_no_image += 1
+          next
+        end
+
+        # Strip Cloudinary transforms to get a clean source — Studio::ImageCache
+        # will resize on its own.
+        img_url = img_url.sub(%r{/image/upload/[^/]+/[^/]+/[^/]+/}, "/image/upload/")
+
+        person_slug = href.split("/").last.parameterize
+        coach = Coach.find_by(team_slug: team_slug, role: role, person_slug: person_slug)
+
+        unless coach
+          skipped_no_coach += 1
+          # Surface mismatch so seed can be corrected later
+          our_coach = Coach.find_by(team_slug: team_slug, role: role)
+          puts "  [~] #{team_slug.ljust(25)} #{role.ljust(28)} NFL.com=#{person_slug}, our DB has #{our_coach&.person_slug.inspect}"
+          next
+        end
+
+        if coach.espn_headshot_url == img_url
+          skipped_unchanged += 1
+        else
+          coach.update!(espn_headshot_url: img_url)
+          matched += 1
+          puts "  [+] #{team_slug.ljust(25)} #{role.ljust(28)} #{coach.person.full_name}" if matched <= 8 || (matched % 25).zero?
+        end
+      end
+    end
+
+    puts ""
+    puts "matched/updated:      #{matched}"
+    puts "skipped (unchanged):  #{skipped_unchanged}"
+    puts "skipped (no Coach):   #{skipped_no_coach}"
+    puts "skipped (no image):   #{skipped_no_image}"
+    puts "failed (team page):   #{failed_team}"
+  end
+
+  desc "For Coaches with espn_headshot_url (from ESPN or NFL.com), cache variants. Idempotent."
   task upload_coach_headshots: :environment do
-    with_url    = Coach.where.not(espn_id: nil).where.not(espn_headshot_url: nil).includes(:image_caches)
-    without_url = Coach.where.not(espn_id: nil).where(espn_headshot_url: nil).count
-    puts "candidates: #{with_url.count} coaches with headshot URL; #{without_url} ESPN-known but no image; widths: #{COACH_HEADSHOT_WIDTHS.inspect}"
+    with_url    = Coach.where.not(espn_headshot_url: nil).includes(:image_caches)
+    without_url = Coach.where(sport: "football", espn_headshot_url: nil).count
+    puts "candidates: #{with_url.count} coaches with headshot URL; #{without_url} football coaches with no image source; widths: #{COACH_HEADSHOT_WIDTHS.inspect}"
 
     cached = 0
     skipped_complete = 0
@@ -203,7 +336,9 @@ namespace :nfl do
         next
       end
 
-      key_prefix = "headshots/nfl/coaches/#{coach.person_slug}"
+      # Use coach.slug (person-team-role) for the S3 path so coaches with the
+      # same person_slug across teams/roles don't collide.
+      key_prefix = "headshots/nfl/coaches/#{coach.slug}"
       content_type = coach.espn_headshot_url.to_s.end_with?(".png") ? "image/png" : "image/jpeg"
 
       begin
