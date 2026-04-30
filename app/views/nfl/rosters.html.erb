@@ -48,12 +48,13 @@
     <% @rosters.each do |roster| %>
       <% team = roster.team %>
       <div class="card p-4">
-        <div class="flex items-center gap-2 mb-3">
+        <%= link_to team_depth_chart_path(team.slug), class: "flex items-center gap-2 mb-3 hover:text-primary transition" do %>
           <% if team.color_primary.present? %>
             <span class="inline-block w-3 h-3 rounded-full flex-shrink-0" style="background-color: <%= team.color_primary %>"></span>
           <% end %>
           <h2 class="text-heading font-semibold"><%= team.emoji %> <%= team.name %></h2>
-        </div>
+          <span class="text-muted text-xs">→ depth chart</span>
+        <% end %>
 
         <% rows = [
           ["O", roster.offense_starting_12.values.flatten.compact, :spot],

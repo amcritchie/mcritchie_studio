@@ -2,3 +2,4 @@
 import "@hotwired/turbo-rails"
 import "dropping_text"
 import "alex_chat"
+import "depth_chart"

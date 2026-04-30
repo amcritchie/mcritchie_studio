@@ -28,6 +28,13 @@ class Roster < ApplicationRecord
 
   FLEX_DL_POSITIONS = %w[EDGE DE DT NT DL DI].freeze
 
+  SPECIAL_TEAMS_COMPOSITION = {
+    k:        { positions: %w[K], count: 1 },
+    p:        { positions: %w[P], count: 1 },
+    ls:       { positions: %w[LS], count: 1 },
+    returner: { positions: %w[WR RB FB], count: 1, sort_by: :return_grade }
+  }.freeze
+
   def offense_starters
     roster_spots.where(depth: 1, side: "offense")
   end
@@ -44,53 +51,78 @@ class Roster < ApplicationRecord
     pick_starters("defense", DEFENSE_COMPOSITION)
   end
 
+  def special_teams_starting_4
+    chart = team.depth_chart
+    return SPECIAL_TEAMS_COMPOSITION.transform_values { [] } unless chart
+
+    entries = chart.depth_chart_entries
+                   .includes(person: { athlete_profile: [:grades, :image_caches] })
+                   .to_a
+    spots = entries.map { |e| PickedSpot.new(person: e.person, position: e.position, depth: e.depth, side: e.side) }
+
+    result = {}
+    SPECIAL_TEAMS_COMPOSITION.each do |group, config|
+      matching = spots.select { |s| config[:positions].include?(s.position) }
+      sort_col = config[:sort_by]
+      sorted   = if sort_col
+                   matching.sort_by do |s|
+                     grade = s.person&.athlete_profile&.grades&.first&.public_send(sort_col)
+                     [-1 * (grade || 0), s.depth]
+                   end
+                 else
+                   matching.sort_by(&:depth)
+                 end
+      result[group] = sorted.first(config[:count])
+    end
+
+    result
+  end
+
   def name_slug
     "#{team_slug}-#{slate_slug}"
   end
 
   private
 
+  # Reads the team's DepthChart and emits a RosterSpot-shaped struct so views
+  # don't need to change. Depth is set manually via the depth-chart UI; locked
+  # entries persist across re-seeds.
+  PickedSpot = Struct.new(:person, :position, :depth, :side, keyword_init: true) do
+    def person_slug; person&.slug; end
+  end
+
   def pick_starters(side, composition)
-    spots = roster_spots.includes(person: { athlete_profile: [:grades, :image_caches] })
-                        .where(side: side)
-                        .to_a
+    chart = team.depth_chart
+    return composition.transform_values { [] } unless chart
+
+    spots = chart.depth_chart_entries
+                 .where(side: side)
+                 .includes(person: { athlete_profile: [:grades, :image_caches] })
+                 .to_a
+                 .map { |e| PickedSpot.new(person: e.person, position: e.position, depth: e.depth, side: e.side) }
 
     selected = []
     result = {}
 
-    # First pass: pick all fixed groups
     composition.each do |group, config|
       next if config == :flex
 
       matching = spots.select { |s| config[:positions].include?(s.position) }
-      sorted = sort_by_grade(matching)
-      picked = sorted.first(config[:count])
+      picked   = matching.sort_by(&:depth).first(config[:count])
       result[group] = picked
       selected.concat(picked)
     end
 
-    # Flex DL: best remaining EDGE/DL player not already selected
     if composition.key?(:flex_dl)
       remaining = spots.select { |s| FLEX_DL_POSITIONS.include?(s.position) } - selected
-      result[:flex_dl] = sort_by_grade(remaining).first(1)
+      result[:flex_dl] = remaining.sort_by(&:depth).first(1)
     end
 
-    # OLine guardrails: must have exactly 1 center
     if result.key?(:oline)
       result[:oline] = apply_oline_guardrails(result[:oline], spots)
     end
 
-    # Preserve composition key order
-    ordered = {}
-    composition.each_key { |k| ordered[k] = result[k] if result.key?(k) }
-    ordered
-  end
-
-  def sort_by_grade(spots)
-    spots.sort_by do |s|
-      grade = s.person&.athlete_profile&.grades&.first&.overall_grade
-      [-1 * (grade || 0), s.depth]
-    end
+    composition.each_key.each_with_object({}) { |k, acc| acc[k] = result[k] if result.key?(k) }
   end
 
   def apply_oline_guardrails(selected, all_spots)
@@ -99,16 +131,12 @@ class Roster < ApplicationRecord
     centers = selected.select { |s| s.position == "C" }
 
     if centers.empty?
-      # Must have a center — swap 5th player for best available center
-      best_center = sort_by_grade(all_oline.select { |s| s.position == "C" } - selected).first
-      if best_center
-        selected = selected[0..3] + [best_center]
-      end
+      best_center = (all_oline.select { |s| s.position == "C" } - selected).sort_by(&:depth).first
+      selected = selected[0..3] + [best_center] if best_center
     elsif centers.size > 1
-      # No duplicate centers — replace lower-graded center with next best non-center
-      worst_center = sort_by_grade(centers).last
-      non_centers = all_oline.select { |s| s.position != "C" } - selected
-      replacement = sort_by_grade(non_centers).first
+      worst_center = centers.max_by(&:depth)
+      non_centers = (all_oline.reject { |s| s.position == "C" } - selected).sort_by(&:depth)
+      replacement = non_centers.first
       if replacement
         idx = selected.index(worst_center)
         selected[idx] = replacement

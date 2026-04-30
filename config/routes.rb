@@ -73,6 +73,9 @@ Rails.application.routes.draw do
   # NFL hub + rankings (SEO-friendly URLs)
   get "nfl", to: "nfl#index", as: :nfl_hub
   get "nfl-rosters", to: "nfl#rosters", as: :nfl_rosters
+  get  "teams/:slug/depth-chart",                to: "depth_charts#show",        as: :team_depth_chart
+  post "teams/:slug/depth-chart/reorder",        to: "depth_charts#reorder",     as: :reorder_depth_chart
+  post "depth_chart_entries/:id/toggle_lock",    to: "depth_charts#toggle_lock", as: :toggle_lock_depth_chart_entry
   get "nfl-quarterback-rankings", to: "rankings#quarterback", as: :nfl_quarterback_rankings
   get "nfl-offensive-line-rankings", to: "rankings#offensive_line", as: :nfl_offensive_line_rankings
   get "nfl-receiving-rankings",      to: "rankings#receiving",      as: :nfl_receiving_rankings

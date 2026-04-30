@@ -1,0 +1,77 @@
+class DepthChartsController < ApplicationController
+  skip_before_action :require_authentication, only: [:show]
+  before_action :set_team, only: [:show, :reorder]
+
+  POSITION_ORDER = {
+    "offense" => %w[QB RB FB WR TE LT LG C RG RT OT OG T G],
+    "defense" => %w[EDGE DE DT NT DL LB ILB OLB MLB CB S FS SS],
+    "special_teams" => %w[K P LS]
+  }.freeze
+
+  def show
+    @season = Season.find_by(year: 2025, league: "nfl")
+    @chart = @team.depth_chart
+    return redirect_to nfl_rosters_path, alert: "No depth chart for #{@team.name}" unless @chart
+
+    grades = AthleteGrade.where(season_slug: @season&.slug)
+                         .where(athlete_slug: @chart.depth_chart_entries.joins(person: :athlete_profile).pluck("athletes.slug"))
+                         .index_by(&:athlete_slug)
+    @grades_by_person = {}
+    @chart.depth_chart_entries.includes(person: { athlete_profile: :image_caches }).each do |e|
+      ath = e.person.athlete_profile
+      @grades_by_person[e.person_slug] = grades[ath.slug] if ath
+    end
+
+    @entries_by_side = @chart.depth_chart_entries
+                             .includes(person: { athlete_profile: :image_caches })
+                             .group_by(&:side)
+                             .transform_values do |entries|
+      entries.group_by(&:position)
+             .sort_by { |pos, _| POSITION_ORDER[entries.first.side]&.index(pos) || 99 }
+             .to_h
+             .transform_values { |es| es.sort_by(&:depth) }
+    end
+  end
+
+  def reorder
+    chart = @team.depth_chart
+    return render json: { error: "no chart" }, status: :not_found unless chart
+
+    rescue_and_log(target: chart) do
+      position = params.require(:position)
+      ids      = Array(params.require(:entry_ids))
+
+      ActiveRecord::Base.transaction do
+        ids.each_with_index do |id, idx|
+          entry = chart.depth_chart_entries.find(id)
+          next if entry.locked
+          entry.update!(depth: idx + 1)
+        end
+      end
+      render json: { ok: true, position: position }
+    end
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "entry not found" }, status: :not_found
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def toggle_lock
+    entry = DepthChartEntry.find(params[:id])
+    rescue_and_log(target: entry) do
+      entry.update!(locked: !entry.locked)
+      render json: { ok: true, locked: entry.locked }
+    end
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "entry not found" }, status: :not_found
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  private
+
+  def set_team
+    @team = Team.find_by(slug: params[:slug])
+    redirect_to nfl_rosters_path, alert: "Team not found" unless @team
+  end
+end

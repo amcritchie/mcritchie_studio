@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_29_212648) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_30_013440) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -156,6 +156,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_29_212648) do
     t.string "slug", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "espn_id"
+    t.string "espn_headshot_url"
+    t.index ["espn_id"], name: "index_coaches_on_espn_id"
     t.index ["person_slug", "team_slug", "role"], name: "index_coaches_unique_role", unique: true
     t.index ["person_slug"], name: "index_coaches_on_person_slug"
     t.index ["slug"], name: "index_coaches_on_slug", unique: true
@@ -229,6 +232,29 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_29_212648) do
     t.index ["person_slug"], name: "index_contracts_on_person_slug"
     t.index ["slug"], name: "index_contracts_on_slug", unique: true
     t.index ["team_slug"], name: "index_contracts_on_team_slug"
+  end
+
+  create_table "depth_chart_entries", force: :cascade do |t|
+    t.string "depth_chart_slug", null: false
+    t.string "person_slug", null: false
+    t.string "position", null: false
+    t.string "side", null: false
+    t.integer "depth", null: false
+    t.boolean "locked", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["depth_chart_slug", "person_slug", "position"], name: "idx_dce_unique", unique: true
+    t.index ["depth_chart_slug", "position", "depth"], name: "idx_on_depth_chart_slug_position_depth_8e80d39ff6"
+    t.index ["depth_chart_slug"], name: "index_depth_chart_entries_on_depth_chart_slug"
+  end
+
+  create_table "depth_charts", force: :cascade do |t|
+    t.string "team_slug", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_depth_charts_on_slug", unique: true
+    t.index ["team_slug"], name: "index_depth_charts_on_team_slug", unique: true
   end
 
   create_table "error_logs", force: :cascade do |t|
