@@ -71,12 +71,8 @@ class Espn::ScrapeDepthCharts
   private
 
   def scrape_team(abbrev, team_slug)
-    chart = DepthChart.find_by(team_slug: team_slug)
-    unless chart
-      puts "  [?] No DepthChart for #{team_slug}"
-      @stats[:teams_skipped] += 1
-      return
-    end
+    chart = DepthChart.find_or_create_by!(team_slug: team_slug)
+    @stats[:depth_charts_created] += 1 if chart.previously_new_record?
 
     groups = fetch_groups(abbrev)
     unless groups
@@ -165,7 +161,7 @@ class Espn::ScrapeDepthCharts
   # 3. Existing entries at this position not in ESPN's list keep their relative
   #    order, slotting in after ESPN-listed entries.
   def apply_row(chart, position, side, athletes, team_slug)
-    espn_persons = athletes.map { |a| match_person(a, team_slug) }.compact
+    espn_persons = athletes.map { |a| match_person(a, team_slug, position: position) }.compact
 
     # Existing entry per ESPN-listed person (might be at any position)
     existing_for_espn = chart.depth_chart_entries
@@ -198,7 +194,6 @@ class Espn::ScrapeDepthCharts
 
     @stats[:rows_applied] += 1
     @stats[:athletes_matched] += espn_persons.size
-    @stats[:athletes_unmatched] += athletes.size - espn_persons.size
     @stats[:athletes_added] += new_entries.size
   end
 
@@ -218,36 +213,76 @@ class Espn::ScrapeDepthCharts
     end
   end
 
-  # Resolve ESPN athlete → our Person, but ONLY if they have an active contract
-  # with this team. Otherwise ESPN's depth chart drift (recent trades, mid-season
-  # signings) would pollute our charts with players actually on other teams.
-  def match_person(athlete, team_slug)
+  # Resolve ESPN athlete → our Person, ensuring an active Contract exists for
+  # this team. ESPN is now authoritative for "who is on the team this week" —
+  # if ESPN places a player and we don't have them on this team, create the
+  # Contract and expire any active contract on a different team (player moved).
+  # Also keeps Athlete.team_slug in sync with the team the scraper just placed
+  # them on.
+  def match_person(athlete, team_slug, position: nil)
     espn_id = athlete["href"].to_s[%r{/id/(\d+)/}, 1]
-    person = nil
-    if espn_id
-      ath = Athlete.find_by(espn_id: espn_id)
-      person = ath&.person
-    end
-
-    unless person
-      full_name = athlete["name"] || athlete["displayName"] || ""
-      parts = strip_suffix(full_name).split(/\s+/, 2)
-      person = Person.find_by_name(parts[0], parts[1]) if parts.size == 2
-    end
+    person, athlete_record = lookup_person(espn_id, athlete["name"] || athlete["displayName"])
 
     unless person
       vputs "      [?] no match: #{athlete['name']} (espn_id=#{espn_id})"
+      @stats[:athletes_unmatched] += 1
       return nil
     end
 
-    on_team = Contract.where(person_slug: person.slug, team_slug: team_slug, contract_type: "active").exists?
-    unless on_team
-      vputs "      [~] cross-team skip: #{person.full_name} (on chart for #{team_slug}, no active contract)"
-      @stats[:athletes_cross_team] += 1
+    athlete_record ||= person.athlete_profile
+    if athlete_record.nil?
+      vputs "      [?] no athlete record: #{person.full_name}"
+      @stats[:athletes_no_record] += 1
       return nil
     end
 
+    ensure_active_contract(person, athlete_record, team_slug, position)
     person
+  end
+
+  def lookup_person(espn_id, name)
+    if espn_id
+      ath = Athlete.find_by(espn_id: espn_id)
+      return [ath.person, ath] if ath
+    end
+
+    return [nil, nil] if name.blank?
+    parts = strip_suffix(name).split(/\s+/, 2)
+    return [nil, nil] if parts.size < 2
+
+    person = Person.find_by_name(parts[0], parts[1])
+    [person, person&.athlete_profile]
+  end
+
+  # Make Contract state agree with what ESPN just told us:
+  #   1. Find or create active Contract for [person, team_slug]. If existing
+  #      Contract was previously expired, un-expire it.
+  #   2. Expire any other active Contracts the player has (they moved teams).
+  #   3. Update Athlete.team_slug.
+  def ensure_active_contract(person, athlete_record, team_slug, position)
+    contract = Contract.find_or_initialize_by(person_slug: person.slug, team_slug: team_slug)
+    if contract.new_record?
+      contract.contract_type = "active"
+      contract.position = position if position
+      contract.save!
+      @stats[:contracts_created] += 1
+    elsif contract.expires_at && contract.expires_at < Date.today
+      contract.update!(expires_at: nil, contract_type: "active")
+      @stats[:contracts_revived] += 1
+    end
+
+    Contract.where(person_slug: person.slug, contract_type: "active")
+            .where.not(team_slug: team_slug)
+            .where("expires_at IS NULL OR expires_at >= ?", Date.today)
+            .find_each do |stale|
+      stale.update!(expires_at: Date.today - 1)
+      @stats[:contracts_expired] += 1
+    end
+
+    if athlete_record.team_slug != team_slug
+      athlete_record.update!(team_slug: team_slug)
+      @stats[:team_slug_updates] += 1
+    end
   end
 
   def strip_suffix(name)
