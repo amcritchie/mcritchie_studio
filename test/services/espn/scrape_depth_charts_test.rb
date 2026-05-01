@@ -153,6 +153,62 @@ class Espn::ScrapeDepthChartsTest < ActiveSupport::TestCase
                  "ESPN's order [Campbell, Hudson, Lomu, Metz] must be preserved verbatim"
   end
 
+  # ─── Position reconciliation ─────────────────────────────────────────────────
+
+  test "reconcile_chart_positions moves a 3-4 OLB to EDGE when athlete.position says EDGE" do
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+
+    # Existing EDGE depth chain: an actual DE at depth 1, another at depth 2
+    de1 = Person.create!(first_name: "DE", last_name: "Starter", athlete: true)
+    Athlete.create!(person_slug: de1.slug, sport: "football", position: "EDGE")
+    chart.depth_chart_entries.create!(person_slug: de1.slug, position: "EDGE", side: "defense", depth: 1)
+
+    de2 = Person.create!(first_name: "DE", last_name: "Backup", athlete: true)
+    Athlete.create!(person_slug: de2.slug, sport: "football", position: "EDGE")
+    chart.depth_chart_entries.create!(person_slug: de2.slug, position: "EDGE", side: "defense", depth: 2)
+
+    # Crosby-shaped: athlete classified as EDGE but ESPN placed him at LB depth 1
+    crosby = Person.create!(first_name: "Maxx", last_name: "Crosby", athlete: true)
+    Athlete.create!(person_slug: crosby.slug, sport: "football", position: "EDGE")
+    chart.depth_chart_entries.create!(person_slug: crosby.slug, position: "LB", side: "defense", depth: 1)
+
+    @service.send(:reconcile_chart_positions, chart)
+
+    # Crosby moved to EDGE, kept depth 1; existing DEs bumped to 2 and 3
+    edge_chain = chart.depth_chart_entries.where(position: "EDGE").order(:depth).pluck(:person_slug)
+    assert_equal [crosby.slug, de1.slug, de2.slug], edge_chain
+
+    # LB chain has the Crosby gap (filled by densify_chart in the real flow)
+    refute_includes chart.depth_chart_entries.where(position: "LB").pluck(:person_slug), crosby.slug
+    assert_equal 1, @service.stats[:positions_reconciled]
+  end
+
+  test "reconcile_chart_positions leaves locked entries alone" do
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+
+    p = Person.create!(first_name: "Locked", last_name: "Edge", athlete: true)
+    Athlete.create!(person_slug: p.slug, sport: "football", position: "EDGE")
+    chart.depth_chart_entries.create!(person_slug: p.slug, position: "LB", side: "defense", depth: 1, locked: true)
+
+    @service.send(:reconcile_chart_positions, chart)
+
+    assert_equal "LB", chart.depth_chart_entries.find_by(person_slug: p.slug).position
+    assert_equal 0, @service.stats[:positions_reconciled]
+  end
+
+  test "reconcile_chart_positions does NOT move CB ↔ S (different reconciliation axis)" do
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+
+    p = Person.create!(first_name: "Hybrid", last_name: "DB", athlete: true)
+    Athlete.create!(person_slug: p.slug, sport: "football", position: "S")
+    chart.depth_chart_entries.create!(person_slug: p.slug, position: "CB", side: "defense", depth: 1)
+
+    @service.send(:reconcile_chart_positions, chart)
+
+    # CB↔S is intentionally NOT auto-reconciled (slot CB / big-nickel ambiguity).
+    assert_equal "CB", chart.depth_chart_entries.find_by(person_slug: p.slug).position
+  end
+
   test "apply_row respects locked entries even when ESPN places someone in the locked depth" do
     chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
 

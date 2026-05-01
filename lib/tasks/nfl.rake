@@ -387,4 +387,12 @@ namespace :nfl do
   task salaries_sync: :environment do
     Spotrac::SyncContracts.new(verbose: ENV["VERBOSE"] == "1").call
   end
+
+  desc "Find suffix-stripped duplicate Persons (e.g. 'will-anderson' alongside 'will-anderson-jr') and merge into the canonical record. Default DRY_RUN=1; set DRY_RUN=0 to commit."
+  task merge_duplicate_athletes: :environment do
+    Athletes::MergeDuplicates.new(
+      dry_run: ENV.fetch("DRY_RUN", "1") != "0",
+      verbose: ENV["VERBOSE"] == "1"
+    ).call
+  end
 end

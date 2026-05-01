@@ -101,11 +101,54 @@ class Espn::ScrapeDepthCharts
       apply_row(chart, position, side, flattened, team_slug)
     end
 
+    # Reconcile any same-side disagreements: ESPN's formation labels
+    # (esp. 3-4 OLB vs 4-3 OLB) get collapsed to LB by ESPN_MAP, but our
+    # athlete.position from nflverse correctly classifies edge rushers as
+    # EDGE. Move the depth chart entry to match athlete.position so Maxx
+    # Crosby (OLB→EDGE) is found in the EDGE pool by the Roster picker.
+    reconcile_chart_positions(chart)
+
     # Re-densify depths everywhere — moves leave gaps at the source position.
     densify_chart(chart)
 
     puts "  [+] #{team_slug}: applied ESPN depth chart"
     @stats[:teams_scraped] += 1
+  end
+
+  # Position pairs we treat as canonically resolvable: when ESPN places someone
+  # in one bucket but the player's stored position is in the other, prefer
+  # athlete.position. The D-line/LB axis is the big one (3-4 OLB ambiguity).
+  RECONCILE_DLINE = %w[EDGE DE DT NT DL DI].freeze
+  RECONCILE_LB    = %w[LB ILB OLB MLB].freeze
+
+  def reconcile_chart_positions(chart)
+    chart.depth_chart_entries.includes(person: :athlete_profile).each do |entry|
+      next if entry.locked
+      ath_pos = entry.person&.athlete_profile&.position
+      next if ath_pos.blank? || ath_pos == entry.position
+      next unless reconcile_pair?(entry.position, ath_pos)
+
+      old_position = entry.position
+      old_depth    = entry.depth
+
+      # Bump existing entries at the target position with depth >= old_depth
+      # down by one, preserving Crosby's starter slot at the new position.
+      chart.depth_chart_entries
+           .where(position: ath_pos)
+           .where(locked: false)
+           .where("depth >= ?", old_depth)
+           .order(depth: :desc)
+           .each { |other| other.update!(depth: other.depth + 1) }
+
+      entry.update!(position: ath_pos)
+      vputs "      [↔] #{entry.person.full_name}: #{old_position}#{old_depth} → #{ath_pos}#{old_depth}"
+      @stats[:positions_reconciled] += 1
+    end
+  end
+
+  def reconcile_pair?(chart_pos, athlete_pos)
+    (RECONCILE_DLINE.include?(athlete_pos) && RECONCILE_LB.include?(chart_pos)) ||
+      (RECONCILE_LB.include?(athlete_pos) && RECONCILE_DLINE.include?(chart_pos))
   end
 
   def fetch_groups(abbrev)
