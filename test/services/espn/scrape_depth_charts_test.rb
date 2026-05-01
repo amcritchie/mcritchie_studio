@@ -213,6 +213,22 @@ class Espn::ScrapeDepthChartsTest < ActiveSupport::TestCase
     assert_equal 1, @service.stats[:positions_deduped]
   end
 
+  test "reconcile_chart_positions moves a 3-4 DE (interior) to DT when athlete.position says DT" do
+    # 3-4 schemes: ESPN's LDE/RDE is an interior 5-tech, our taxonomy calls that DT.
+    # ESPN_MAP collapses LDE/RDE → EDGE blindly; reconciliation moves them to DT.
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+
+    p = Person.create!(first_name: "Ed", last_name: "OliverDup", athlete: true)
+    Athlete.create!(person_slug: p.slug, sport: "football", position: "DT")
+    chart.depth_chart_entries.create!(person_slug: p.slug, position: "EDGE", side: "defense", depth: 1)
+
+    @service.send(:reconcile_chart_positions, chart)
+
+    entry = chart.depth_chart_entries.find_by(person_slug: p.slug)
+    assert_equal "DT", entry.position
+    assert_equal 1, @service.stats[:positions_reconciled]
+  end
+
   test "reconcile_chart_positions does NOT move CB ↔ S (different reconciliation axis)" do
     chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
 

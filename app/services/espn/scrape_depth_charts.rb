@@ -115,11 +115,14 @@ class Espn::ScrapeDepthCharts
     @stats[:teams_scraped] += 1
   end
 
-  # Position pairs we treat as canonically resolvable: when ESPN places someone
-  # in one bucket but the player's stored position is in the other, prefer
-  # athlete.position. The D-line/LB axis is the big one (3-4 OLB ambiguity).
-  RECONCILE_DLINE = %w[EDGE DE DT NT DL DI].freeze
-  RECONCILE_LB    = %w[LB ILB OLB MLB].freeze
+  # Defensive front-7 positions where ESPN's formation slot can disagree with
+  # nflverse's player-role classification. ESPN labels by formation (LDE in
+  # a 3-4 is interior DT; OLB in a 3-4 is an edge rusher) while nflverse
+  # tracks the player's actual role across schemes. When chart.position and
+  # athlete.position both fall in this set but differ, athlete.position wins.
+  # Excluded by design: CB ↔ S (slot/big-nickel fluidity is real position
+  # blending, not a labeling error).
+  RECONCILE_FRONT7 = %w[EDGE DE DT NT DL DI LB ILB OLB MLB].freeze
 
   def reconcile_chart_positions(chart)
     chart.depth_chart_entries.includes(person: :athlete_profile).each do |entry|
@@ -160,8 +163,7 @@ class Espn::ScrapeDepthCharts
   end
 
   def reconcile_pair?(chart_pos, athlete_pos)
-    (RECONCILE_DLINE.include?(athlete_pos) && RECONCILE_LB.include?(chart_pos)) ||
-      (RECONCILE_LB.include?(athlete_pos) && RECONCILE_DLINE.include?(chart_pos))
+    RECONCILE_FRONT7.include?(chart_pos) && RECONCILE_FRONT7.include?(athlete_pos)
   end
 
   def fetch_groups(abbrev)
