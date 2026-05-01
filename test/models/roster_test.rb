@@ -221,6 +221,27 @@ class RosterTest < ActiveSupport::TestCase
     assert_equal "aj-epenesa",     result[:dl_flex].person_slug, "DL Flex should be the depth-2 EDGE"
   end
 
+  test "OL slot picks the lowest-depth entry when multiple match the same position" do
+    # Regression: pick_ol_slot used .detect which returned the first by
+    # insertion order, not depth. So a seed-created LT depth=2 entry could
+    # win over an ESPN-set LT depth=1 entry just because it was inserted
+    # first (Saints Landon Young winning over Kelvin Banks Jr.).
+    roster = rosters(:bills_offseason)
+    chart = DepthChart.find_or_create_by!(team_slug: roster.team_slug)
+    chart.depth_chart_entries.where(position: %w[LT OT T]).destroy_all
+
+    older_dup = Person.create!(first_name: "Older", last_name: "LtDup", athlete: true)
+    Athlete.create!(person_slug: older_dup.slug, sport: "football", position: "LT")
+    chart.depth_chart_entries.create!(person_slug: older_dup.slug, position: "LT", side: "offense", depth: 2)
+
+    starter = Person.create!(first_name: "True", last_name: "LtStarter", athlete: true)
+    Athlete.create!(person_slug: starter.slug, sport: "football", position: "LT")
+    chart.depth_chart_entries.create!(person_slug: starter.slug, position: "LT", side: "offense", depth: 1)
+
+    result = roster.offense_starting_12
+    assert_equal starter.slug, result[:lt].person_slug
+  end
+
   # Backward-compat grouped accessors
 
   test "offense_starters_grouped wraps the 12-slot layout in legacy shape" do

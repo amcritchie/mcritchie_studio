@@ -354,7 +354,7 @@ class Roster < ApplicationRecord
 
   def pick_ol_slot(spots, used, primary_position, fallback_positions)
     pool = spots.reject { |s| used.include?(s) }
-    pool.detect { |s| s.position == primary_position } ||
+    pool.select { |s| s.position == primary_position }.min_by(&:depth) ||
       pool.select { |s| fallback_positions.include?(s.position) }.min_by(&:depth)
   end
 
