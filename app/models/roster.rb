@@ -12,6 +12,8 @@ class Roster < ApplicationRecord
   OFFENSE_SLOTS = %i[qb rb wr1 wr2 wr3 te flex lt lg c rg rt].freeze
   DEFENSE_SLOTS = %i[edge1 edge2 dl1 dl2 dl_flex lb1 lb2 ss fs cb1 cb2 flex].freeze
 
+  RB_PRIORITY = { "RB" => 0, "HB" => 1, "FB" => 2 }.freeze
+
   EDGE_POSITIONS = %w[EDGE DE].freeze
   DL_POSITIONS   = %w[DT NT DL DI].freeze
   DLINE_POOL     = (EDGE_POSITIONS + DL_POSITIONS).freeze
@@ -98,7 +100,11 @@ class Roster < ApplicationRecord
     qbs = spots_at(spots, %w[QB])
     result[:qb] = take(qbs, used)
 
-    rbs = spots_at(spots, %w[RB FB HB])
+    # RB pool: prefer true RBs over HB/FB at same depth so a fullback at FB
+    # depth=1 doesn't beat the actual RB at RB depth=1 (Chargers had FB Alec
+    # Ingold winning RB1 over RB Hampton because both were at depth=1).
+    rbs = spots.select { |s| %w[RB FB HB].include?(s.position) }
+               .sort_by { |s| [RB_PRIORITY[s.position] || 99, s.depth] }
     result[:rb] = take(rbs, used)
 
     wrs = spots_at(spots, %w[WR])

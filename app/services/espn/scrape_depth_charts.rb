@@ -86,10 +86,11 @@ class Espn::ScrapeDepthCharts
     scheme = detect_scheme(groups)
     chart.update!(scheme: scheme) if scheme && chart.scheme != scheme
 
-    # Tag each athlete with their raw formation slot ("WLB", "LDE", "NT") so
-    # the picker can map formation→display per scheme. Each athlete becomes
-    # a single-element "row" so the existing apply_row pipeline handles them
-    # one at a time but preserves the formation_slot per entry.
+    # Tag each athlete with their raw formation slot ("WLB", "LDE", "NT") and
+    # PRESERVE ESPN's row structure. Multi-row position groups (e.g. WR has 3
+    # rows for WR1/WR2/WR3 chains) need the row grouping intact so flatten_rows
+    # can round-robin the starters together: row1[0], row2[0], row3[0], then
+    # row1[1], row2[1], row3[1], etc.
     by_side_pos = Hash.new { |h, k| h[k] = [] }
     groups.each do |group|
       side = side_for_group(group["name"])
@@ -98,11 +99,8 @@ class Espn::ScrapeDepthCharts
         formation_slot = row[0].to_s.upcase
         next if IGNORED_POSITIONS.include?(formation_slot)
         position = normalize_position(formation_slot)
-        row[1..].each do |athlete_data|
-          next unless athlete_data
-          tagged = athlete_data.merge("_formation_slot" => formation_slot)
-          by_side_pos[[side, position]] << [tagged]
-        end
+        tagged_row = row[1..].compact.map { |a| a.merge("_formation_slot" => formation_slot) }
+        by_side_pos[[side, position]] << tagged_row
       end
     end
 
