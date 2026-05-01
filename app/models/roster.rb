@@ -151,7 +151,12 @@ class Roster < ApplicationRecord
 
     mapping.each do |slot, formation|
       next if formation.nil?
-      pick = spots.find { |s| s.formation_slot == formation && s.depth == 1 && !used.include?(s) }
+      # Take the first (lowest chart-depth) entry with this formation_slot.
+      # Reconciliation may have shuffled entries into different position
+      # chains, but the FIRST formation_slot=SLB entry is still ESPN's
+      # SLB1 starter — formation_slot identity is preserved on the row.
+      pick = spots.select { |s| s.formation_slot == formation && !used.include?(s) }
+                  .min_by(&:depth)
       if pick
         result[slot] = pick
         used << pick
@@ -166,12 +171,12 @@ class Roster < ApplicationRecord
       used << result[:dl_flex] if result[:dl_flex]
     end
 
-    # Nickel Flex fallback: when ESPN doesn't list NB, try SLB depth=1 (4-3
+    # Nickel Flex fallback: when ESPN doesn't list NB, try SLB starter (4-3
     # only — in 3-4 SLB is already used as EDGE2). Then fall back to best
     # CB/S not yet picked, sorted by coverage_grade.
     if result[:flex].nil?
       if chart.scheme == "4-3"
-        slb = spots.find { |s| s.formation_slot == "SLB" && s.depth == 1 && !used.include?(s) }
+        slb = spots.select { |s| s.formation_slot == "SLB" && !used.include?(s) }.min_by(&:depth)
         result[:flex] = slb if slb
       end
       if result[:flex].nil?
