@@ -1,22 +1,19 @@
-# Link ESPN identity to Athletes + Coaches.
+# Coach headshot URL discovery (athlete URLs come from nfl:players_seed via
+# nflverse master CSV, not this seed).
 #
-# - Athletes: pull nflverse roster CSV, match by name, set espn_id +
-#   espn_headshot_url (always derived from espn_id, never the nflverse
-#   headshot_url which is NFL.com 3MB hi-res).
-# - Coaches: hit ESPN's /v2/sports/football/leagues/nfl/teams/{id}/coaches
-#   per team for HCs (only ~1/3 have a usable headshot.href), then scrape
-#   each team's NFL.com /team/coaches[-roster]/ page for HC + 3 coordinators.
+# - Coaches: HCs from ESPN's v2 coaches API + all 4 roles (HC + 3 coordinators)
+#   scraped from each team's NFL.com /team/coaches[-roster]/ page via the
+#   TEAM_NFL_SUBDOMAIN map in lib/tasks/nfl.rake.
 #
 # DB-only — no S3 traffic. Image upload + caching happens in
-# 33_headshot_uploads.rb from the local files committed to the repo.
+# bin/rails nfl:upload_coach_headshots (called by /nfl-rebuild Step 5).
 #
 # Idempotent — re-seeds only update rows whose source URL has changed.
 
-puts "\n--- NFL headshot identity links ---"
+puts "\n--- NFL coach headshot identity links ---"
 
 require "rake"
-Rails.application.load_tasks unless Rake::Task.task_defined?("nfl:link_headshots")
+Rails.application.load_tasks unless Rake::Task.task_defined?("nfl:link_coach_headshots")
 
-Rake::Task["nfl:link_headshots"].invoke
 Rake::Task["nfl:link_coach_headshots"].invoke
 Rake::Task["nfl:link_coach_headshots_from_team_sites"].invoke
