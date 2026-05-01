@@ -111,6 +111,26 @@ class Nflverse::SeedPlayersTest < ActiveSupport::TestCase
     assert_equal 1, service.stats[:athletes_updated]
   end
 
+  test "prefers pff_position over generic position (3-4 OLB → EDGE)" do
+    # nflverse generic position = "OLB" → NFLVERSE_MAP collapses to "LB",
+    # but pff_position = "ED" disambiguates as edge rusher (T.J. Watt case)
+    csv_body = csv_for([row("position" => "OLB", "pff_position" => "ED")])
+    service = Nflverse::SeedPlayers.new(csv_body: csv_body, upload_headshots: false)
+    service.call
+
+    person = Person.find_by(slug: "test-quarterback")
+    assert_equal "EDGE", person.athlete_profile.position
+  end
+
+  test "falls back to nflverse position when pff_position is blank" do
+    csv_body = csv_for([row("position" => "DE", "pff_position" => "")])
+    service = Nflverse::SeedPlayers.new(csv_body: csv_body, upload_headshots: false)
+    service.call
+
+    person = Person.find_by(slug: "test-quarterback")
+    assert_equal "EDGE", person.athlete_profile.position
+  end
+
   test "normalizes position via :nflverse source map" do
     csv_body = csv_for([row("position" => "T", "latest_team" => "BUF")])
     service = Nflverse::SeedPlayers.new(csv_body: csv_body, upload_headshots: false)

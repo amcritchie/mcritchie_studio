@@ -66,7 +66,31 @@ echo "exit: $?"
 tail -25 tmp/espn_scrape.log
 ```
 
-Expect: 32 teams scraped, ~2,000 athletes matched, some Contracts created/expired/revived as the scrape catches up to current rosters.
+Expect: 32 teams scraped, ~2,000 athletes matched, ~200 positions reconciled, some Contracts created/expired/revived as the scrape catches up to current rosters.
+
+### Step 5 — Headshot backfill (athletes + coaches)
+
+Step 3 (nfl:players_seed) only caches headshots for athletes who appear in nflverse's `status=ACT, last_season>=2024` filter. Step 4 may add Contracts (and `Athlete.team_slug`) for ESPN-listed players outside that filter (practice-squad call-ups, recently-cut players still on rosters). And `db:seed` only LINKS coach `espn_headshot_url` (via 32_headshot_links.rb), it doesn't upload them.
+
+This step closes both gaps.
+
+**Athletes** — uploads any Athlete with `espn_id` + `team_slug` but no cached variants:
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:upload_headshots > tmp/headshot_backfill.log 2>&1
+echo "exit: $?"
+tail -10 tmp/headshot_backfill.log
+```
+
+**Coaches** — uploads any Coach with `espn_headshot_url` (set by db:seed) but no cached variants:
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:upload_coach_headshots > tmp/coach_backfill.log 2>&1
+echo "exit: $?"
+tail -8 tmp/coach_backfill.log
+```
+
+Expect: ~300-400 athletes newly cached + ~150 coaches (HC always, OC/DC/STC where NFL.com scrape captured a URL). Both tasks are idempotent.
 
 ## Verification
 

@@ -149,12 +149,24 @@ class Nflverse::SeedPlayers
       espn_id:           espn_id,
       pfr_id:            row["pfr_id"].to_s.strip.presence,
       nflverse_id:       row["nfl_id"].to_s.strip.presence,
-      position:          PositionConcern.normalize_position(row["position"], source: :nflverse),
+      position:          resolve_position(row),
       height_inches:     row["height"].to_s.strip.presence&.to_i,
       weight_lbs:        row["weight"].to_s.strip.presence&.to_i,
       team_slug:         TEAM_ABBR_TO_SLUG[team_abbr],
       espn_headshot_url: (espn_id && "https://a.espncdn.com/i/headshots/nfl/players/full/#{espn_id}.png")
     }
+  end
+
+  # Prefer pff_position (PFF's role classification) over the generic position
+  # column. nflverse's `position` collapses 3-4 OLBs and 4-3 OLBs into "OLB",
+  # which our NFLVERSE_MAP collapses further into "LB" — so true edge rushers
+  # (T.J. Watt, Maxx Crosby, Andrew Van Ginkel, etc.) end up tagged LB and
+  # never make it to the EDGE pool. PFF disambiguates: "ED" for edge rushers,
+  # "DI" for interior linemen, "LB" for off-ball backers.
+  def resolve_position(row)
+    pff_pos = row["pff_position"].to_s.strip.presence
+    return PositionConcern.normalize_position(pff_pos, source: :pff) if pff_pos
+    PositionConcern.normalize_position(row["position"], source: :nflverse)
   end
 
   def cache_headshot(athlete)

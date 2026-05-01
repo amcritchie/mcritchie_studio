@@ -78,11 +78,11 @@
   }
   defense_label = ->(slot, pick) {
     case slot
-    when :edge1, :edge2 then "E"
+    when :edge1, :edge2 then "EG"
     when :dl1, :dl2     then "DL"
     when :dl_flex
       return "—" unless pick
-      %w[EDGE DE].include?(pick.position) ? "E" : "DL"
+      %w[EDGE DE].include?(pick.position) ? "EG" : "DL"
     when :lb1, :lb2     then "LB"
     when :ss            then "SS"
     when :fs            then "FS"
