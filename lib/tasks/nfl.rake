@@ -258,9 +258,26 @@ namespace :nfl do
     cached = 0
     skipped_complete = 0
     failed = 0
+    refreshed = 0
 
     with_url.find_each do |coach|
-      have = coach.image_caches.select { |c| c.purpose == "headshot" }.map(&:variant)
+      headshots = coach.image_caches.select { |c| c.purpose == "headshot" }
+
+      # Stale cache: coach.espn_headshot_url has changed since the variants
+      # were uploaded. Sources differ across rows, OR all rows point to a
+      # URL that no longer matches the current one. Wipe and re-upload so
+      # 100w and 400w aren't from different photos (e.g., McVay's old ESPN
+      # B&W still cached at 100w while 400w came from a later NFL.com URL).
+      cached_sources = headshots.map(&:source_url).uniq
+      if headshots.any? && (cached_sources.size > 1 || cached_sources.first != coach.espn_headshot_url)
+        ImageCache.where(owner: coach, purpose: "headshot").destroy_all
+        # Note: the S3 objects stay (orphaned). Studio::ImageCache.cache! will
+        # overwrite them on re-upload since the s3_key is deterministic.
+        headshots = []
+        refreshed += 1
+      end
+
+      have = headshots.map(&:variant)
       if (["original"] + COACH_HEADSHOT_WIDTHS.map(&:to_s) - have).empty?
         skipped_complete += 1
         next
@@ -290,6 +307,7 @@ namespace :nfl do
 
     puts ""
     puts "cached:                 #{cached}"
+    puts "refreshed (stale cache):#{refreshed}"
     puts "skipped (already done): #{skipped_complete}"
     puts "skipped (no ESPN img):  #{without_url}"
     puts "failed:                 #{failed}"
