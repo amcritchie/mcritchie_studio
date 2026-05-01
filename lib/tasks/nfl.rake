@@ -140,41 +140,6 @@ namespace :nfl do
   # Used to scrape the team's coaches roster page when ESPN's coach API
   # doesn't provide a headshot.href (which is the case for ~21/32 HCs and
   # for every coordinator).
-  TEAM_NFL_SUBDOMAIN = {
-    "arizona-cardinals"     => "azcardinals",
-    "atlanta-falcons"       => "atlantafalcons",
-    "baltimore-ravens"      => "baltimoreravens",
-    "buffalo-bills"         => "buffalobills",
-    "carolina-panthers"     => "panthers",
-    "chicago-bears"         => "chicagobears",
-    "cincinnati-bengals"    => "bengals",
-    "cleveland-browns"      => "clevelandbrowns",
-    "dallas-cowboys"        => "dallascowboys",
-    "denver-broncos"        => "denverbroncos",
-    "detroit-lions"         => "detroitlions",
-    "green-bay-packers"     => "packers",
-    "houston-texans"        => "houstontexans",
-    "indianapolis-colts"    => "colts",
-    "jacksonville-jaguars"  => "jaguars",
-    "kansas-city-chiefs"    => "chiefs",
-    "las-vegas-raiders"     => "raiders",
-    "los-angeles-chargers"  => "chargers",
-    "los-angeles-rams"      => "therams",
-    "miami-dolphins"        => "miamidolphins",
-    "minnesota-vikings"     => "vikings",
-    "new-england-patriots"  => "patriots",
-    "new-orleans-saints"    => "neworleanssaints",
-    "new-york-giants"       => "giants",
-    "new-york-jets"         => "newyorkjets",
-    "philadelphia-eagles"   => "philadelphiaeagles",
-    "pittsburgh-steelers"   => "steelers",
-    "san-francisco-49ers"   => "49ers",
-    "seattle-seahawks"      => "seahawks",
-    "tampa-bay-buccaneers"  => "buccaneers",
-    "tennessee-titans"      => "tennesseetitans",
-    "washington-commanders" => "commanders"
-  }.freeze
-
   COACH_ROLE_LABELS = {
     "head coach"                 => "head_coach",
     "offensive coordinator"      => "offensive_coordinator",
@@ -193,21 +158,20 @@ namespace :nfl do
     skipped_no_image = 0
     failed_team = 0
 
-    TEAM_NFL_SUBDOMAIN.each do |team_slug, subdomain|
+    Team.where(league: "nfl").where.not(coaches_url: nil).find_each do |team|
+      team_slug = team.slug
       html = nil
-      ["coaches-roster", "coaches"].each do |path|
-        url = "https://www.#{subdomain}.com/team/#{path}/"
-        begin
-          html = URI.open(url, read_timeout: 15, "User-Agent" => "Mozilla/5.0").read
-          break
-        rescue OpenURI::HTTPError
-          next
-        end
+      begin
+        html = URI.open(team.coaches_url, read_timeout: 15, "User-Agent" => "Mozilla/5.0").read
+      rescue OpenURI::HTTPError, SocketError, Net::OpenTimeout, Net::ReadTimeout => e
+        failed_team += 1
+        puts "  [!] #{team_slug.ljust(25)} fetch failed: #{e.class}: #{e.message}"
+        next
       end
 
       unless html
         failed_team += 1
-        puts "  [!] #{team_slug.ljust(25)} no coaches page found at #{subdomain}.com"
+        puts "  [!] #{team_slug.ljust(25)} empty response from #{team.coaches_url}"
         next
       end
 

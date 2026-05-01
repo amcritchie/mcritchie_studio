@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_01_055624) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_01_062609) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -545,6 +545,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_01_055624) do
     t.string "conference"
     t.string "division"
     t.jsonb "rivals", default: []
+    t.string "team_website"
+    t.string "coaches_url"
     t.index ["slug"], name: "index_teams_on_slug", unique: true
     t.index ["sport", "league"], name: "index_teams_on_sport_and_league"
   end

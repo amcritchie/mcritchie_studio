@@ -74,6 +74,25 @@ NFL_TEAMS = [
     rivals: %w[san-francisco-49ers los-angeles-rams arizona-cardinals] },
 ]
 
+NFL_TEAM_DOMAINS = {
+  "arizona-cardinals" => "azcardinals.com",       "atlanta-falcons" => "atlantafalcons.com",
+  "baltimore-ravens" => "baltimoreravens.com",    "buffalo-bills" => "buffalobills.com",
+  "carolina-panthers" => "panthers.com",          "chicago-bears" => "chicagobears.com",
+  "cincinnati-bengals" => "bengals.com",          "cleveland-browns" => "clevelandbrowns.com",
+  "dallas-cowboys" => "dallascowboys.com",        "denver-broncos" => "denverbroncos.com",
+  "detroit-lions" => "detroitlions.com",          "green-bay-packers" => "packers.com",
+  "houston-texans" => "houstontexans.com",        "indianapolis-colts" => "colts.com",
+  "jacksonville-jaguars" => "jaguars.com",        "kansas-city-chiefs" => "chiefs.com",
+  "las-vegas-raiders" => "raiders.com",           "los-angeles-chargers" => "chargers.com",
+  "los-angeles-rams" => "therams.com",            "miami-dolphins" => "miamidolphins.com",
+  "minnesota-vikings" => "vikings.com",           "new-england-patriots" => "patriots.com",
+  "new-orleans-saints" => "neworleanssaints.com", "new-york-giants" => "giants.com",
+  "new-york-jets" => "newyorkjets.com",           "philadelphia-eagles" => "philadelphiaeagles.com",
+  "pittsburgh-steelers" => "steelers.com",        "san-francisco-49ers" => "49ers.com",
+  "seattle-seahawks" => "seahawks.com",           "tampa-bay-buccaneers" => "buccaneers.com",
+  "tennessee-titans" => "tennesseetitans.com",    "washington-commanders" => "commanders.com"
+}.freeze
+
 NFL_TEAMS.each do |data|
   team = Team.find_or_create_by!(slug: data[:name].parameterize) do |t|
     t.name = data[:name]
@@ -84,13 +103,16 @@ NFL_TEAMS.each do |data|
     t.color_secondary = data[:color_secondary]
     t.color_text_light = data[:color_text_light] || false
   end
+  domain = NFL_TEAM_DOMAINS[team.slug]
   team.update!(
     sport: "football",
     league: "nfl",
     conference: data[:conference],
     division: data[:division],
     color_text_light: data[:color_text_light] || false,
-    rivals: data[:rivals] || []
+    rivals: data[:rivals] || [],
+    team_website: domain && "https://www.#{domain}",
+    coaches_url:  domain && "https://www.#{domain}/team/coaches/"
   )
   safe_puts "Team: #{team.emoji} #{team.name} (NFL #{data[:conference]} #{data[:division]}) rivals=#{team.rivals.size}"
 end
