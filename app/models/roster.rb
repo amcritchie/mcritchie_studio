@@ -30,36 +30,47 @@ class Roster < ApplicationRecord
     def person_slug; person&.slug; end
   end
 
-  # ESPN formation slot → display slot. Per-scheme because the same slot
-  # ("WLB") means different things in 3-4 (edge rusher) vs 4-3 (coverage LB).
-  DEFENSE_FORMATION_MAP_3_4 = {
-    edge1:   "WLB",
-    edge2:   "SLB",
-    dl1:     "LDE",
-    dl2:     "RDE",
-    dl_flex: "NT",
-    lb1:     "LILB",
-    lb2:     "RILB",
-    ss:      "SS",
-    fs:      "FS",
-    cb1:     "LCB",
-    cb2:     "RCB",
-    flex:    "NB"
+  # Universal: each ESPN formation_slot lists the display groups it CAN feed.
+  # athlete.position picks which group it actually fills — disambiguates the
+  # ambiguous slots (LDE/RDE in 3-4 = interior DT, in 4-3 = edge rusher;
+  # WLB/SLB in 3-4 = edge rusher, in 4-3 = coverage LB) without needing
+  # scheme detection.
+  DEFENSE_FORMATION_GROUPS = {
+    "WLB"  => [:edge, :lb],   # 3-4 OLB rushes (EDGE), 4-3 OLB covers (LB)
+    "SLB"  => [:edge, :lb],
+    "LILB" => [:lb],
+    "RILB" => [:lb],
+    "MLB"  => [:lb],
+    "LB"   => [:lb],
+    "ILB"  => [:lb],
+    "OLB"  => [:edge, :lb],
+    "LDE"  => [:edge, :dl],   # 4-3 LDE rushes, 3-4 LDE is interior
+    "RDE"  => [:edge, :dl],
+    "DE"   => [:edge, :dl],
+    "LDT"  => [:dl],
+    "RDT"  => [:dl],
+    "NT"   => [:dl],
+    "DT"   => [:dl],
+    "DL"   => [:dl],
+    "LCB"  => [:cb],
+    "RCB"  => [:cb],
+    "CB"   => [:cb],
+    "SS"   => [:ss],
+    "FS"   => [:fs],
+    "S"    => [:ss, :fs],
+    "NB"   => [:nickel],
+    "NCB"  => [:nickel],
+    "SCB"  => [:nickel]
   }.freeze
 
-  DEFENSE_FORMATION_MAP_4_3 = {
-    edge1:   "LDE",
-    edge2:   "RDE",
-    dl1:     "LDT",
-    dl2:     "RDT",
-    dl_flex: nil,    # no 5th D-line at depth=1 in 4-3; computed from depth=2 EDGE
-    lb1:     "WLB",
-    lb2:     "MLB",
-    ss:      "SS",
-    fs:      "FS",
-    cb1:     "LCB",
-    cb2:     "RCB",
-    flex:    "NB"    # falls back to SLB then to best CB/S by coverage_grade
+  GROUP_ATHLETE_POSITIONS = {
+    edge:   %w[EDGE DE],
+    dl:     %w[DT NT DL DI],
+    lb:     %w[LB ILB OLB MLB],
+    cb:     %w[CB],
+    ss:     %w[SS S],
+    fs:     %w[FS S],
+    nickel: %w[CB S SS FS]
   }.freeze
 
   def offense_starters
@@ -134,8 +145,8 @@ class Roster < ApplicationRecord
     chart = team.depth_chart
     return DEFENSE_SLOTS.index_with { nil } unless chart
 
-    if chart.scheme.present? && chart.depth_chart_entries.where.not(formation_slot: nil).exists?
-      pick_defense_by_scheme(chart)
+    if chart.depth_chart_entries.where.not(formation_slot: nil).exists?
+      pick_defense_by_formation(chart)
     else
       pick_defense_by_pool(chart)
     end
@@ -143,54 +154,99 @@ class Roster < ApplicationRecord
 
   private
 
-  def pick_defense_by_scheme(chart)
+  # Pick each defensive starter slot from the universal formation map. Each
+  # ESPN formation_slot can feed one or more display groups; athlete.position
+  # picks which one. Within each group, take the FIRST entry per formation
+  # slot (its starter), then sort by the slot's grade criterion and pick top N.
+  def pick_defense_by_formation(chart)
     spots = load_spots(chart, "defense")
+    by_group = bucket_by_effective_group(spots)
     used = Set.new
     result = DEFENSE_SLOTS.index_with { nil }
-    mapping = chart.scheme == "3-4" ? DEFENSE_FORMATION_MAP_3_4 : DEFENSE_FORMATION_MAP_4_3
 
-    mapping.each do |slot, formation|
-      next if formation.nil?
-      # Take the first (lowest chart-depth) entry with this formation_slot.
-      # Reconciliation may have shuffled entries into different position
-      # chains, but the FIRST formation_slot=SLB entry is still ESPN's
-      # SLB1 starter — formation_slot identity is preserved on the row.
-      pick = spots.select { |s| s.formation_slot == formation && !used.include?(s) }
-                  .min_by(&:depth)
-      if pick
-        result[slot] = pick
-        used << pick
-      end
-    end
+    edge_starters = formation_starters(by_group[:edge] || [])
+    dl_starters   = formation_starters(by_group[:dl]   || [])
+    lb_starters   = formation_starters(by_group[:lb]   || [])
+    cb_starters   = formation_starters(by_group[:cb]   || [])
 
-    # 4-3 DL Flex: no 5th D-line slot at depth=1; take best PR among
-    # unselected EDGE/DL (typically depth=2 LDE or RDE).
-    if chart.scheme == "4-3" && result[:dl_flex].nil?
-      flex_pool = spots.select { |s| DLINE_POOL.include?(s.position) && !used.include?(s) }
-      result[:dl_flex] = flex_pool.max_by { |s| grade_value(s, :pass_rush_grade) }
-      used << result[:dl_flex] if result[:dl_flex]
-    end
+    # EDGE: top 2 by pass_rush_grade
+    edge_top = edge_starters.sort_by { |s| -grade_value(s, :pass_rush_grade) }.first(2)
+    result[:edge1] = edge_top[0]; used << edge_top[0] if edge_top[0]
+    result[:edge2] = edge_top[1]; used << edge_top[1] if edge_top[1]
 
-    # Nickel Flex fallback: when ESPN doesn't list NB, try SLB starter (4-3
-    # only — in 3-4 SLB is already used as EDGE2). Then fall back to best
-    # CB/S not yet picked, sorted by coverage_grade.
+    # DL: top 2 by defense_grade
+    dl_top = dl_starters.sort_by { |s| -grade_value(s, :defense_grade) }.first(2)
+    result[:dl1] = dl_top[0]; used << dl_top[0] if dl_top[0]
+    result[:dl2] = dl_top[1]; used << dl_top[1] if dl_top[1]
+
+    # DL Flex: best pass_rush_grade among unselected entries in EDGE+DL groups
+    # (covers depth-2 EDGE in 4-3, NT in 3-4, leftover starters from either).
+    flex_pool = ((by_group[:edge] || []) + (by_group[:dl] || [])).reject { |s| used.include?(s) }
+    result[:dl_flex] = flex_pool.max_by { |s| grade_value(s, :pass_rush_grade) }
+    used << result[:dl_flex] if result[:dl_flex]
+
+    # LB: top 2 by rush_defense_grade
+    lb_top = lb_starters.sort_by { |s| -grade_value(s, :rush_defense_grade) }.first(2)
+    result[:lb1] = lb_top[0]; used << lb_top[0] if lb_top[0]
+    result[:lb2] = lb_top[1]; used << lb_top[1] if lb_top[1]
+
+    # SS: first formation_slot=SS entry; FS: first formation_slot=FS entry.
+    # Generic S can fall into either if one is missing.
+    result[:ss] = (by_group[:ss] || []).reject { |s| used.include?(s) }.min_by(&:depth)
+    used << result[:ss] if result[:ss]
+    result[:fs] = (by_group[:fs] || []).reject { |s| used.include?(s) }.min_by(&:depth)
+    used << result[:fs] if result[:fs]
+
+    # CB: top 2 by coverage_grade
+    cb_top = cb_starters.sort_by { |s| -grade_value(s, :coverage_grade) }.first(2)
+    result[:cb1] = cb_top[0]; used << cb_top[0] if cb_top[0]
+    result[:cb2] = cb_top[1]; used << cb_top[1] if cb_top[1]
+
+    # Nickel Flex: NB entry, falling back to best unused CB/S by coverage_grade
+    nickel_pool = (by_group[:nickel] || []).reject { |s| used.include?(s) }
+    result[:flex] = nickel_pool.min_by(&:depth)
     if result[:flex].nil?
-      if chart.scheme == "4-3"
-        slb = spots.select { |s| s.formation_slot == "SLB" && !used.include?(s) }.min_by(&:depth)
-        result[:flex] = slb if slb
-      end
-      if result[:flex].nil?
-        pool = spots.select { |s| (CB_POSITIONS + S_POSITIONS).include?(s.position) && !used.include?(s) }
-        result[:flex] = pool.max_by { |s| grade_value(s, :coverage_grade) }
-      end
-      used << result[:flex] if result[:flex]
+      remaining = ((by_group[:cb] || []) + (by_group[:ss] || []) + (by_group[:fs] || []))
+                    .reject { |s| used.include?(s) }
+      result[:flex] = remaining.max_by { |s| grade_value(s, :coverage_grade) }
     end
+    used << result[:flex] if result[:flex]
 
     DEFENSE_SLOTS.each_with_object({}) do |slot, h|
       pick = result[slot]
       pick.slot = slot if pick
       h[slot] = pick
     end
+  end
+
+  # Bucket each entry into ONE display group based on its formation_slot's
+  # eligible groups + its athlete.position.
+  def bucket_by_effective_group(spots)
+    out = Hash.new { |h, k| h[k] = [] }
+    spots.each do |s|
+      group = effective_group(s)
+      out[group] << s if group
+    end
+    out
+  end
+
+  def effective_group(spot)
+    candidates = DEFENSE_FORMATION_GROUPS[spot.formation_slot.to_s.upcase]
+    return nil unless candidates
+    return candidates.first if candidates.size == 1
+    athlete_pos = spot.person&.athlete_profile&.position
+    return candidates.first unless athlete_pos
+    matching = candidates.find { |g| GROUP_ATHLETE_POSITIONS[g]&.include?(athlete_pos) }
+    matching || candidates.first
+  end
+
+  # For each formation_slot in the pool, take the entry with the lowest
+  # chart-depth (the formation's #1 starter). De-duplicates the pool so we
+  # don't pick WLB1 + WLB2 for EDGE1 + EDGE2.
+  def formation_starters(spots)
+    spots.group_by(&:formation_slot)
+         .map { |_fs, group| group.min_by(&:depth) }
+         .compact
   end
 
   def pick_defense_by_pool(chart)
