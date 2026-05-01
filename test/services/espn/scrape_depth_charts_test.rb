@@ -196,6 +196,23 @@ class Espn::ScrapeDepthChartsTest < ActiveSupport::TestCase
     assert_equal 0, @service.stats[:positions_reconciled]
   end
 
+  test "reconcile_chart_positions drops the misplaced entry when athlete already has one at the canonical position" do
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+
+    p = Person.create!(first_name: "Twin", last_name: "Defender", athlete: true)
+    Athlete.create!(person_slug: p.slug, sport: "football", position: "EDGE")
+    canonical_entry = chart.depth_chart_entries.create!(person_slug: p.slug, position: "EDGE", side: "defense", depth: 1)
+    misplaced_entry = chart.depth_chart_entries.create!(person_slug: p.slug, position: "LB",   side: "defense", depth: 2)
+
+    @service.send(:reconcile_chart_positions, chart)
+
+    assert DepthChartEntry.exists?(canonical_entry.id),
+           "canonical EDGE entry should survive"
+    refute DepthChartEntry.exists?(misplaced_entry.id),
+           "misplaced LB entry should be deleted"
+    assert_equal 1, @service.stats[:positions_deduped]
+  end
+
   test "reconcile_chart_positions does NOT move CB ↔ S (different reconciliation axis)" do
     chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
 
@@ -207,6 +224,28 @@ class Espn::ScrapeDepthChartsTest < ActiveSupport::TestCase
 
     # CB↔S is intentionally NOT auto-reconciled (slot CB / big-nickel ambiguity).
     assert_equal "CB", chart.depth_chart_entries.find_by(person_slug: p.slug).position
+  end
+
+  test "apply_row prunes stale duplicate entries (post-merge artifact)" do
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+
+    # Crosby ends up with two entries on the chart after a duplicate-Person
+    # merge: one at EDGE, one at LB.
+    crosby = Person.create!(first_name: "Maxx", last_name: "CrosbyDup", athlete: true)
+    Athlete.create!(person_slug: crosby.slug, sport: "football", espn_id: "mc-1")
+    Contract.create!(person_slug: crosby.slug, team_slug: @bills.slug, contract_type: "active")
+    chart.depth_chart_entries.create!(person_slug: crosby.slug, position: "EDGE", side: "defense", depth: 5)
+    stale = chart.depth_chart_entries.create!(person_slug: crosby.slug, position: "LB", side: "defense", depth: 4)
+
+    # ESPN scrape places Crosby at LB depth 1
+    espn_athletes = [{ "name" => "Maxx CrosbyDup", "href" => "/nfl/player/_/id/mc-1/" }]
+    @service.send(:apply_row, chart, "LB", "defense", espn_athletes, @bills.slug)
+
+    # The pre-existing LB entry was kept and updated to depth 1; EDGE entry was pruned
+    refute DepthChartEntry.exists?(id: chart.depth_chart_entries.find_by(person_slug: crosby.slug, position: "EDGE")&.id),
+           "EDGE entry should have been pruned"
+    assert_equal 1, chart.depth_chart_entries.find_by(person_slug: crosby.slug, position: "LB").depth
+    assert_equal 1, @service.stats[:stale_entries_pruned]
   end
 
   test "apply_row respects locked entries even when ESPN places someone in the locked depth" do

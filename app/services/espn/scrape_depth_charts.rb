@@ -128,6 +128,19 @@ class Espn::ScrapeDepthCharts
       next if ath_pos.blank? || ath_pos == entry.position
       next unless reconcile_pair?(entry.position, ath_pos)
 
+      # Player already has an entry at the canonical position on this chart
+      # (e.g., a post-merge state where one entry came from each duplicate
+      # Person). Drop the misplaced one — the canonical-position entry wins.
+      twin = chart.depth_chart_entries
+                  .where(person_slug: entry.person_slug, position: ath_pos)
+                  .where.not(id: entry.id)
+                  .first
+      if twin
+        entry.destroy
+        @stats[:positions_deduped] += 1
+        next
+      end
+
       old_position = entry.position
       old_depth    = entry.depth
 
@@ -209,10 +222,24 @@ class Espn::ScrapeDepthCharts
   def apply_row(chart, position, side, athletes, team_slug)
     espn_persons = athletes.map { |a| match_person(a, team_slug, position: position) }.compact
 
-    # Existing entry per ESPN-listed person (might be at any position on the chart)
-    existing_for_espn = chart.depth_chart_entries
-                             .where(person_slug: espn_persons.map(&:slug))
-                             .index_by(&:person_slug)
+    # Existing entry per ESPN-listed person on this chart. A player can
+    # legitimately have only one entry at a given position, but post-merge
+    # data can leave a person with multiple entries at DIFFERENT positions
+    # (e.g., one carried over from each side of a duplicate-Person merge).
+    # Prefer the entry already at our target position; drop the others so
+    # the upcoming move doesn't violate the [chart, person, position]
+    # uniqueness constraint.
+    existing_for_espn = {}
+    all_entries = chart.depth_chart_entries.where(person_slug: espn_persons.map(&:slug)).to_a
+    all_entries.group_by(&:person_slug).each do |slug, entries|
+      keep = entries.find { |e| e.position == position } || entries.first
+      existing_for_espn[slug] = keep
+      (entries - [keep]).each do |stale|
+        next if stale.locked
+        stale.destroy
+        @stats[:stale_entries_pruned] += 1
+      end
+    end
 
     position_entries = chart.depth_chart_entries.where(position: position).to_a
     locked = position_entries.select(&:locked).sort_by(&:depth)
