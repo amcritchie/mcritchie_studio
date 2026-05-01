@@ -293,6 +293,28 @@ namespace :nfl do
     puts "skipped (already done): #{skipped_complete}"
     puts "skipped (no ESPN img):  #{without_url}"
     puts "failed:                 #{failed}"
+
+    # Per-coach gap report — surfaces which roles on which teams ended this
+    # rebuild without a cached headshot, grouped by team. Makes the next
+    # iteration's targets visible at the bottom of the rebuild log.
+    puts ""
+    puts "─── Coaches still missing headshots (post-upload) ───"
+    missing = Coach.where(sport: "football").includes(:person, :image_caches).reject do |c|
+      c.image_caches.any? { |ic| ic.purpose == "headshot" }
+    end
+    if missing.empty?
+      puts "  (none — full coverage)"
+    else
+      missing.group_by(&:team_slug).sort.each do |team_slug, coaches|
+        puts "  #{team_slug}"
+        coaches.each do |c|
+          reason = c.espn_headshot_url.present? ? "url present, upload failed" : "no espn_headshot_url"
+          puts "    #{c.role.ljust(28)} #{c.person.full_name.ljust(22)} [#{reason}]"
+        end
+      end
+      puts ""
+      puts "  Total missing: #{missing.size} of #{Coach.where(sport: "football").count}"
+    end
   end
 
   desc "Seed Person + Athlete from nflverse players.csv (cross-ref IDs + ESPN headshots → S3). VERBOSE=1 SKIP_HEADSHOTS=1 MIN_SEASON=2024 STATUS=ACT"
