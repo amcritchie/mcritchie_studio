@@ -33,9 +33,9 @@ class PositionConcernTest < ActiveSupport::TestCase
     assert_equal "LB", PositionConcern.normalize_position("MIKE", source: :espn)
   end
 
-  test "normalize_position with source: :espn collapses safeties to S" do
-    assert_equal "S", PositionConcern.normalize_position("FS", source: :espn)
-    assert_equal "S", PositionConcern.normalize_position("SS", source: :espn)
+  test "normalize_position with source: :espn keeps FS and SS distinct" do
+    assert_equal "FS", PositionConcern.normalize_position("FS", source: :espn)
+    assert_equal "SS", PositionConcern.normalize_position("SS", source: :espn)
   end
 
   test "normalize_position with source: :espn collapses ends to EDGE" do

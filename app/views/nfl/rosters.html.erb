@@ -22,6 +22,26 @@
     transition: opacity 0.15s ease;
   }
   .roster-spot:hover .roster-name { opacity: 1; }
+  /* Position badge — always visible bottom-right corner of the headshot */
+  .roster-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.25rem;
+    border-radius: 0.55rem;
+    background: rgba(15, 12, 35, 0.92);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.1rem;
+    text-align: center;
+    z-index: 10;
+    pointer-events: none;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    letter-spacing: 0.02em;
+  }
 </style>
 
 <script>
@@ -37,6 +57,23 @@
     if (img.src !== img.dataset.defaultSrc) img.src = img.dataset.defaultSrc;
   });
 </script>
+
+<%
+  # Display labels for the 12 ordered offense + defense slots.
+  off_labels = {
+    qb:  "QB",  rb:  "RB",
+    wr1: "WR1", wr2: "WR2", wr3: "WR3",
+    te:  "TE",  flex: "FLX",
+    lt:  "LT",  lg:  "LG", c: "C", rg: "RG", rt: "RT"
+  }
+  def_labels = {
+    edge1: "E1", edge2: "E2",
+    dl1:   "DL1", dl2: "DL2", dl_flex: "FLX",
+    lb1:   "LB1", lb2: "LB2",
+    ss:    "SS",  fs: "FS",
+    cb1:   "CB1", cb2: "CB2", flex: "NB"
+  }
+%>
 
 <section class="max-w-7xl mx-auto px-4 py-8">
   <div class="mb-8">
@@ -56,45 +93,61 @@
           <span class="text-muted text-xs">→ depth chart</span>
         <% end %>
 
+        <%
+          off_pairs = roster.offense_starting_12.map { |slot, pick| [off_labels[slot], pick] }
+          def_pairs = roster.defense_starting_12.map { |slot, pick| [def_labels[slot], pick] }
+          st_picks  = roster.special_teams_starting_4.values.flatten.compact
+          st_pairs  = st_picks.map { |p| [p.position.to_s, p] }
+          coaches   = @coaches_by_team[team.slug] || []
+          coach_pairs = coaches.map { |c| [c.role.split("_").map { |w| w[0].upcase }.join, c] }
+        %>
+
         <% rows = [
-          ["O", roster.offense_starting_12.values.flatten.compact, :spot],
-          ["D", roster.defense_starting_12.values.flatten.compact, :spot],
-          ["S", roster.special_teams_starting_4.values.flatten.compact, :spot],
-          ["C", @coaches_by_team[team.slug] || [], :coach]
+          ["O", off_pairs, :spot],
+          ["D", def_pairs, :spot],
+          ["S", st_pairs,  :spot],
+          ["C", coach_pairs, :coach]
         ] %>
         <% rows.each do |label, items, kind| %>
           <div class="flex items-start gap-2 mb-2 last:mb-0">
             <span class="w-5 text-xs text-muted font-mono uppercase pt-3"><%= label %></span>
             <div class="flex flex-wrap gap-1">
-              <% items.each do |item| %>
-                <% if kind == :spot %>
-                  <% person  = item.person %>
-                  <% athlete = person.athlete_profile %>
-                  <% small   = athlete&.headshot_url(width: 100) %>
-                  <% large   = athlete&.headshot_url(width: 400) %>
-                  <% sub     = item.position %>
-                <% else %>
-                  <% person = item.person %>
-                  <% small  = item.headshot_url(width: 100) %>
-                  <% large  = item.headshot_url(width: 400) %>
-                  <% sub    = item.role.split("_").map { |w| w[0].upcase }.join %>
-                <% end %>
-                <div class="roster-spot relative">
-                  <% if small %>
-                    <img src="<%= small %>"
-                         data-hover-src="<%= large %>"
-                         alt="<%= person.full_name %>"
-                         loading="lazy"
-                         class="roster-img w-12 h-12 rounded-full object-cover bg-surface-alt">
-                  <% else %>
-                    <div class="roster-img w-12 h-12 rounded-full bg-surface-alt flex items-center justify-center text-[10px] text-muted font-mono">
-                      <%= sub %>
+              <% items.each do |slot_label, item| %>
+                <% if item.nil? %>
+                  <div class="roster-spot relative">
+                    <div class="roster-img w-12 h-12 rounded-full bg-surface-alt flex items-center justify-center text-[10px] text-muted font-mono opacity-40">
+                      <%= slot_label %>
                     </div>
+                  </div>
+                <% else %>
+                  <% if kind == :spot %>
+                    <% person  = item.person %>
+                    <% athlete = person&.athlete_profile %>
+                    <% small   = athlete&.headshot_url(width: 100) %>
+                    <% large   = athlete&.headshot_url(width: 400) %>
+                  <% else %>
+                    <% person = item.person %>
+                    <% small  = item.headshot_url(width: 100) %>
+                    <% large  = item.headshot_url(width: 400) %>
                   <% end %>
-                  <span class="roster-name px-2 py-1 bg-inset text-heading text-[11px] font-medium rounded shadow-lg">
-                    <%= person.full_name %><span class="text-muted ml-1">· <%= sub %></span>
-                  </span>
-                </div>
+                  <div class="roster-spot relative">
+                    <% if small %>
+                      <img src="<%= small %>"
+                           data-hover-src="<%= large %>"
+                           alt="<%= person&.full_name %>"
+                           loading="lazy"
+                           class="roster-img w-12 h-12 rounded-full object-cover bg-surface-alt">
+                    <% else %>
+                      <div class="roster-img w-12 h-12 rounded-full bg-surface-alt flex items-center justify-center text-[10px] text-muted font-mono">
+                        <%= slot_label %>
+                      </div>
+                    <% end %>
+                    <span class="roster-badge"><%= slot_label %></span>
+                    <span class="roster-name px-2 py-1 bg-inset text-heading text-[11px] font-medium rounded shadow-lg">
+                      <%= person&.full_name %><span class="text-muted ml-1">· <%= slot_label %></span>
+                    </span>
+                  </div>
+                <% end %>
               <% end %>
             </div>
           </div>

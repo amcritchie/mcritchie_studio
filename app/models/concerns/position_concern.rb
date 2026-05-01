@@ -24,15 +24,15 @@ module PositionConcern
   }.freeze
 
   # ESPN's per-team depth chart pages use formation-specific labels. Collapse
-  # WLB/SLB/LILB/RILB → LB, FS/SS → S, LDE/RDE → EDGE so they match the
-  # generic positions our contracts use.
+  # the L/R/W/M/S formation prefixes (LDE/RDE → EDGE, WLB/SLB/LILB → LB) to
+  # match the generic positions our contracts use. FS and SS pass through as
+  # canonical so the depth chart can carry the safety subtype.
   ESPN_MAP = {
     "LDE" => "EDGE", "RDE" => "EDGE", "DE" => "EDGE",
     "OLB" => "LB", "ILB" => "LB", "MLB" => "LB",
     "WLB" => "LB", "SLB" => "LB", "LILB" => "LB", "RILB" => "LB",
     "MIKE" => "LB", "WILL" => "LB", "SAM" => "LB",
     "LCB" => "CB", "RCB" => "CB", "NB" => "CB", "NCB" => "CB", "SCB" => "CB",
-    "FS"  => "S",  "SS"  => "S",
     "PK"  => "K"
   }.freeze
 

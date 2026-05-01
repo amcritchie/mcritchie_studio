@@ -3,13 +3,15 @@
 <%
   rankings  = local_assigns.fetch(:rankings, {})
   mode      = local_assigns.fetch(:mode, nil)
-  groups    = roster&.defense_starting_12 || {}
+  groups    = roster&.defense_starters_grouped || {}
   edges     = groups[:edge] || []
   dl_int    = groups[:dl] || []
   flex_dl   = groups[:flex_dl] || []
   lbs       = groups[:lb] || []
-  cbs       = groups[:cb] || []
-  safeties  = groups[:s] || []
+  cbs_pri   = groups[:cb] || []
+  nickel    = (groups[:flex] || []).first
+  cbs       = cbs_pri + (nickel && nickel.position == "CB" ? [nickel] : [])
+  safeties  = (groups[:s] || []) + (nickel && %w[S FS SS].include?(nickel.position) ? [nickel] : [])
   total     = edges.size + dl_int.size + flex_dl.size + lbs.size + cbs.size + safeties.size
 
   mode_label = case mode

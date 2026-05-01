@@ -3,13 +3,14 @@
 <%
   rankings = local_assigns.fetch(:rankings, {})
   mode     = local_assigns.fetch(:mode, nil)
-  groups   = roster&.offense_starting_12 || {}
-  o_line   = groups[:oline] || []
-  qbs      = groups[:qb] || []
-  rbs      = groups[:rb] || []
-  wrs      = groups[:wr] || []
-  tes      = groups[:te] || []
-  total    = o_line.size + qbs.size + rbs.size + wrs.size + tes.size
+  groups    = roster&.offense_starters_grouped || {}
+  o_line    = groups[:oline] || []
+  qbs       = groups[:qb] || []
+  rbs       = groups[:rb] || []
+  wrs       = groups[:wr] || []
+  tes       = groups[:te] || []
+  flex_pick = (groups[:flex] || []).first
+  total     = o_line.size + qbs.size + rbs.size + wrs.size + tes.size + (flex_pick ? 1 : 0)
 
   mode_label = case mode
                when "run"  then "Establish the Run"
@@ -86,9 +87,10 @@
   blind_side = ol_display.select { |pos, _| blind_keys.include?(pos) }
   rest_ol    = ol_display.select { |pos, _| rest_keys.include?(pos) }
 
-  # Skill position splits
-  rb1 = rbs.first(1)
-  flex = rbs.drop(1) + tes
+  # Skill position splits — flex slot now picked by offense_grade
+  # across (RB depth=2, WR depth=4, TE depth=2), not just RB2 + TE.
+  rb1 = rbs
+  flex = (tes + [flex_pick]).compact.uniq
 %>
 
 <div class="card p-4">
