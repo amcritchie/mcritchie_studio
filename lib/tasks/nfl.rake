@@ -160,18 +160,26 @@ namespace :nfl do
 
     Team.where(league: "nfl").where.not(coaches_url: nil).find_each do |team|
       team_slug = team.slug
+      # Try Team.coaches_url first; if it 404s, try the alternate /team/coaches-roster/
+      # path (Buccaneers and Titans use coaches-roster instead of coaches).
+      candidate_urls = [team.coaches_url]
+      if team.coaches_url.include?("/team/coaches/")
+        candidate_urls << team.coaches_url.sub("/team/coaches/", "/team/coaches-roster/")
+      elsif team.coaches_url.include?("/team/coaches-roster/")
+        candidate_urls << team.coaches_url.sub("/team/coaches-roster/", "/team/coaches/")
+      end
+
       html = nil
-      begin
-        html = URI.open(team.coaches_url, read_timeout: 15, "User-Agent" => "Mozilla/5.0").read
-      rescue OpenURI::HTTPError, SocketError, Net::OpenTimeout, Net::ReadTimeout => e
-        failed_team += 1
-        puts "  [!] #{team_slug.ljust(25)} fetch failed: #{e.class}: #{e.message}"
+      candidate_urls.each do |url|
+        html = URI.open(url, read_timeout: 15, "User-Agent" => "Mozilla/5.0").read
+        break
+      rescue OpenURI::HTTPError, SocketError, Net::OpenTimeout, Net::ReadTimeout
         next
       end
 
       unless html
         failed_team += 1
-        puts "  [!] #{team_slug.ljust(25)} empty response from #{team.coaches_url}"
+        puts "  [!] #{team_slug.ljust(25)} no coach page found (tried #{candidate_urls.size} URLs)"
         next
       end
 
