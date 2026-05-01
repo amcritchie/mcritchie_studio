@@ -81,11 +81,6 @@ class Espn::ScrapeDepthCharts
       return
     end
 
-    # Detect scheme from "Base 3-4 D" / "Base 4-3 D" group name and persist on
-    # chart. Drives the scheme-aware Roster picker (3-4 WLB/SLB → EDGE, etc.).
-    scheme = detect_scheme(groups)
-    chart.update!(scheme: scheme) if scheme && chart.scheme != scheme
-
     # Tag each athlete with their raw formation slot ("WLB", "LDE", "NT") and
     # PRESERVE ESPN's row structure. Multi-row position groups (e.g. WR has 3
     # rows for WR1/WR2/WR3 chains) need the row grouping intact so flatten_rows
@@ -119,17 +114,8 @@ class Espn::ScrapeDepthCharts
     # Re-densify depths everywhere — moves leave gaps at the source position.
     densify_chart(chart)
 
-    puts "  [+] #{team_slug} (#{scheme || '?'}): applied ESPN depth chart"
+    puts "  [+] #{team_slug}: applied ESPN depth chart"
     @stats[:teams_scraped] += 1
-  end
-
-  def detect_scheme(groups)
-    groups.each do |g|
-      name = g["name"].to_s
-      return "3-4" if name =~ /3.?4/
-      return "4-3" if name =~ /4.?3/
-    end
-    nil
   end
 
   # Defensive front-7 positions where ESPN's formation slot can disagree with

@@ -67,6 +67,53 @@ module PositionConcern
     spotrac:  SPOTRAC_MAP
   }.freeze
 
+  # ESPN formation_slot → display group (offense/defense). Each formation
+  # slot lists the display groups it CAN feed; athlete.position picks which
+  # group it actually fills. This disambiguates ambiguous slots WITHOUT
+  # scheme detection: LDE/RDE feed :edge in 4-3 (athlete=EDGE) and :dl in
+  # 3-4 (athlete=DT); WLB/SLB feed :edge in 3-4 (athlete=EDGE) and :lb in
+  # 4-3 (athlete=LB). Used by Roster#defense_starting_12.
+  FORMATION_GROUPS = {
+    "WLB"  => [:edge, :lb],
+    "SLB"  => [:edge, :lb],
+    "LILB" => [:lb],
+    "RILB" => [:lb],
+    "MLB"  => [:lb],
+    "LB"   => [:lb],
+    "ILB"  => [:lb],
+    "OLB"  => [:edge, :lb],
+    "LDE"  => [:edge, :dl],
+    "RDE"  => [:edge, :dl],
+    "DE"   => [:edge, :dl],
+    "LDT"  => [:dl],
+    "RDT"  => [:dl],
+    "NT"   => [:dl],
+    "DT"   => [:dl],
+    "DL"   => [:dl],
+    "LCB"  => [:cb],
+    "RCB"  => [:cb],
+    "CB"   => [:cb],
+    "SS"   => [:ss],
+    "FS"   => [:fs],
+    "S"    => [:ss, :fs],
+    "NB"   => [:nickel],
+    "NCB"  => [:nickel],
+    "SCB"  => [:nickel]
+  }.freeze
+
+  # athlete.position values that "claim" each display group. When a
+  # formation slot has multiple eligible groups, the picker uses these to
+  # match the athlete to one of them.
+  GROUP_ATHLETE_POSITIONS = {
+    edge:   %w[EDGE DE],
+    dl:     %w[DT NT DL DI],
+    lb:     %w[LB ILB OLB MLB],
+    cb:     %w[CB],
+    ss:     %w[SS S],
+    fs:     %w[FS S],
+    nickel: %w[CB S SS FS]
+  }.freeze
+
   def self.side_for(position)
     normalized = normalize_position(position)
     if OFFENSE_POSITIONS.include?(normalized)

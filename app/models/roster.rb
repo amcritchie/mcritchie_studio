@@ -32,48 +32,8 @@ class Roster < ApplicationRecord
     def person_slug; person&.slug; end
   end
 
-  # Universal: each ESPN formation_slot lists the display groups it CAN feed.
-  # athlete.position picks which group it actually fills — disambiguates the
-  # ambiguous slots (LDE/RDE in 3-4 = interior DT, in 4-3 = edge rusher;
-  # WLB/SLB in 3-4 = edge rusher, in 4-3 = coverage LB) without needing
-  # scheme detection.
-  DEFENSE_FORMATION_GROUPS = {
-    "WLB"  => [:edge, :lb],   # 3-4 OLB rushes (EDGE), 4-3 OLB covers (LB)
-    "SLB"  => [:edge, :lb],
-    "LILB" => [:lb],
-    "RILB" => [:lb],
-    "MLB"  => [:lb],
-    "LB"   => [:lb],
-    "ILB"  => [:lb],
-    "OLB"  => [:edge, :lb],
-    "LDE"  => [:edge, :dl],   # 4-3 LDE rushes, 3-4 LDE is interior
-    "RDE"  => [:edge, :dl],
-    "DE"   => [:edge, :dl],
-    "LDT"  => [:dl],
-    "RDT"  => [:dl],
-    "NT"   => [:dl],
-    "DT"   => [:dl],
-    "DL"   => [:dl],
-    "LCB"  => [:cb],
-    "RCB"  => [:cb],
-    "CB"   => [:cb],
-    "SS"   => [:ss],
-    "FS"   => [:fs],
-    "S"    => [:ss, :fs],
-    "NB"   => [:nickel],
-    "NCB"  => [:nickel],
-    "SCB"  => [:nickel]
-  }.freeze
-
-  GROUP_ATHLETE_POSITIONS = {
-    edge:   %w[EDGE DE],
-    dl:     %w[DT NT DL DI],
-    lb:     %w[LB ILB OLB MLB],
-    cb:     %w[CB],
-    ss:     %w[SS S],
-    fs:     %w[FS S],
-    nickel: %w[CB S SS FS]
-  }.freeze
+  # ESPN formation_slot → display group mappings live in PositionConcern.
+  # See PositionConcern::FORMATION_GROUPS and GROUP_ATHLETE_POSITIONS.
 
   def offense_starters
     roster_spots.where(depth: 1, side: "offense")
@@ -170,59 +130,54 @@ class Roster < ApplicationRecord
     used = Set.new
     result = DEFENSE_SLOTS.index_with { nil }
 
-    edge_starters = formation_starters(by_group[:edge] || [])
-    dl_starters   = formation_starters(by_group[:dl]   || [])
-    lb_starters   = formation_starters(by_group[:lb]   || [])
-    cb_starters   = formation_starters(by_group[:cb]   || [])
+    # Per-group: take the lowest-depth entry per formation_slot (the "starters"),
+    # sort by the slot's grade criterion, and assign top N to the display slots.
+    assign_top_n(result, used, formation_starters(by_group[:edge] || []), :pass_rush_grade,    [:edge1, :edge2])
+    assign_top_n(result, used, formation_starters(by_group[:dl]   || []), :defense_grade,     [:dl1, :dl2])
 
-    # EDGE: top 2 by pass_rush_grade
-    edge_top = edge_starters.sort_by { |s| -grade_value(s, :pass_rush_grade) }.first(2)
-    result[:edge1] = edge_top[0]; used << edge_top[0] if edge_top[0]
-    result[:edge2] = edge_top[1]; used << edge_top[1] if edge_top[1]
-
-    # DL: top 2 by defense_grade
-    dl_top = dl_starters.sort_by { |s| -grade_value(s, :defense_grade) }.first(2)
-    result[:dl1] = dl_top[0]; used << dl_top[0] if dl_top[0]
-    result[:dl2] = dl_top[1]; used << dl_top[1] if dl_top[1]
-
-    # DL Flex: best pass_rush_grade among unselected entries in EDGE+DL groups
-    # (covers depth-2 EDGE in 4-3, NT in 3-4, leftover starters from either).
+    # DL Flex: best pass_rush_grade among unselected EDGE+DL (covers depth-2
+    # EDGE in 4-3, NT in 3-4, leftover starters from either group).
     flex_pool = ((by_group[:edge] || []) + (by_group[:dl] || [])).reject { |s| used.include?(s) }
-    result[:dl_flex] = flex_pool.max_by { |s| grade_value(s, :pass_rush_grade) }
-    used << result[:dl_flex] if result[:dl_flex]
+    assign(result, used, :dl_flex, flex_pool.max_by { |s| grade_value(s, :pass_rush_grade) })
 
-    # LB: top 2 by rush_defense_grade
-    lb_top = lb_starters.sort_by { |s| -grade_value(s, :rush_defense_grade) }.first(2)
-    result[:lb1] = lb_top[0]; used << lb_top[0] if lb_top[0]
-    result[:lb2] = lb_top[1]; used << lb_top[1] if lb_top[1]
+    assign_top_n(result, used, formation_starters(by_group[:lb] || []), :rush_defense_grade, [:lb1, :lb2])
 
-    # SS: first formation_slot=SS entry; FS: first formation_slot=FS entry.
-    # Generic S can fall into either if one is missing.
-    result[:ss] = (by_group[:ss] || []).reject { |s| used.include?(s) }.min_by(&:depth)
-    used << result[:ss] if result[:ss]
-    result[:fs] = (by_group[:fs] || []).reject { |s| used.include?(s) }.min_by(&:depth)
-    used << result[:fs] if result[:fs]
+    # SS / FS: lowest-depth entry per formation_slot (S group includes SS and FS).
+    assign(result, used, :ss, (by_group[:ss] || []).reject { |s| used.include?(s) }.min_by(&:depth))
+    assign(result, used, :fs, (by_group[:fs] || []).reject { |s| used.include?(s) }.min_by(&:depth))
 
-    # CB: top 2 by coverage_grade
-    cb_top = cb_starters.sort_by { |s| -grade_value(s, :coverage_grade) }.first(2)
-    result[:cb1] = cb_top[0]; used << cb_top[0] if cb_top[0]
-    result[:cb2] = cb_top[1]; used << cb_top[1] if cb_top[1]
+    assign_top_n(result, used, formation_starters(by_group[:cb] || []), :coverage_grade, [:cb1, :cb2])
 
-    # Nickel Flex: NB entry, falling back to best unused CB/S by coverage_grade
+    # Nickel Flex: NB entry first, then fall back to best unused CB/S by coverage_grade.
     nickel_pool = (by_group[:nickel] || []).reject { |s| used.include?(s) }
-    result[:flex] = nickel_pool.min_by(&:depth)
-    if result[:flex].nil?
+    nickel_pick = nickel_pool.min_by(&:depth)
+    if nickel_pick.nil?
       remaining = ((by_group[:cb] || []) + (by_group[:ss] || []) + (by_group[:fs] || []))
                     .reject { |s| used.include?(s) }
-      result[:flex] = remaining.max_by { |s| grade_value(s, :coverage_grade) }
+      nickel_pick = remaining.max_by { |s| grade_value(s, :coverage_grade) }
     end
-    used << result[:flex] if result[:flex]
+    assign(result, used, :flex, nickel_pick)
 
     DEFENSE_SLOTS.each_with_object({}) do |slot, h|
       pick = result[slot]
       pick.slot = slot if pick
       h[slot] = pick
     end
+  end
+
+  # Sort `pool` by grade DESC, assign top entries to consecutive slots,
+  # marking each as used. Reduces the result[:x] = y; used << y if y boilerplate.
+  def assign_top_n(result, used, pool, grade_field, slots)
+    sorted = pool.sort_by { |s| -grade_value(s, grade_field) }
+    slots.each_with_index do |slot, i|
+      assign(result, used, slot, sorted[i])
+    end
+  end
+
+  def assign(result, used, slot, pick)
+    return if pick.nil?
+    result[slot] = pick
+    used << pick
   end
 
   # Bucket each entry into ONE display group based on its formation_slot's
@@ -237,12 +192,12 @@ class Roster < ApplicationRecord
   end
 
   def effective_group(spot)
-    candidates = DEFENSE_FORMATION_GROUPS[spot.formation_slot.to_s.upcase]
+    candidates = PositionConcern::FORMATION_GROUPS[spot.formation_slot.to_s.upcase]
     return nil unless candidates
     return candidates.first if candidates.size == 1
     athlete_pos = spot.person&.athlete_profile&.position
     return candidates.first unless athlete_pos
-    matching = candidates.find { |g| GROUP_ATHLETE_POSITIONS[g]&.include?(athlete_pos) }
+    matching = candidates.find { |g| PositionConcern::GROUP_ATHLETE_POSITIONS[g]&.include?(athlete_pos) }
     matching || candidates.first
   end
 

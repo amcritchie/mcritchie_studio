@@ -155,23 +155,6 @@ class Espn::ScrapeDepthChartsTest < ActiveSupport::TestCase
 
   # ─── Position reconciliation ─────────────────────────────────────────────────
 
-  # ─── Scheme detection ────────────────────────────────────────────────────────
-
-  test "detect_scheme returns 3-4 from Base 3-4 D group name" do
-    groups = [{ "name" => "Base 3-4 D", "rows" => [] }]
-    assert_equal "3-4", @service.send(:detect_scheme, groups)
-  end
-
-  test "detect_scheme returns 4-3 from Base 4-3 D group name" do
-    groups = [{ "name" => "3WR 1TE", "rows" => [] }, { "name" => "Base 4-3 D", "rows" => [] }]
-    assert_equal "4-3", @service.send(:detect_scheme, groups)
-  end
-
-  test "detect_scheme returns nil when no scheme in group names" do
-    groups = [{ "name" => "Defense", "rows" => [] }]
-    assert_nil @service.send(:detect_scheme, groups)
-  end
-
   test "reconcile_chart_positions moves a 3-4 OLB to EDGE when athlete.position says EDGE" do
     chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
 

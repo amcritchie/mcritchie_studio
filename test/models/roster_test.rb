@@ -149,10 +149,9 @@ class RosterTest < ActiveSupport::TestCase
 
   # ─── Scheme-aware defense picker ─────────────────────────────────────────────
 
-  test "defense_starting_12 uses 3-4 formation mapping when scheme=3-4" do
+  test "defense_starting_12 uses universal formation mapping with formation_slot data" do
     roster = rosters(:bills_offseason)
     chart = DepthChart.find_or_create_by!(team_slug: roster.team_slug)
-    chart.update!(scheme: "3-4")
 
     # Wipe defense entries from fixture-mirror setup, build fresh ones with
     # formation_slot set per the 3-4 mapping
@@ -193,10 +192,8 @@ class RosterTest < ActiveSupport::TestCase
     assert_equal "christian-benford", result[:flex].person_slug
   end
 
-  test "defense_starting_12 falls back to pool logic when scheme is nil" do
+  test "defense_starting_12 falls back to pool logic when no formation_slot data" do
     roster = rosters(:bills_offseason)
-    chart = DepthChart.find_or_create_by!(team_slug: roster.team_slug)
-    chart.update!(scheme: nil)
     # All entries from fixture-mirror have nil formation_slot, so pool path used
     result = roster.defense_starting_12
     assert_equal Roster::DEFENSE_SLOTS, result.keys
@@ -206,7 +203,6 @@ class RosterTest < ActiveSupport::TestCase
   test "defense_starting_12 4-3 DL Flex picks best PR among unselected EDGE/DL at depth 2+" do
     roster = rosters(:bills_offseason)
     chart = DepthChart.find_or_create_by!(team_slug: roster.team_slug)
-    chart.update!(scheme: "4-3")
 
     chart.depth_chart_entries.where(side: "defense").destroy_all
     # Minimum 4-3 setup with one depth-2 EDGE for the flex slot

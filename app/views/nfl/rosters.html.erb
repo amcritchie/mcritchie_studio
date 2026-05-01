@@ -58,41 +58,7 @@
   });
 </script>
 
-<%
-  # Slot → display label. Depth numbers are omitted (depth is implied by the
-  # slot's left-to-right order). Flex slots derive their label from the picked
-  # player's actual position so you can see at a glance what role they fill
-  # (e.g., a TE2 in the offense Flex shows "TE", a CB3 in the nickel Flex
-  # shows "CB", a big-nickel safety shows "S").
-  offense_label = ->(slot, pick) {
-    case slot
-    when :qb        then "QB"
-    when :rb        then "RB"
-    when :wr1, :wr2, :wr3 then "WR"
-    when :te        then "TE"
-    when :flex
-      return "—" unless pick
-      %w[RB FB HB].include?(pick.position) ? "RB" : pick.position
-    when :lt, :lg, :c, :rg, :rt then slot.to_s.upcase
-    end
-  }
-  defense_label = ->(slot, pick) {
-    case slot
-    when :edge1, :edge2 then "EG"
-    when :dl1, :dl2     then "DL"
-    when :dl_flex
-      return "—" unless pick
-      %w[EDGE DE].include?(pick.position) ? "EG" : "DL"
-    when :lb1, :lb2     then "LB"
-    when :ss            then "SS"
-    when :fs            then "FS"
-    when :cb1, :cb2     then "CB"
-    when :flex
-      return "—" unless pick
-      pick.position == "CB" ? "CB" : (pick.position == "S" ? "S" : pick.position)
-    end
-  }
-%>
+<%# Slot labels come from LineupLabelsHelper — shared with /teams/:slug/depth-chart %>
 
 <section class="max-w-7xl mx-auto px-4 py-8">
   <div class="mb-8">
@@ -113,8 +79,8 @@
         <% end %>
 
         <%
-          off_pairs = roster.offense_starting_12.map { |slot, pick| [offense_label.call(slot, pick), pick] }
-          def_pairs = roster.defense_starting_12.map { |slot, pick| [defense_label.call(slot, pick), pick] }
+          off_pairs = roster.offense_starting_12.map { |slot, pick| [offense_slot_label(slot, pick), pick] }
+          def_pairs = roster.defense_starting_12.map { |slot, pick| [defense_slot_label(slot, pick), pick] }
           st_picks  = roster.special_teams_starting_4.values.flatten.compact
           st_pairs  = st_picks.map { |p| [p.position.to_s, p] }
           coaches   = @coaches_by_team[team.slug] || []

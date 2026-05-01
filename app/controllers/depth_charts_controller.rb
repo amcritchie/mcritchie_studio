@@ -1,4 +1,6 @@
 class DepthChartsController < ApplicationController
+  include LineupLabelsHelper
+
   skip_before_action :require_authentication, only: [:show]
   before_action :set_team, only: [:show, :reorder]
 
@@ -41,45 +43,17 @@ class DepthChartsController < ApplicationController
     if roster
       roster.offense_starting_12.each do |slot, pick|
         next unless pick
-        @starter_labels[pick.person_slug] = offense_starter_label(slot, pick)
+        @starter_labels[pick.person_slug] = offense_slot_label(slot, pick)
       end
       roster.defense_starting_12.each do |slot, pick|
         next unless pick
-        @starter_labels[pick.person_slug] = defense_starter_label(slot, pick)
+        @starter_labels[pick.person_slug] = defense_slot_label(slot, pick)
       end
       roster.special_teams_starting_4.each do |slot, picks|
         picks.each { |p| @starter_labels[p.person_slug] ||= slot.to_s.upcase }
       end
     end
   end
-
-  private
-
-  def offense_starter_label(slot, pick)
-    case slot
-    when :qb        then "QB"
-    when :rb        then "RB"
-    when :wr1, :wr2, :wr3 then "WR"
-    when :te        then "TE"
-    when :flex      then %w[RB FB HB].include?(pick.position) ? "RB" : pick.position
-    when :lt, :lg, :c, :rg, :rt then slot.to_s.upcase
-    end
-  end
-
-  def defense_starter_label(slot, pick)
-    case slot
-    when :edge1, :edge2 then "EG"
-    when :dl1, :dl2     then "DL"
-    when :dl_flex       then %w[EDGE DE].include?(pick.position) ? "EG" : "DL"
-    when :lb1, :lb2     then "LB"
-    when :ss            then "SS"
-    when :fs            then "FS"
-    when :cb1, :cb2     then "CB"
-    when :flex          then pick.position == "CB" ? "CB" : "S"
-    end
-  end
-
-  public
 
   def reorder
     chart = @team.depth_chart
