@@ -31,6 +31,28 @@ class DepthChartsController < ApplicationController
              .to_h
              .transform_values { |es| es.sort_by(&:depth) }
     end
+
+    # Build a person_slug → slot label map (e.g. "QB", "WR1", "FLX") for any
+    # athlete who lands in the team's starting 28 (12 off + 12 def + 4 ST).
+    @starter_labels = {}
+    roster = @team.rosters.first
+    if roster
+      offense_labels = { qb: "QB", rb: "RB", wr1: "WR1", wr2: "WR2", wr3: "WR3",
+                          te: "TE", flex: "FLX", lt: "LT", lg: "LG", c: "C", rg: "RG", rt: "RT" }
+      defense_labels = { edge1: "E1", edge2: "E2", dl1: "DL1", dl2: "DL2", dl_flex: "DLF",
+                          lb1: "LB1", lb2: "LB2", ss: "SS", fs: "FS",
+                          cb1: "CB1", cb2: "CB2", flex: "NB" }
+
+      roster.offense_starting_12.each do |slot, pick|
+        @starter_labels[pick.person_slug] = offense_labels[slot] if pick
+      end
+      roster.defense_starting_12.each do |slot, pick|
+        @starter_labels[pick.person_slug] = defense_labels[slot] if pick
+      end
+      roster.special_teams_starting_4.each do |slot, picks|
+        picks.each { |p| @starter_labels[p.person_slug] ||= slot.to_s.upcase }
+      end
+    end
   end
 
   def reorder
