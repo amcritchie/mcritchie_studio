@@ -44,24 +44,46 @@ class Athletes::MergeDuplicates
   end
 
   # Returns Array of [duplicate_person, canonical_person]. Public so callers
-  # can preview without invoking #call.
+  # can preview without invoking #call. Detects two patterns:
+  #   1. Suffix-stripped: `will-anderson` ↔ `will-anderson-jr`
+  #   2. Same-name distinct slugs: a Person with no IDs whose first+last
+  #      matches another Person who DOES have IDs (e.g., punctuation/
+  #      apostrophe variations that produced different parameterized slugs)
   def find_duplicate_pairs
     pairs = []
-    Person.where(athlete: true).find_each do |dup|
+    seen_canonical_ids = Set.new
+
+    Person.where(athlete: true).includes(:athlete_profile).find_each do |dup|
       ath = dup.athlete_profile
       next unless ath
       next if has_any_id?(ath)
 
-      suffix_slugs = SUFFIXES.map { |s| "#{dup.slug}-#{s}" }
-      canonical = Person.where(slug: suffix_slugs)
-                        .includes(:athlete_profile)
-                        .find { |c| has_any_id?(c.athlete_profile) }
-      pairs << [dup, canonical] if canonical
+      canonical = find_suffix_variant(dup) || find_same_name_with_ids(dup)
+      next unless canonical
+      next if seen_canonical_ids.include?(canonical.id)
+
+      seen_canonical_ids << canonical.id
+      pairs << [dup, canonical]
     end
     pairs
   end
 
   private
+
+  def find_suffix_variant(dup)
+    suffix_slugs = SUFFIXES.map { |s| "#{dup.slug}-#{s}" }
+    Person.where(slug: suffix_slugs)
+          .includes(:athlete_profile)
+          .find { |c| has_any_id?(c.athlete_profile) }
+  end
+
+  def find_same_name_with_ids(dup)
+    siblings = Person.where("LOWER(first_name) = LOWER(?) AND LOWER(last_name) = LOWER(?)",
+                             dup.first_name, dup.last_name)
+                     .where.not(id: dup.id)
+                     .includes(:athlete_profile)
+    siblings.find { |c| has_any_id?(c.athlete_profile) }
+  end
 
   def has_any_id?(athlete)
     return false unless athlete

@@ -56,6 +56,18 @@ tail -20 tmp/players_seed.log
 
 Expect: ~2,500 athletes upserted, ~1,500 headshots cached (ESPN has IDs for most current players). Takes ~10-25 min depending on network. The two known dead links (`sal-cannella`, `isaiah-bond`) log a `[!]` and continue.
 
+### Step 3.5 — Merge duplicate Persons
+
+`db:seed` (Spotrac, prospects) creates Persons with suffix-stripped names ("Will Anderson") while `nfl:players_seed` keeps the canonical "Will Anderson Jr." with all the cross-ref IDs. ID-first lookup prevents NEW collisions but pre-existing seed-induced duplicates are still floating around with their own contracts and depth chart entries. This step consolidates them into the canonical record.
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:merge_duplicate_athletes DRY_RUN=0 > tmp/merge.log 2>&1
+echo "exit: $?"
+tail -5 tmp/merge.log
+```
+
+Expect: ~20-60 pairs merged on a fresh build. Idempotent — re-running on a clean DB finds 0 pairs. Conflicts (duplicate Contract for the same team, etc.) are dropped in favor of the canonical row.
+
 ### Step 4 — ESPN depth-chart scrape
 
 Auto-creates DepthChart shells per team, places players per ESPN's published depth, creates Contracts for any active-roster players not yet in the DB (UDFAs, mid-season call-ups), expires stale contracts when players have moved teams.

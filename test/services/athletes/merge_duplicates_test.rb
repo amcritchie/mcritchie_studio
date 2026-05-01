@@ -26,6 +26,22 @@ class Athletes::MergeDuplicatesTest < ActiveSupport::TestCase
     assert_includes pairs.map { |d, c| [d.slug, c.slug] }, [duplicate.slug, canonical.slug]
   end
 
+  test "find_duplicate_pairs detects same-name siblings with different slugs" do
+    # Two Persons with the same first+last but distinct slugs. Happens when
+    # data sources produce different parameterizations (punctuation, etc.) —
+    # we simulate by creating one Person, then mutating another to share
+    # first+last via update_column (bypasses Sluggable's before_save).
+    canonical = Person.create!(first_name: "Test", last_name: "Sibling", athlete: true)
+    Athlete.create!(person_slug: canonical.slug, sport: "football", gsis_id: "00-9999993")
+
+    duplicate = Person.create!(first_name: "Test", last_name: "Variant", athlete: true)
+    duplicate.update_column(:last_name, "Sibling")  # now matches canonical's first+last
+    Athlete.create!(person_slug: duplicate.slug, sport: "football")
+
+    pairs = Athletes::MergeDuplicates.new.find_duplicate_pairs
+    assert_includes pairs.map { |d, c| [d.slug, c.slug] }, [duplicate.slug, canonical.slug]
+  end
+
   test "find_duplicate_pairs ignores Persons that already have IDs" do
     duplicate, _canonical, dup_athlete, _ = make_pair
     dup_athlete.update!(gsis_id: "00-9999998")

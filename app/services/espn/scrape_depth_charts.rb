@@ -81,6 +81,18 @@ class Espn::ScrapeDepthCharts
       return
     end
 
+    # ESPN occasionally serves partial responses (Lions on 2026-05-01 returned
+    # only "Base 4-3 D" — no offense, no special teams). Applying that data
+    # would silently OVERWRITE a complete chart with incomplete data. Skip
+    # the team if we don't see all three sides — the next scrape (when ESPN
+    # is healthy) will refresh.
+    sides_present = groups.map { |g| side_for_group(g["name"]) }.compact.uniq
+    if sides_present.size < 3
+      puts "  [!] #{team_slug}: ESPN returned partial response (sides: #{sides_present.inspect}), skipping to preserve existing chart"
+      @stats[:teams_partial] += 1
+      return
+    end
+
     # Tag each athlete with their raw formation slot ("WLB", "LDE", "NT") and
     # PRESERVE ESPN's row structure. Multi-row position groups (e.g. WR has 3
     # rows for WR1/WR2/WR3 chains) need the row grouping intact so flatten_rows

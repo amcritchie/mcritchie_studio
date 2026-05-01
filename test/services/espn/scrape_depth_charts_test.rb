@@ -100,6 +100,23 @@ class Espn::ScrapeDepthChartsTest < ActiveSupport::TestCase
     assert_equal 1, @service.stats[:contracts_revived]
   end
 
+  # ─── Partial response guard ──────────────────────────────────────────────────
+
+  test "scrape_team skips when ESPN returns only some sides (partial response)" do
+    chart = DepthChart.find_or_create_by!(team_slug: @bills.slug)
+    p = Person.create!(first_name: "Guard", last_name: "Test", athlete: true)
+    pre_existing = chart.depth_chart_entries.create!(
+      person_slug: p.slug, position: "QB", side: "offense", depth: 1
+    )
+
+    # Stub fetch_groups to simulate ESPN's broken Lions response: only defense
+    @service.define_singleton_method(:fetch_groups) { |_| [{ "name" => "Base 4-3 D", "rows" => [] }] }
+    @service.send(:scrape_team, "buf", @bills.slug)
+
+    assert_equal 1, @service.stats[:teams_partial]
+    assert DepthChartEntry.exists?(pre_existing.id), "pre-existing entry should not be touched"
+  end
+
   # ─── DepthChart shell auto-create ────────────────────────────────────────────
 
   test "scrape_team auto-creates DepthChart shell when missing" do
