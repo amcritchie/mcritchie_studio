@@ -170,6 +170,42 @@ class Espn::ScrapeDepthChartsTest < ActiveSupport::TestCase
                  "ESPN's order [Campbell, Hudson, Lomu, Metz] must be preserved verbatim"
   end
 
+  # ─── espn_id backfill on name-match ──────────────────────────────────────────
+
+  test "match_person backfills espn_id when athlete was found by name (not id)" do
+    person = Person.create!(first_name: "Backfill", last_name: "Target", athlete: true)
+    athlete = Athlete.create!(person_slug: person.slug, sport: "football")  # no espn_id
+
+    @service.send(:match_person, { "name" => "Backfill Target", "href" => "/nfl/player/_/id/123456/" }, @bills.slug)
+
+    athlete.reload
+    assert_equal "123456", athlete.espn_id
+    assert_equal "https://a.espncdn.com/i/headshots/nfl/players/full/123456.png", athlete.espn_headshot_url
+    assert_equal 1, @service.stats[:espn_ids_backfilled]
+  end
+
+  test "match_person does NOT overwrite an existing espn_id" do
+    person = Person.create!(first_name: "Existing", last_name: "Espn", athlete: true)
+    athlete = Athlete.create!(person_slug: person.slug, sport: "football", espn_id: "999")
+
+    @service.send(:match_person, { "name" => "Existing Espn", "href" => "/nfl/player/_/id/123456/" }, @bills.slug)
+
+    assert_equal "999", athlete.reload.espn_id
+    assert_equal 0, @service.stats[:espn_ids_backfilled]
+  end
+
+  test "match_person does NOT backfill if espn_id is already taken by another athlete" do
+    other_person = Person.create!(first_name: "Other", last_name: "Owner", athlete: true)
+    Athlete.create!(person_slug: other_person.slug, sport: "football", espn_id: "555")
+
+    target_person = Person.create!(first_name: "Wants", last_name: "Espn", athlete: true)
+    target_athlete = Athlete.create!(person_slug: target_person.slug, sport: "football")
+
+    @service.send(:match_person, { "name" => "Wants Espn", "href" => "/nfl/player/_/id/555/" }, @bills.slug)
+
+    assert_nil target_athlete.reload.espn_id  # not backfilled because 555 is taken
+  end
+
   # ─── Position reconciliation ─────────────────────────────────────────────────
 
   test "reconcile_chart_positions moves a 3-4 OLB to EDGE when athlete.position says EDGE" do

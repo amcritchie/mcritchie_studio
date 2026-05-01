@@ -344,8 +344,24 @@ class Espn::ScrapeDepthCharts
       return nil
     end
 
+    backfill_espn_id(athlete_record, espn_id) if espn_id
     ensure_active_contract(person, athlete_record, team_slug, position)
     person
+  end
+
+  # When we name-matched an athlete (because lookup_by_espn_id missed) but ESPN's
+  # href DID give us an espn_id, persist it so future scrapes can fast-path AND
+  # downstream nfl:upload_headshots can cache the headshot. Skip if athlete
+  # already has espn_id (don't overwrite) or if some OTHER athlete already owns
+  # that espn_id (uniqueness-protected).
+  def backfill_espn_id(athlete, espn_id)
+    return if athlete.espn_id.present?
+    return if Athlete.where(espn_id: espn_id).where.not(id: athlete.id).exists?
+    athlete.update!(
+      espn_id: espn_id,
+      espn_headshot_url: "https://a.espncdn.com/i/headshots/nfl/players/full/#{espn_id}.png"
+    )
+    @stats[:espn_ids_backfilled] += 1
   end
 
   def lookup_person(espn_id, name)
