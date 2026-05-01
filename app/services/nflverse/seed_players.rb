@@ -49,7 +49,7 @@ class Nflverse::SeedPlayers
   attr_reader :stats
 
   def initialize(verbose: false, upload_headshots: true,
-                 min_season: DEFAULT_MIN_SEASON, status_filter: "ACT",
+                 min_season: DEFAULT_MIN_SEASON, status_filter: nil,
                  source_url: PLAYERS_URL, csv_body: nil)
     @verbose = verbose
     @upload_headshots = upload_headshots && ENV["AWS_ACCESS_KEY_ID"].present?

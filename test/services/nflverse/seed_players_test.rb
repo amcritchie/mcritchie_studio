@@ -52,13 +52,24 @@ class Nflverse::SeedPlayersTest < ActiveSupport::TestCase
                  athlete.espn_headshot_url
   end
 
-  test "skips inactive (status != ACT) by default" do
+  test "skips inactive (status mismatch) when status_filter is set" do
     csv_body = csv_for([row("status" => "RET", "last_season" => "2025")])
-    service = Nflverse::SeedPlayers.new(csv_body: csv_body, upload_headshots: false)
+    service = Nflverse::SeedPlayers.new(csv_body: csv_body, upload_headshots: false, status_filter: "ACT")
     service.call
 
     assert_nil Person.find_by(slug: "test-quarterback")
     assert_equal 1, service.stats[:skipped_inactive]
+  end
+
+  test "ingests rows of any status when no status_filter (default)" do
+    # UFA / RES / PUP players (e.g., late-signing veterans like Hunt/Harris)
+    # used to be filtered out by the status=ACT default. Now they pass.
+    csv_body = csv_for([row("status" => "UFA", "last_season" => "2026")])
+    service = Nflverse::SeedPlayers.new(csv_body: csv_body, upload_headshots: false)
+    service.call
+
+    person = Person.find_by(slug: "test-quarterback")
+    assert person, "Person should be ingested even with status=UFA"
   end
 
   test "skips players whose last_season is below MIN_SEASON" do
