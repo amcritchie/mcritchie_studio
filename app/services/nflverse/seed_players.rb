@@ -79,22 +79,38 @@ class Nflverse::SeedPlayers
   # Public so tests can drive a single row without a CSV. Returns the Athlete
   # (or nil if skipped).
   def ingest_row(row)
-    first = (row["common_first_name"].to_s.strip.presence || row["first_name"].to_s.strip)
-    last  = row["last_name"].to_s.strip
-    if first.empty? || last.empty?
-      @stats[:skipped_no_name] += 1
-      return nil
-    end
-
-    person = Person.find_or_create_by_name!(first, last, athlete: true)
-    @stats[:people_created] += 1 if person.previously_new_record?
-
     gsis_id = row["gsis_id"].to_s.strip.presence
-    athlete = (Athlete.find_by(gsis_id: gsis_id) if gsis_id)
-    athlete ||= Athlete.find_by(person_slug: person.slug)
+    pff_id  = row["pff_id"].to_s.strip.presence&.to_i
+    otc_id  = row["otc_id"].to_s.strip.presence
+    espn_id = row["espn_id"].to_s.strip.presence
+    pfr_id  = row["pfr_id"].to_s.strip.presence
+
+    # ID hierarchy lookup — every cross-ref ID nflverse provides is unique to a
+    # specific player. If any matches an existing Athlete, that's the canonical
+    # record (regardless of name). This prevents split-record collisions where
+    # "Will Anderson Jr." (with pff_id from PFF CSV) and "Will Anderson" (from
+    # Spotrac without suffix) live as two Person+Athlete pairs and a name match
+    # picks the wrong one.
+    athlete = lookup_athlete_by_ids(gsis_id: gsis_id, pff_id: pff_id, otc_id: otc_id,
+                                     espn_id: espn_id, pfr_id: pfr_id)
+    person = athlete&.person
+
     if athlete.nil?
-      athlete = Athlete.create!(person_slug: person.slug, sport: "football")
-      @stats[:athletes_created] += 1
+      first = (row["common_first_name"].to_s.strip.presence || row["first_name"].to_s.strip)
+      last  = row["last_name"].to_s.strip
+      if first.empty? || last.empty?
+        @stats[:skipped_no_name] += 1
+        return nil
+      end
+
+      person = Person.find_or_create_by_name!(first, last, athlete: true)
+      @stats[:people_created] += 1 if person.previously_new_record?
+
+      athlete = Athlete.find_by(person_slug: person.slug)
+      if athlete.nil?
+        athlete = Athlete.create!(person_slug: person.slug, sport: "football")
+        @stats[:athletes_created] += 1
+      end
     end
 
     attrs = build_attrs(row, gsis_id)
@@ -103,7 +119,7 @@ class Nflverse::SeedPlayers
       @stats[:athletes_updated] += 1
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => e
       @stats[:athletes_failed] += 1
-      vputs "  [!] update fail #{person.slug} (gsis=#{gsis_id}): #{e.message}"
+      vputs "  [!] update fail #{person&.slug} (gsis=#{gsis_id}): #{e.message}"
       return nil
     end
 
@@ -112,6 +128,15 @@ class Nflverse::SeedPlayers
   end
 
   private
+
+  def lookup_athlete_by_ids(gsis_id:, pff_id:, otc_id:, espn_id:, pfr_id:)
+    return Athlete.find_by(gsis_id: gsis_id) if gsis_id && Athlete.exists?(gsis_id: gsis_id)
+    return Athlete.find_by(pff_id: pff_id)   if pff_id  && Athlete.exists?(pff_id: pff_id)
+    return Athlete.find_by(otc_id: otc_id)   if otc_id  && Athlete.exists?(otc_id: otc_id)
+    return Athlete.find_by(espn_id: espn_id) if espn_id && Athlete.exists?(espn_id: espn_id)
+    return Athlete.find_by(pfr_id: pfr_id)   if pfr_id  && Athlete.exists?(pfr_id: pfr_id)
+    nil
+  end
 
   def build_attrs(row, gsis_id)
     espn_id = row["espn_id"].to_s.strip.presence

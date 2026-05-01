@@ -83,6 +83,34 @@ class Nflverse::SeedPlayersTest < ActiveSupport::TestCase
     assert_equal "9999991", athlete.espn_id
   end
 
+  test "ID hierarchy wins over name match (split-record scenario)" do
+    # Reproduces the Will Anderson Jr. failure: PFF imported the canonical
+    # "Will Anderson Jr." → person+athlete with pff_id=999. Spotrac stripped
+    # the suffix → separate "Will Anderson" person+athlete (no IDs). nflverse
+    # row last_name="Anderson" name-matches the Spotrac one and tries to
+    # write pff_id=999 → unique-constraint collision under the old code.
+    canonical_person = Person.create!(first_name: "Will", last_name: "Anderson Jr.", athlete: true)
+    canonical_athlete = Athlete.create!(person_slug: canonical_person.slug, sport: "football", pff_id: 999991)
+
+    duplicate_person = Person.create!(first_name: "Will", last_name: "Anderson", athlete: true)
+    Athlete.create!(person_slug: duplicate_person.slug, sport: "football")
+
+    # nflverse row uses bare last_name "Anderson" but pff_id matches the canonical
+    csv_body = csv_for([row("first_name" => "Will", "common_first_name" => "Will", "last_name" => "Anderson",
+                              "gsis_id" => "00-9999992", "pff_id" => "999991", "espn_id" => "ww-1", "otc_id" => "wo-1")])
+    service = Nflverse::SeedPlayers.new(csv_body: csv_body, upload_headshots: false)
+    service.call
+
+    # Canonical record (matched by pff_id) gets the new IDs
+    canonical_athlete.reload
+    assert_equal "00-9999992", canonical_athlete.gsis_id
+    assert_equal "ww-1", canonical_athlete.espn_id
+
+    # Duplicate athlete left untouched — no failure logged
+    assert_equal 0, service.stats[:athletes_failed]
+    assert_equal 1, service.stats[:athletes_updated]
+  end
+
   test "normalizes position via :nflverse source map" do
     csv_body = csv_for([row("position" => "T", "latest_team" => "BUF")])
     service = Nflverse::SeedPlayers.new(csv_body: csv_body, upload_headshots: false)
