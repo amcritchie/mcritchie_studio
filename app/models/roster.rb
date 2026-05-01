@@ -26,9 +26,41 @@ class Roster < ApplicationRecord
     returner: { positions: %w[WR RB FB], count: 1, sort_by: :return_grade }
   }.freeze
 
-  PickedSpot = Struct.new(:person, :position, :depth, :side, :slot, keyword_init: true) do
+  PickedSpot = Struct.new(:person, :position, :depth, :side, :slot, :formation_slot, keyword_init: true) do
     def person_slug; person&.slug; end
   end
+
+  # ESPN formation slot → display slot. Per-scheme because the same slot
+  # ("WLB") means different things in 3-4 (edge rusher) vs 4-3 (coverage LB).
+  DEFENSE_FORMATION_MAP_3_4 = {
+    edge1:   "WLB",
+    edge2:   "SLB",
+    dl1:     "LDE",
+    dl2:     "RDE",
+    dl_flex: "NT",
+    lb1:     "LILB",
+    lb2:     "RILB",
+    ss:      "SS",
+    fs:      "FS",
+    cb1:     "LCB",
+    cb2:     "RCB",
+    flex:    "NB"
+  }.freeze
+
+  DEFENSE_FORMATION_MAP_4_3 = {
+    edge1:   "LDE",
+    edge2:   "RDE",
+    dl1:     "LDT",
+    dl2:     "RDT",
+    dl_flex: nil,    # no 5th D-line at depth=1 in 4-3; computed from depth=2 EDGE
+    lb1:     "WLB",
+    lb2:     "MLB",
+    ss:      "SS",
+    fs:      "FS",
+    cb1:     "LCB",
+    cb2:     "RCB",
+    flex:    "NB"    # falls back to SLB then to best CB/S by coverage_grade
+  }.freeze
 
   def offense_starters
     roster_spots.where(depth: 1, side: "offense")
@@ -90,14 +122,73 @@ class Roster < ApplicationRecord
   # Returns 12 ordered defensive starter slots, each mapped to a PickedSpot or nil:
   #   :edge1, :edge2, :dl1, :dl2, :dl_flex, :lb1, :lb2, :ss, :fs, :cb1, :cb2, :flex
   #
-  # Within-group sort: EDGE by pass_rush_grade, DL by defense_grade, LB by
-  # run_defense_grade, CB by coverage_grade. DL Flex = highest pass_rush_grade
-  # among unselected EDGE/DL. Flex (Nickel) = highest coverage_grade among
-  # unselected CB/S/FS/SS — covers nickel CB or big-nickel safety.
+  # Two strategies:
+  # 1. Scheme-aware (preferred): when DepthChart.scheme is set, map ESPN's
+  #    raw formation_slot directly to display slot per scheme (3-4 WLB=EDGE,
+  #    NT=DL Flex; 4-3 LDE=EDGE, LDT=DL, etc.). Trusts ESPN's published
+  #    starters at depth=1 for each formation slot.
+  # 2. Pool-based fallback: when scheme is unknown or formation_slot is
+  #    blank, group athletes by their canonical position bucket and pick top
+  #    by depth + grade re-sort.
   def defense_starting_12
     chart = team.depth_chart
     return DEFENSE_SLOTS.index_with { nil } unless chart
 
+    if chart.scheme.present? && chart.depth_chart_entries.where.not(formation_slot: nil).exists?
+      pick_defense_by_scheme(chart)
+    else
+      pick_defense_by_pool(chart)
+    end
+  end
+
+  private
+
+  def pick_defense_by_scheme(chart)
+    spots = load_spots(chart, "defense")
+    used = Set.new
+    result = DEFENSE_SLOTS.index_with { nil }
+    mapping = chart.scheme == "3-4" ? DEFENSE_FORMATION_MAP_3_4 : DEFENSE_FORMATION_MAP_4_3
+
+    mapping.each do |slot, formation|
+      next if formation.nil?
+      pick = spots.find { |s| s.formation_slot == formation && s.depth == 1 && !used.include?(s) }
+      if pick
+        result[slot] = pick
+        used << pick
+      end
+    end
+
+    # 4-3 DL Flex: no 5th D-line slot at depth=1; take best PR among
+    # unselected EDGE/DL (typically depth=2 LDE or RDE).
+    if chart.scheme == "4-3" && result[:dl_flex].nil?
+      flex_pool = spots.select { |s| DLINE_POOL.include?(s.position) && !used.include?(s) }
+      result[:dl_flex] = flex_pool.max_by { |s| grade_value(s, :pass_rush_grade) }
+      used << result[:dl_flex] if result[:dl_flex]
+    end
+
+    # Nickel Flex fallback: when ESPN doesn't list NB, try SLB depth=1 (4-3
+    # only — in 3-4 SLB is already used as EDGE2). Then fall back to best
+    # CB/S not yet picked, sorted by coverage_grade.
+    if result[:flex].nil?
+      if chart.scheme == "4-3"
+        slb = spots.find { |s| s.formation_slot == "SLB" && s.depth == 1 && !used.include?(s) }
+        result[:flex] = slb if slb
+      end
+      if result[:flex].nil?
+        pool = spots.select { |s| (CB_POSITIONS + S_POSITIONS).include?(s.position) && !used.include?(s) }
+        result[:flex] = pool.max_by { |s| grade_value(s, :coverage_grade) }
+      end
+      used << result[:flex] if result[:flex]
+    end
+
+    DEFENSE_SLOTS.each_with_object({}) do |slot, h|
+      pick = result[slot]
+      pick.slot = slot if pick
+      h[slot] = pick
+    end
+  end
+
+  def pick_defense_by_pool(chart)
     spots = load_spots(chart, "defense")
     used = Set.new
     result = DEFENSE_SLOTS.index_with { nil }
@@ -151,6 +242,8 @@ class Roster < ApplicationRecord
       h[slot] = pick
     end
   end
+
+  public
 
   def special_teams_starting_4
     chart = team.depth_chart
@@ -218,7 +311,7 @@ class Roster < ApplicationRecord
          .where(side: side)
          .includes(person: { athlete_profile: [:grades, :image_caches] })
          .to_a
-         .map { |e| PickedSpot.new(person: e.person, position: e.position, depth: e.depth, side: e.side) }
+         .map { |e| PickedSpot.new(person: e.person, position: e.position, depth: e.depth, side: e.side, formation_slot: e.formation_slot) }
   end
 
   def spots_at(spots, positions)

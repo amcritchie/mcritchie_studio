@@ -147,6 +147,84 @@ class RosterTest < ActiveSupport::TestCase
     skip "OL slots are now per-position — no possibility of duplicate centers"
   end
 
+  # ─── Scheme-aware defense picker ─────────────────────────────────────────────
+
+  test "defense_starting_12 uses 3-4 formation mapping when scheme=3-4" do
+    roster = rosters(:bills_offseason)
+    chart = DepthChart.find_or_create_by!(team_slug: roster.team_slug)
+    chart.update!(scheme: "3-4")
+
+    # Wipe defense entries from fixture-mirror setup, build fresh ones with
+    # formation_slot set per the 3-4 mapping
+    chart.depth_chart_entries.where(side: "defense").destroy_all
+    {
+      "WLB"  => "von-miller",       # → EDGE1
+      "SLB"  => "greg-rousseau",    # → EDGE2
+      "LDE"  => "ed-oliver",        # → DL1
+      "RDE"  => "daquan-jones",     # → DL2
+      "NT"   => "tim-settle",       # → DL Flex
+      "LILB" => "matt-milano",      # → LB1
+      "RILB" => "terrel-bernard",   # → LB2
+      "SS"   => "jordan-poyer",     # → SS
+      "FS"   => "taylor-rapp",      # → FS
+      "LCB"  => "rasul-douglas",    # → CB1
+      "RCB"  => "taron-johnson",    # → CB2
+      "NB"   => "christian-benford" # → Nickel Flex
+    }.each do |slot, person_slug|
+      chart.depth_chart_entries.create!(
+        person_slug: person_slug, position: slot, side: "defense",
+        depth: 1, formation_slot: slot
+      )
+    end
+
+    result = roster.defense_starting_12
+
+    assert_equal "von-miller",        result[:edge1].person_slug
+    assert_equal "greg-rousseau",     result[:edge2].person_slug
+    assert_equal "ed-oliver",         result[:dl1].person_slug
+    assert_equal "daquan-jones",      result[:dl2].person_slug
+    assert_equal "tim-settle",        result[:dl_flex].person_slug
+    assert_equal "matt-milano",       result[:lb1].person_slug
+    assert_equal "terrel-bernard",    result[:lb2].person_slug
+    assert_equal "jordan-poyer",      result[:ss].person_slug
+    assert_equal "taylor-rapp",       result[:fs].person_slug
+    assert_equal "rasul-douglas",     result[:cb1].person_slug
+    assert_equal "taron-johnson",     result[:cb2].person_slug
+    assert_equal "christian-benford", result[:flex].person_slug
+  end
+
+  test "defense_starting_12 falls back to pool logic when scheme is nil" do
+    roster = rosters(:bills_offseason)
+    chart = DepthChart.find_or_create_by!(team_slug: roster.team_slug)
+    chart.update!(scheme: nil)
+    # All entries from fixture-mirror have nil formation_slot, so pool path used
+    result = roster.defense_starting_12
+    assert_equal Roster::DEFENSE_SLOTS, result.keys
+    assert result.values.compact.size >= 7  # bills fixture has enough defense to fill most slots
+  end
+
+  test "defense_starting_12 4-3 DL Flex picks best PR among unselected EDGE/DL at depth 2+" do
+    roster = rosters(:bills_offseason)
+    chart = DepthChart.find_or_create_by!(team_slug: roster.team_slug)
+    chart.update!(scheme: "4-3")
+
+    chart.depth_chart_entries.where(side: "defense").destroy_all
+    # Minimum 4-3 setup with one depth-2 EDGE for the flex slot
+    chart.depth_chart_entries.create!(person_slug: "von-miller",     position: "EDGE", side: "defense", depth: 1, formation_slot: "LDE")
+    chart.depth_chart_entries.create!(person_slug: "greg-rousseau",  position: "EDGE", side: "defense", depth: 1, formation_slot: "RDE")
+    chart.depth_chart_entries.create!(person_slug: "ed-oliver",      position: "DT",   side: "defense", depth: 1, formation_slot: "LDT")
+    chart.depth_chart_entries.create!(person_slug: "daquan-jones",   position: "DT",   side: "defense", depth: 1, formation_slot: "RDT")
+    chart.depth_chart_entries.create!(person_slug: "aj-epenesa",     position: "EDGE", side: "defense", depth: 2, formation_slot: "LDE")
+
+    result = roster.defense_starting_12
+
+    assert_equal "von-miller",     result[:edge1].person_slug
+    assert_equal "greg-rousseau",  result[:edge2].person_slug
+    assert_equal "ed-oliver",      result[:dl1].person_slug
+    assert_equal "daquan-jones",   result[:dl2].person_slug
+    assert_equal "aj-epenesa",     result[:dl_flex].person_slug, "DL Flex should be the depth-2 EDGE"
+  end
+
   # Backward-compat grouped accessors
 
   test "offense_starters_grouped wraps the 12-slot layout in legacy shape" do

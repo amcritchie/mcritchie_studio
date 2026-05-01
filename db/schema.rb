@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_30_055236) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_01_050019) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -255,9 +255,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_30_055236) do
     t.boolean "locked", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "formation_slot"
     t.index ["depth_chart_slug", "person_slug", "position"], name: "idx_dce_unique", unique: true
     t.index ["depth_chart_slug", "position", "depth"], name: "idx_on_depth_chart_slug_position_depth_8e80d39ff6"
     t.index ["depth_chart_slug"], name: "index_depth_chart_entries_on_depth_chart_slug"
+    t.index ["formation_slot"], name: "index_depth_chart_entries_on_formation_slot"
   end
 
   create_table "depth_charts", force: :cascade do |t|
@@ -265,6 +267,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_30_055236) do
     t.string "slug", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "scheme"
     t.index ["slug"], name: "index_depth_charts_on_slug", unique: true
     t.index ["team_slug"], name: "index_depth_charts_on_team_slug", unique: true
   end

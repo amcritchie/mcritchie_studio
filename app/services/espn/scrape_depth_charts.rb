@@ -81,18 +81,28 @@ class Espn::ScrapeDepthCharts
       return
     end
 
-    # ESPN models depth by formation slot (WR1/WR2/WR3 are 3 rows). We have one
-    # chain per position, so flatten: take starters from every row first, then
-    # second-stringers from every row, etc.
+    # Detect scheme from "Base 3-4 D" / "Base 4-3 D" group name and persist on
+    # chart. Drives the scheme-aware Roster picker (3-4 WLB/SLB → EDGE, etc.).
+    scheme = detect_scheme(groups)
+    chart.update!(scheme: scheme) if scheme && chart.scheme != scheme
+
+    # Tag each athlete with their raw formation slot ("WLB", "LDE", "NT") so
+    # the picker can map formation→display per scheme. Each athlete becomes
+    # a single-element "row" so the existing apply_row pipeline handles them
+    # one at a time but preserves the formation_slot per entry.
     by_side_pos = Hash.new { |h, k| h[k] = [] }
     groups.each do |group|
       side = side_for_group(group["name"])
       next unless side
       group["rows"].each do |row|
-        espn_pos = row[0].to_s.upcase
-        next if IGNORED_POSITIONS.include?(espn_pos)
-        position = normalize_position(espn_pos)
-        by_side_pos[[side, position]] << row[1..]
+        formation_slot = row[0].to_s.upcase
+        next if IGNORED_POSITIONS.include?(formation_slot)
+        position = normalize_position(formation_slot)
+        row[1..].each do |athlete_data|
+          next unless athlete_data
+          tagged = athlete_data.merge("_formation_slot" => formation_slot)
+          by_side_pos[[side, position]] << [tagged]
+        end
       end
     end
 
@@ -111,8 +121,17 @@ class Espn::ScrapeDepthCharts
     # Re-densify depths everywhere — moves leave gaps at the source position.
     densify_chart(chart)
 
-    puts "  [+] #{team_slug}: applied ESPN depth chart"
+    puts "  [+] #{team_slug} (#{scheme || '?'}): applied ESPN depth chart"
     @stats[:teams_scraped] += 1
+  end
+
+  def detect_scheme(groups)
+    groups.each do |g|
+      name = g["name"].to_s
+      return "3-4" if name =~ /3.?4/
+      return "4-3" if name =~ /4.?3/
+    end
+    nil
   end
 
   # Defensive front-7 positions where ESPN's formation slot can disagree with
@@ -222,7 +241,16 @@ class Espn::ScrapeDepthCharts
   # 4. Existing entries at this position not in ESPN's list keep their
   #    relative order, slotting in BELOW ESPN's listed players.
   def apply_row(chart, position, side, athletes, team_slug)
-    espn_persons = athletes.map { |a| match_person(a, team_slug, position: position) }.compact
+    # Resolve persons ONCE (match_person has side effects: contract creation,
+    # team_slug sync). Remember each athlete's raw formation slot so we can
+    # persist it on the depth chart entry for the scheme-aware Roster picker.
+    resolved = athletes.filter_map do |a|
+      person = match_person(a, team_slug, position: position)
+      next nil unless person
+      [person, a["_formation_slot"]]
+    end
+    espn_persons  = resolved.map(&:first)
+    formation_for = resolved.to_h { |person, fs| [person.slug, fs] }
 
     # Existing entry per ESPN-listed person on this chart. A player can
     # legitimately have only one entry at a given position, but post-merge
@@ -270,7 +298,9 @@ class Espn::ScrapeDepthCharts
 
     ordered.each_with_index do |entry, i|
       depth = free_depths[i] || (total + i + 1)
-      entry.assign_attributes(depth: depth, side: side, position: position)
+      attrs = { depth: depth, side: side, position: position }
+      attrs[:formation_slot] = formation_for[entry.person_slug] if formation_for[entry.person_slug]
+      entry.assign_attributes(attrs)
       entry.save!
     end
 
