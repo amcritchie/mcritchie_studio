@@ -13,9 +13,11 @@ require "open-uri"
 # scoped to current/recent rosters (the master CSV has 24k rows total). Pass
 # MIN_SEASON=0 to ingest everything, or status="" to skip the status filter.
 #
-# Headshot caching is opt-in via AWS credentials. When credentials are set,
-# each Athlete with an espn_id gets its 100w/400w variants cached in S3 via
-# Studio::ImageCache. Idempotent — variants already cached are skipped.
+# Headshot caching is enabled by default and REQUIRES AWS credentials —
+# the constructor raises if AWS_ACCESS_KEY_ID is missing. Each Athlete with
+# an espn_id gets its 100w/400w variants cached in S3 via Studio::ImageCache.
+# Idempotent — variants already cached are skipped. To opt out (CI, tests),
+# pass upload_headshots: false or set SKIP_HEADSHOTS=1 on the rake task.
 #
 # Usage:
 #   Nflverse::SeedPlayers.new.call
@@ -52,7 +54,11 @@ class Nflverse::SeedPlayers
                  min_season: DEFAULT_MIN_SEASON, status_filter: nil,
                  source_url: PLAYERS_URL, csv_body: nil)
     @verbose = verbose
-    @upload_headshots = upload_headshots && ENV["AWS_ACCESS_KEY_ID"].present?
+    @upload_headshots = upload_headshots
+    if @upload_headshots && ENV["AWS_ACCESS_KEY_ID"].blank?
+      raise "AWS_ACCESS_KEY_ID not set — headshot caching requires AWS credentials. " \
+            "Pass upload_headshots: false (or SKIP_HEADSHOTS=1) to opt out."
+    end
     @min_season = min_season.to_i
     @status_filter = status_filter.presence
     @source_url = source_url
