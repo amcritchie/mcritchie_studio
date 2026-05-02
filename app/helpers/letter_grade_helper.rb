@@ -21,4 +21,20 @@ module LetterGradeHelper
     else          "bg-surface-alt text-muted"
     end
   end
+
+  # Hex color for a 0-100 PFF grade badge. Nil-safe.
+  PFF_GRADE_COLORS = [
+    [90, "#16a34a"],  # green-600
+    [80, "#22c55e"],  # green-500
+    [70, "#84cc16"],  # lime-500
+    [60, "#eab308"]   # yellow-500
+  ].freeze
+  PFF_GRADE_FALLBACK = "#ef4444".freeze # red-500
+  PFF_GRADE_NIL      = "#6b7280".freeze # gray-500
+
+  def pff_grade_color(value)
+    return PFF_GRADE_NIL if value.nil?
+    PFF_GRADE_COLORS.each { |threshold, color| return color if value >= threshold }
+    PFF_GRADE_FALLBACK
+  end
 end

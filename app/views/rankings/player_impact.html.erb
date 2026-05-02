@@ -82,13 +82,7 @@
 
     is_new = person&.slug == highlight_slug
 
-    gc = if value.nil? then "#6b7280"
-         elsif value >= 90 then "#16a34a"
-         elsif value >= 80 then "#22c55e"
-         elsif value >= 70 then "#84cc16"
-         elsif value >= 60 then "#eab308"
-         else "#ef4444"
-         end
+    gc = pff_grade_color(value)
 
     ring_class = is_new ? "ring-2 ring-offset-1" : ""
     ring_style = is_new ? "ring-color: #16a34a; --tw-ring-color: #16a34a;" : ""
