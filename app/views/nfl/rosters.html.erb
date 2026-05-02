@@ -79,6 +79,11 @@
             <span class="text-muted text-xs">→ depth chart</span>
           <% end %>
           <div class="flex items-center gap-2">
+            <% week1_game = @week1_games_by_team[team.slug] %>
+            <% if week1_game %>
+              <%= link_to "🆚 Week 1", game_show_path(@season.year, 1, week1_game.slug),
+                    class: "btn btn-outline btn-sm" %>
+            <% end %>
             <%= link_to "👀 Preview", team_lineup_graphic_path(team.slug),
                   class: "btn btn-outline btn-sm", target: "_blank" %>
             <%= button_to "🐦 New X Post", starter_post_x_contents_path(team_slug: team.slug),

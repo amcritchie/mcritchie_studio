@@ -40,5 +40,16 @@ class NflController < ApplicationController
                             .includes(:person, :image_caches)
                             .group_by(&:team_slug)
                             .transform_values { |cs| cs.sort_by { |c| COACH_ROLE_ORDER.index(c.role) || 99 } }
+
+    @week1_games_by_team = {}
+    if @season
+      week1_slate = @season.slates.find_by(sequence: 1)
+      if week1_slate
+        week1_slate.games.each do |g|
+          @week1_games_by_team[g.home_team_slug] = g
+          @week1_games_by_team[g.away_team_slug] = g
+        end
+      end
+    end
   end
 end
