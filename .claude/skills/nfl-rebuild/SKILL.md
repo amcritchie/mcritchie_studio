@@ -104,6 +104,18 @@ tail -8 tmp/coach_backfill.log
 
 Expect: ~300-400 athletes newly cached + ~150 coaches (HC always, OC/DC/STC where NFL.com scrape captured a URL). Both tasks are idempotent.
 
+### Step 5c — Compute proprietary Pass/Run grades
+
+Reads the `*_grade_pff` columns (set by `db/seeds/29_pff_grades.rb` during Step 2) and writes `position_pass_rank` / `position_pass_grade` / `position_run_rank` / `position_run_grade` on each `AthleteGrade`. Without this step the P/R letter-grade badges on `/games/.../show` and `/nfl-team-grades/:team_slug` render empty (`—`).
+
+```bash
+op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:assign_grades > tmp/assign_grades.log 2>&1
+echo "exit: $?"
+tail -3 tmp/assign_grades.log
+```
+
+Expect: a stats hash like `proprietary grades: {qb=>~80, rb=>~150, wr_te=>~500, ol=>~460, dl=>~590, lb=>~210, db=>~350}` (sizes vary with PFF coverage). Pure DB compute, runs in seconds. Idempotent — re-runs overwrite prior values.
+
 ## Verification
 
 ```bash
@@ -118,6 +130,8 @@ op run --env-file=/Users/alex/projects/.env -- bin/rails runner '
   puts "DepthChartEntries:#{DepthChartEntry.count}"
   puts "ImageCaches:     #{ImageCache.where(purpose: "headshot").count}"
   puts "AthleteGrades:   #{AthleteGrade.count}"
+  puts "  prop pass set: #{AthleteGrade.where.not(position_pass_grade: nil).count}"
+  puts "  prop run set:  #{AthleteGrade.where.not(position_run_grade: nil).count}"
 '
 ```
 

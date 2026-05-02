@@ -34,6 +34,7 @@ step "Step 3.5: nfl:merge_duplicate_athletes" op run --env-file=/Users/alex/proj
 step "Step 4: espn:scrape_depth_charts"      op run --env-file=/Users/alex/projects/.env -- bin/rails espn:scrape_depth_charts
 step "Step 5a: nfl:upload_headshots"         op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:upload_headshots
 step "Step 5b: nfl:upload_coach_headshots"   op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:upload_coach_headshots
+step "Step 5c: nfl:assign_grades"            op run --env-file=/Users/alex/projects/.env -- bin/rails nfl:assign_grades
 
 END_ALL=$(date +%s)
 TOTAL=$((END_ALL - START_ALL))
