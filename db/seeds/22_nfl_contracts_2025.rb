@@ -1,6 +1,11 @@
-# NFL Contracts — Spotrac salary overlay
+# NFL Contracts — Spotrac salary overlay (2025 NFL season)
 #
-# Source:  db/seeds/data/spotrac_contracts.json (~2,500 active NFL contracts)
+# **Season-specific snapshot** — the JSON file is a point-in-time export of
+# Spotrac contracts for the 2025 NFL season. When prepping a new season,
+# create a sibling seed `22_nfl_contracts_<year>.rb` + JSON, retire this one,
+# and update Spotrac::SyncContracts::DEFAULT_JSON_PATH.
+#
+# Source:  db/seeds/data/spotrac_contracts_2025.json (~2,500 active NFL contracts)
 # Service: Spotrac::SyncContracts (matches by otc_id when present, name otherwise)
 #
 # Identity is seeded by `bin/rails nfl:players_seed` (nflverse master CSV).

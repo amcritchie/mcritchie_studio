@@ -113,7 +113,7 @@ namespace :spotrac do
     end
 
     # Write JSON output
-    output_path = Rails.root.join("db/seeds/data/spotrac_contracts.json")
+    output_path = Rails.root.join("db/seeds/data/spotrac_contracts_2025.json")
     File.write(output_path, JSON.pretty_generate(contracts))
 
     puts "\nDone! #{contracts.size} contracts written to #{output_path}"

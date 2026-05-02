@@ -19,7 +19,7 @@ require "json"
 #   Spotrac::SyncContracts.new.call
 #   Spotrac::SyncContracts.new(json_path: "/tmp/contracts.json", verbose: true).call
 class Spotrac::SyncContracts
-  DEFAULT_JSON_PATH = -> { Rails.root.join("db/seeds/data/spotrac_contracts.json") }
+  DEFAULT_JSON_PATH = -> { Rails.root.join("db/seeds/data/spotrac_contracts_2025.json") }
 
   attr_reader :stats
 
