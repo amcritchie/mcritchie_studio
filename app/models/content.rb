@@ -1,12 +1,15 @@
 class Content < ApplicationRecord
   STAGES = %w[idea hook script assets assembly posted reviewed].freeze
+  WORKFLOWS = %w[video starter_post_x].freeze
 
   validates :title, presence: true
   validates :slug, presence: true, uniqueness: true
   validates :stage, inclusion: { in: STAGES }
+  validates :workflow, inclusion: { in: WORKFLOWS }
 
   belongs_to :source_news, class_name: "News", foreign_key: :source_news_slug, primary_key: :slug, optional: true
   belongs_to :rival_team, class_name: "Team", foreign_key: :rival_team_slug, primary_key: :slug, optional: true
+  belongs_to :team, class_name: "Team", foreign_key: :team_slug, primary_key: :slug, optional: true
 
   before_validation :generate_slug, on: :create
   before_create :set_initial_position

@@ -1,14 +1,76 @@
 <section>
   <div class="mb-6 flex items-center justify-between">
     <%= link_to "&larr; All Content".html_safe, contents_path, class: "text-secondary hover:text-heading text-sm transition" %>
-    <% if logged_in? %>
-      <%= link_to "Edit", edit_content_path(@content.slug), class: "btn btn-outline btn-sm" %>
-    <% end %>
+    <div class="flex items-center gap-2">
+      <% if @content.workflow == "starter_post_x" && @content.team_slug.present? %>
+        <%= link_to "👀 Preview", team_lineup_graphic_path(@content.team_slug),
+              class: "btn btn-outline btn-sm", target: "_blank" %>
+        <% if %w[idea hook script].include?(@content.stage) %>
+          <%= button_to "🎬 Generate Assets",
+                generate_lineup_assets_content_path(@content.slug),
+                class: "btn btn-secondary btn-sm",
+                form: { class: "inline-block", "data-turbo": "false" },
+                data: { confirm: "This takes ~10–15s while we capture and upload to S3. Continue?" } %>
+        <% end %>
+      <% end %>
+      <%= link_to "Edit", edit_content_path(@content.slug), class: "btn btn-primary btn-sm" %>
+    </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Content -->
     <div class="lg:col-span-2 space-y-6">
+      <%# Post-to-X call-to-action: shows for starter_post_x once assets are ready %>
+      <% if @content.workflow == "starter_post_x" && @content.stage == "assets" %>
+        <%
+          intent_url   = "https://twitter.com/intent/tweet?text=#{ERB::Util.url_encode(@content.captions.to_s)}"
+          x_creds_set  = %w[X_API_KEY X_API_SECRET X_ACCESS_TOKEN X_ACCESS_TOKEN_SECRET].all? { |k| ENV[k].present? }
+        %>
+        <div class="card p-6 border border-primary/30">
+          <p class="label-upper mb-2 text-primary">Post to X</p>
+
+          <%# AUTOMATED POST %>
+          <div class="mb-4 pb-4 border-b border-subtle">
+            <p class="text-sm text-body mb-3">
+              <span class="font-semibold">Automated:</span>
+              uploads the video and posts via the X API.
+              <% unless x_creds_set %>
+                <span class="text-warning text-xs block mt-1">⚠ X_API_KEY / X_API_SECRET / X_ACCESS_TOKEN / X_ACCESS_TOKEN_SECRET not set in .env — automated post disabled.</span>
+              <% end %>
+            </p>
+            <%= button_to "🚀 Post to X (auto)",
+                  post_to_x_content_path(@content.slug),
+                  class: "btn btn-primary",
+                  disabled: !x_creds_set,
+                  form: { class: "inline-block", "data-turbo": "false" },
+                  data: { confirm: "Upload + post immediately. ~30–60s. Continue?" } %>
+          </div>
+
+          <%# MANUAL POST %>
+          <p class="text-sm text-body mb-3">
+            <span class="font-semibold">Manual fallback:</span>
+            download → compose on X → paste the URL here.
+          </p>
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            <% if @content.final_video_url.present? %>
+              <%= link_to "⬇ Download Video", @content.final_video_url,
+                    class: "btn btn-outline btn-sm", target: "_blank", download: "" %>
+            <% end %>
+            <%= link_to "📤 Open X Compose", intent_url,
+                  class: "btn btn-outline btn-sm", target: "_blank", rel: "noopener" %>
+          </div>
+          <%= form_with url: post_step_content_path(@content.slug), method: :post, local: true,
+                        html: { class: "flex flex-col sm:flex-row gap-2" } do %>
+            <input type="url"
+                   name="post_url"
+                   required
+                   placeholder="https://x.com/TurfMonster/status/1234567890"
+                   class="input-field flex-1">
+            <button type="submit" class="btn btn-secondary">Mark as Posted</button>
+          <% end %>
+        </div>
+      <% end %>
+
       <div class="card p-6">
         <div class="flex items-start justify-between mb-4">
           <div>

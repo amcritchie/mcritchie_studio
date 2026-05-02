@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title><%= content_for(:title) || "Lineup" %></title>
+  <meta name="viewport" content="width=1200">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0b0b14; }
+    body { font-family: "Montserrat", system-ui, -apple-system, sans-serif; }
+    img { display: block; }
+  </style>
+</head>
+<body>
+  <%= yield %>
+</body>
+</html>

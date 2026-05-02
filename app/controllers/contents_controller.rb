@@ -2,7 +2,7 @@ class ContentsController < ApplicationController
   skip_before_action :verify_authenticity_token, if: -> { request.format.json? }
   skip_before_action :require_authentication, only: [:index, :show]
   before_action :require_admin, except: [:index, :show]
-  before_action :set_content, only: [:show, :edit, :update, :destroy, :hook_step, :script_step, :assets_step, :assemble_step, :post_step, :review_step, :script_agent_step, :assets_agent_step, :assemble_agent_step, :finalize_step, :metadata_step]
+  before_action :set_content, only: [:show, :edit, :update, :destroy, :hook_step, :script_step, :assets_step, :assemble_step, :post_step, :review_step, :script_agent_step, :assets_agent_step, :assemble_agent_step, :finalize_step, :metadata_step, :generate_lineup_assets, :post_to_x]
 
   def index
     @contents = Content.ordered
@@ -27,6 +27,52 @@ class ContentsController < ApplicationController
   end
 
   def edit
+  end
+
+  def generate_lineup_assets
+    rescue_and_log(target: @content) do
+      raise "Only available for starter_post_x content" unless @content.workflow == "starter_post_x"
+      Content::GenerateLineupAssets.new(@content).call
+      redirect_to content_path(@content.slug), notice: "Lineup assets generated and uploaded to S3."
+    end
+  rescue StandardError => e
+    redirect_to content_path(@content.slug), alert: "Asset generation failed: #{e.message}"
+  end
+
+  def post_to_x
+    rescue_and_log(target: @content) do
+      raise "Only available for starter_post_x content" unless @content.workflow == "starter_post_x"
+      Content::PostToX.new(@content).call
+      redirect_to content_path(@content.slug), notice: "Posted to X."
+    end
+  rescue StandardError => e
+    redirect_to content_path(@content.slug), alert: "Post to X failed: #{e.message}"
+  end
+
+  def create_starter_post_x
+    team = Team.find_by(slug: params[:team_slug])
+    return redirect_to nfl_rosters_path, alert: "Team not found" unless team
+
+    mascot = team.name.split.last
+    suffix = [team.hashtag, team.emoji].compact_blank.join(" ")
+    body   = "Find the mistake in my #{mascot} lineup 👀"
+    body   = "#{body}\n\n#{suffix}" if suffix.present?
+
+    @content = Content.new(
+      workflow: "starter_post_x",
+      team_slug: team.slug,
+      title: "#{team.name} — find the mistake",
+      description: "Starter Post (X) for #{team.name}.",
+      stage: "script",
+      source_type: "studio",
+      captions: body
+    )
+    rescue_and_log(target: @content) do
+      @content.save!
+      redirect_to edit_content_path(@content.slug), notice: "Starter Post created for #{team.name}."
+    end
+  rescue StandardError => e
+    redirect_to nfl_rosters_path, alert: e.message
   end
 
   def update
@@ -134,14 +180,24 @@ class ContentsController < ApplicationController
 
   def post_step
     rescue_and_log(target: @content) do
-      raise "Content must be in assembly stage" unless @content.stage == "assembly"
+      # starter_post_x skips assembly (video is already final at assets stage).
+      allowed_stages = @content.workflow == "starter_post_x" ? %w[assets assembly] : %w[assembly]
+      unless allowed_stages.include?(@content.stage)
+        raise "Content must be in #{allowed_stages.join(' or ')} stage (currently #{@content.stage})"
+      end
+
+      url = params[:post_url].to_s.strip
+      raise "X post URL required" if url.blank?
+
+      platform = params[:platform].presence || (@content.workflow == "starter_post_x" ? "x" : nil)
+      post_id  = params[:post_id].presence || extract_x_post_id(url)
 
       Content::Post.new(@content).call(
-        platform: params[:platform],
-        post_url: params[:post_url],
-        post_id: params[:post_id]
+        platform: platform,
+        post_url: url,
+        post_id: post_id
       )
-      redirect_to content_path(@content.slug), notice: "Content posted."
+      redirect_to content_path(@content.slug), notice: "Marked as posted."
     end
   rescue StandardError => e
     redirect_to content_path(@content.slug), alert: e.message
@@ -219,6 +275,10 @@ class ContentsController < ApplicationController
 
   private
 
+  def extract_x_post_id(url)
+    url.to_s.match(%r{/status/(\d+)})&.captures&.first
+  end
+
   def set_content
     @content = Content.find_by(slug: params[:slug])
     return redirect_to contents_path, alert: "Content not found" unless @content
@@ -234,6 +294,7 @@ class ContentsController < ApplicationController
       :views, :likes, :comments_count, :shares, :review_notes,
       :reference_video_url, :reference_video_start, :reference_video_end,
       :rival_team_slug, :captions,
+      :workflow, :team_slug,
       hashtags: [], music_suggestions: []
     )
   end

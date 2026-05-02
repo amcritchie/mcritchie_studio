@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_01_000031) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_02_043121) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -79,29 +79,35 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_01_000031) do
   create_table "athlete_grades", force: :cascade do |t|
     t.string "athlete_slug", null: false
     t.string "season_slug", null: false
-    t.float "overall_grade"
-    t.float "offense_grade"
-    t.float "defense_grade"
-    t.float "pass_grade"
-    t.float "run_grade"
-    t.float "pass_route_grade"
-    t.float "pass_block_grade"
-    t.float "run_block_grade"
-    t.float "pass_rush_grade"
-    t.float "coverage_grade"
-    t.float "rush_defense_grade"
+    t.float "overall_grade_pff"
+    t.float "offense_grade_pff"
+    t.float "defense_grade_pff"
+    t.float "pass_grade_pff"
+    t.float "run_grade_pff"
+    t.float "pass_route_grade_pff"
+    t.float "pass_block_grade_pff"
+    t.float "run_block_grade_pff"
+    t.float "pass_rush_grade_pff"
+    t.float "coverage_grade_pff"
+    t.float "rush_defense_grade_pff"
     t.integer "games_played"
     t.integer "snaps"
     t.string "slug", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.float "fg_grade"
-    t.float "kickoff_grade"
-    t.float "punting_grade"
-    t.float "return_grade"
+    t.float "fg_grade_pff"
+    t.float "kickoff_grade_pff"
+    t.float "punting_grade_pff"
+    t.float "return_grade_pff"
     t.jsonb "grade_ranges"
+    t.integer "position_pass_rank"
+    t.integer "position_pass_grade"
+    t.integer "position_run_rank"
+    t.integer "position_run_grade"
     t.index ["athlete_slug", "season_slug"], name: "index_athlete_grades_on_athlete_slug_and_season_slug", unique: true
     t.index ["athlete_slug"], name: "index_athlete_grades_on_athlete_slug"
+    t.index ["position_pass_rank"], name: "index_athlete_grades_on_position_pass_rank"
+    t.index ["position_run_rank"], name: "index_athlete_grades_on_position_run_rank"
     t.index ["season_slug"], name: "index_athlete_grades_on_season_slug"
     t.index ["slug"], name: "index_athlete_grades_on_slug", unique: true
   end
@@ -221,11 +227,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_01_000031) do
     t.text "captions"
     t.jsonb "hashtags", default: []
     t.jsonb "music_suggestions", default: []
+    t.string "workflow", default: "video", null: false
+    t.string "team_slug"
     t.index ["rival_team_slug"], name: "index_contents_on_rival_team_slug"
     t.index ["slug"], name: "index_contents_on_slug", unique: true
     t.index ["source_news_slug"], name: "index_contents_on_source_news_slug"
     t.index ["stage", "position"], name: "index_contents_on_stage_and_position"
     t.index ["stage"], name: "index_contents_on_stage"
+    t.index ["team_slug"], name: "index_contents_on_team_slug"
+    t.index ["workflow"], name: "index_contents_on_workflow"
   end
 
   create_table "contracts", force: :cascade do |t|
@@ -547,6 +557,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_01_000031) do
     t.jsonb "rivals", default: []
     t.string "team_website"
     t.string "coaches_url"
+    t.string "hashtag"
     t.index ["slug"], name: "index_teams_on_slug", unique: true
     t.index ["sport", "league"], name: "index_teams_on_sport_and_league"
   end

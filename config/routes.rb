@@ -46,6 +46,7 @@ Rails.application.routes.draw do
   resources :contents, param: :slug do
     collection do
       post :reorder
+      post :starter_post_x, action: :create_starter_post_x
     end
     member do
       post :hook_step
@@ -59,6 +60,8 @@ Rails.application.routes.draw do
       post :assemble_agent_step
       post :finalize_step
       post :metadata_step
+      post :generate_lineup_assets
+      post :post_to_x
     end
   end
   resources :teams, only: [:index], param: :slug
@@ -74,6 +77,7 @@ Rails.application.routes.draw do
   get "nfl", to: "nfl#index", as: :nfl_hub
   get "nfl-rosters", to: "nfl#rosters", as: :nfl_rosters
   get  "teams/:slug/depth-chart",                to: "depth_charts#show",        as: :team_depth_chart
+  get  "teams/:slug/lineup-graphic",             to: "lineup_graphics#show",     as: :team_lineup_graphic
   post "teams/:slug/depth-chart/reorder",        to: "depth_charts#reorder",     as: :reorder_depth_chart
   post "depth_chart_entries/:id/toggle_lock",    to: "depth_charts#toggle_lock", as: :toggle_lock_depth_chart_entry
   get "nfl-quarterback-rankings", to: "rankings#quarterback", as: :nfl_quarterback_rankings
@@ -87,6 +91,7 @@ Rails.application.routes.draw do
   get "nfl-coaches",                  to: "rankings#coaches",        as: :nfl_coaches
   get "nfl-pass-first-rankings",       to: "rankings#pass_first",     as: :nfl_pass_first_rankings
   get "nfl-team-rankings/:id",         to: "rankings#team_unit",      as: :nfl_team_rankings
+  get "nfl-team-grades/:team_slug",    to: "team_grades#show",        as: :nfl_team_grades
   get "nfl-player-impact/:player_id/to/:team_id", to: "rankings#player_impact", as: :nfl_player_impact
   post "nfl-player-impact/:player_id/to/:team_id/confirm", to: "rankings#confirm_draft_pick", as: :confirm_draft_pick
   get "nfl-contracts",                to: "contracts#index",         as: :nfl_contracts

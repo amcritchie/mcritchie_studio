@@ -272,4 +272,22 @@ class ContentTest < ActiveSupport::TestCase
     )
     assert_equal "reviewed", content.stage
   end
+
+  # --- Workflow ---
+
+  test "default workflow is video" do
+    content = Content.create!(title: "x")
+    assert_equal "video", content.workflow
+  end
+
+  test "starter_post_x is a valid workflow" do
+    content = Content.create!(title: "x", workflow: "starter_post_x")
+    assert_equal "starter_post_x", content.workflow
+  end
+
+  test "invalid workflow value is rejected" do
+    content = Content.new(title: "x", workflow: "garbage")
+    assert_not content.valid?
+    assert content.errors[:workflow].any?
+  end
 end

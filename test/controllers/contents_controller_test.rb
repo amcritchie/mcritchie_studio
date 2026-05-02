@@ -258,4 +258,53 @@ class ContentsControllerTest < ActionDispatch::IntegrationTest
     post create_content_news_path(news(:concluded_article).slug)
     assert_response :redirect
   end
+
+  # === Starter Post (X) workflow ===
+
+  test "create_starter_post_x creates a Content for the team and redirects to edit" do
+    log_in_as(@admin)
+    team = Team.where(league: "nfl").first
+    skip "no NFL team fixture available" unless team
+
+    assert_difference "Content.count", 1 do
+      post starter_post_x_contents_path(team_slug: team.slug)
+    end
+    content = Content.order(:created_at).last
+    assert_equal "starter_post_x", content.workflow
+    assert_equal team.slug, content.team_slug
+    assert_equal "script", content.stage
+    assert_equal "studio", content.source_type
+    assert_match(/lineup/i, content.captions.to_s)
+    assert_redirected_to edit_content_path(content.slug)
+  end
+
+  test "create_starter_post_x without team_slug redirects to nfl-rosters" do
+    log_in_as(@admin)
+    post starter_post_x_contents_path
+    assert_redirected_to nfl_rosters_path
+  end
+
+  test "create_starter_post_x requires admin" do
+    post starter_post_x_contents_path(team_slug: "buffalo-bills")
+    assert_response :redirect
+  end
+
+  test "generate_lineup_assets requires starter_post_x workflow" do
+    log_in_as(@admin)
+    post generate_lineup_assets_content_path(@idea_content.slug)
+    assert_redirected_to content_path(@idea_content.slug)
+    assert_match(/starter_post_x/, flash[:alert].to_s)
+  end
+
+  test "generate_lineup_assets requires admin" do
+    post generate_lineup_assets_content_path(@idea_content.slug)
+    assert_response :redirect
+  end
+
+  test "post_to_x requires starter_post_x workflow" do
+    log_in_as(@admin)
+    post post_to_x_content_path(@idea_content.slug)
+    assert_redirected_to content_path(@idea_content.slug)
+    assert_match(/starter_post_x/, flash[:alert].to_s)
+  end
 end

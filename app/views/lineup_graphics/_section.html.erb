@@ -1,0 +1,32 @@
+<div class="section">
+  <h3 class="section-title"><%= title %></h3>
+  <div class="grid <%= grid_cls %>">
+    <% pairs.each do |slot_label, pick| %>
+      <%
+        person  = pick&.person
+        athlete = person&.athlete_profile
+        small   = athlete&.headshot_url(width: 100)
+        large   = athlete&.headshot_url(width: 400)
+        first_name = person&.first_name.to_s
+        last_name  = person&.last_name.to_s
+      %>
+      <div class="tile">
+        <div class="pos-badge"><%= slot_label %></div>
+        <div class="photo" data-photo>
+          <div class="photo-card">
+            <div class="photo-face photo-front"><span><%= slot_label %></span></div>
+            <div class="photo-face photo-back">
+              <% if (large || small) %>
+                <img src="<%= large || small %>" alt="" loading="eager" decoding="sync">
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <div class="name">
+          <span><%= first_name %></span>
+          <span class="last"><%= last_name.presence || "—" %></span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

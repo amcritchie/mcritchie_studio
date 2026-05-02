@@ -1,4 +1,4 @@
-<div class="card p-6">
+<div class="card p-6" x-data="{ workflow: '<%= content.workflow.presence || "video" %>' }">
   <% if content.errors.any? %>
     <div class="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
       <% content.errors.full_messages.each do |msg| %>
@@ -8,6 +8,15 @@
   <% end %>
 
   <%= form_with model: content, url: content.persisted? ? content_path(content.slug) : contents_path do |f| %>
+    <!-- Workflow -->
+    <div class="mb-5">
+      <label class="block text-sm text-secondary mb-2 font-medium">Workflow</label>
+      <%= f.select :workflow,
+            [["Video", "video"], ["Starter Post (X)", "starter_post_x"]],
+            {},
+            class: "input-field", "x-model": "workflow" %>
+    </div>
+
     <!-- Idea -->
     <p class="label-upper mb-3">Idea</p>
 
@@ -24,17 +33,18 @@
     <div class="grid grid-cols-2 gap-4 mb-5">
       <div>
         <label class="block text-sm text-secondary mb-2 font-medium">Source Type</label>
-        <%= f.select :source_type, [["Manual", "manual"], ["News", "news"]], { include_blank: true }, class: "input-field" %>
+        <%= f.select :source_type, [["Studio", "studio"], ["Manual", "manual"], ["News", "news"]], { include_blank: true }, class: "input-field" %>
       </div>
-      <div>
+      <div x-show="workflow === 'video'">
         <label class="block text-sm text-secondary mb-2 font-medium">Content Type</label>
         <%= f.select :content_type, [["TikTok Video", "tiktok_video"], ["Reel", "reel"], ["Short", "short"]], {}, class: "input-field" %>
       </div>
     </div>
 
     <!-- Reference & Context -->
-    <hr class="border-subtle my-6">
-    <p class="label-upper mb-3">Reference & Context</p>
+    <div x-show="workflow === 'video'">
+      <hr class="border-subtle my-6">
+      <p class="label-upper mb-3">Reference & Context</p>
 
     <div class="mb-5">
       <label class="block text-sm text-secondary mb-2 font-medium">Reference Video URL</label>
@@ -58,6 +68,28 @@
             Team.where(sport: "football", league: "nfl").order(:name).map { |t| ["#{t.emoji} #{t.name}", t.slug] },
             { include_blank: "— Select rival —" },
             class: "input-field" %>
+    </div>
+    </div>
+
+    <!-- Starter Post X — Hook -->
+    <div x-show="workflow === 'starter_post_x'" x-cloak>
+      <hr class="border-subtle my-6">
+      <p class="label-upper mb-3">Starter Post (X) — Hook</p>
+
+      <div class="mb-5">
+        <label class="block text-sm text-secondary mb-2 font-medium">Team (whose lineup)</label>
+        <%= f.select :team_slug,
+              Team.where(sport: "football", league: "nfl").order(:name).map { |t| ["#{t.emoji} #{t.name}", t.slug] },
+              { include_blank: "— Select team —" },
+              class: "input-field" %>
+      </div>
+
+      <div class="mb-5">
+        <label class="block text-sm text-secondary mb-2 font-medium">Post Body (X tweet)</label>
+        <%= f.text_area :captions, rows: 3, class: "input-field",
+              placeholder: "Find the mistake in my Bills lineup 👀", maxlength: 280 %>
+        <p class="text-xs text-muted mt-1">Max 280 characters.</p>
+      </div>
     </div>
 
     <% if content.persisted? %>
@@ -172,15 +204,6 @@
         <%= f.text_area :review_notes, rows: 3, class: "input-field", placeholder: "Performance analysis..." %>
       </div>
 
-      <hr class="border-subtle my-6">
-
-      <!-- Metadata -->
-      <p class="label-upper mb-3">Metadata</p>
-
-      <div class="mb-5">
-        <label class="block text-sm text-secondary mb-2 font-medium">Caption</label>
-        <%= f.text_area :captions, rows: 3, class: "input-field", placeholder: "TikTok caption text..." %>
-      </div>
     <% end %>
 
     <button type="submit" class="btn btn-primary btn-lg">
