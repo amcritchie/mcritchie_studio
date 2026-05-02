@@ -27,13 +27,18 @@ class Athletes::ComputeProprietaryGradesTest < ActiveSupport::TestCase
     assert_equal allen.position_pass_grade, allen.position_run_grade
   end
 
-  test "athletes missing the bucket's input get nil rank and grade" do
-    # Cam Ward fixture has no pass_grade_pff set → should be unranked among QBs.
+  test "athletes missing both primary input AND side-overall fall to the bottom with grade 0" do
+    # Cam Ward fixture has no pass_grade_pff and no offense_grade_pff set →
+    # should be ranked at the bottom of the QB pool with grade 0 (D tier).
     Athletes::ComputeProprietaryGrades.new(season_slug: SEASON).call
 
     ward = AthleteGrade.find_by(athlete_slug: "cam-ward-athlete", season_slug: SEASON)
-    assert_nil ward.position_pass_rank
-    assert_nil ward.position_pass_grade
+    assert_not_nil ward.position_pass_rank, "expected Ward to get a bottom rank, not nil"
+    assert_equal 0, ward.position_pass_grade
+
+    # Ward's rank should be greater than any QB with a real input.
+    allen = AthleteGrade.find_by(athlete_slug: "josh-allen-athlete", season_slug: SEASON)
+    assert ward.position_pass_rank > allen.position_pass_rank
   end
 
   test "0-10 grade maps linearly: best=10, worst=0, middle scaled" do

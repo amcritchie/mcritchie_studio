@@ -8,37 +8,44 @@ module Athletes
   # mapping 0..10: best rank = 10, worst = 0. Letter conversion (A/B/C/D)
   # happens at the view layer via LetterGradeHelper.
   #
-  # Athletes whose PFF input is nil or 0 get nil rank + nil grade for that
-  # axis (no signal to rank against).
+  # Input cascade per athlete:
+  #   1. Bucket's position-specific input (e.g. coverage_grade_pff for LB pass)
+  #   2. Side-of-ball overall (offense_grade_pff or defense_grade_pff)
+  #   3. No input → bottom of the list, grade 0 (renders as D)
   #
   # Usage:
   #   Athletes::ComputeProprietaryGrades.new(season_slug: "2025-nfl").call
   class ComputeProprietaryGrades
+    # QBs are scored on passing for both axes; no separate "run" grade.
+    # RB pass uses offense_grade_pff directly — pass_block_grade_pff is sparse
+    # for non-3rd-down backs and offense gives a more representative signal.
     POSITION_BUCKETS = {
-      # QBs are scored on passing for both axes — there's no separate "run"
-      # grade for QBs at this level, so we reuse pass_grade_pff for the run
-      # rank as well. Means QB pass and run rankings are identical.
-      qb:    { positions: %w[QB],
+      qb:    { positions: %w[QB], side: :offense,
                pass_input: :pass_grade_pff,
                run_input:  :pass_grade_pff },
-      rb:    { positions: %w[RB FB HB],
-               pass_input: :pass_block_grade_pff,
+      rb:    { positions: %w[RB FB HB], side: :offense,
+               pass_input: :offense_grade_pff,
                run_input:  :run_grade_pff },
-      wr_te: { positions: %w[WR TE],
+      wr_te: { positions: %w[WR TE], side: :offense,
                pass_input: :pass_route_grade_pff,
                run_input:  :run_block_grade_pff },
-      ol:    { positions: %w[OT OG C T G LT LG RG RT],
+      ol:    { positions: %w[OT OG C T G LT LG RG RT], side: :offense,
                pass_input: :pass_block_grade_pff,
                run_input:  :run_block_grade_pff },
-      dl:    { positions: %w[EDGE DE DT NT DL DI],
+      dl:    { positions: %w[EDGE DE DT NT DL DI], side: :defense,
                pass_input: :pass_rush_grade_pff,
                run_input:  :rush_defense_grade_pff },
-      lb:    { positions: %w[LB ILB OLB MLB],
+      lb:    { positions: %w[LB ILB OLB MLB], side: :defense,
                pass_input: :coverage_grade_pff,
                run_input:  :rush_defense_grade_pff },
-      db:    { positions: %w[CB S FS SS],
+      db:    { positions: %w[CB S FS SS], side: :defense,
                pass_input: :coverage_grade_pff,
                run_input:  :rush_defense_grade_pff }
+    }.freeze
+
+    SIDE_OVERALL = {
+      offense: :offense_grade_pff,
+      defense: :defense_grade_pff
     }.freeze
 
     attr_reader :season_slug, :stats
@@ -50,9 +57,10 @@ module Athletes
 
     def call
       POSITION_BUCKETS.each do |bucket, config|
-        grades = grades_for_positions(config[:positions])
-        rank_axis(grades, config[:pass_input], :position_pass_rank, :position_pass_grade)
-        rank_axis(grades, config[:run_input],  :position_run_rank,  :position_run_grade)
+        grades   = grades_for_positions(config[:positions])
+        fallback = SIDE_OVERALL.fetch(config[:side])
+        rank_axis(grades, config[:pass_input], fallback, :position_pass_rank, :position_pass_grade)
+        rank_axis(grades, config[:run_input],  fallback, :position_run_rank,  :position_run_grade)
         @stats[bucket] = grades.size
       end
       puts "proprietary grades: #{@stats.inspect}"
@@ -68,18 +76,26 @@ module Athletes
         .to_a
     end
 
-    def rank_axis(grades, input_col, rank_col, grade_col)
-      with_input, without_input = grades.partition { |g| usable?(g.public_send(input_col)) }
+    # Two-tier cascade: athletes with the primary input rank first (sorted
+    # high→low), athletes with only the fallback rank next (sorted high→low),
+    # athletes with neither go to the bottom with grade 0.
+    def rank_axis(grades, primary_col, fallback_col, rank_col, grade_col)
+      primary, rest      = grades.partition { |g| usable?(g.public_send(primary_col)) }
+      fallback, no_input = rest.partition { |g| usable?(g.public_send(fallback_col)) }
 
-      sorted = with_input.sort_by { |g| -g.public_send(input_col) }
-      n = sorted.size
-      sorted.each_with_index do |g, idx|
+      ranked = primary.sort_by  { |g| -g.public_send(primary_col) } +
+               fallback.sort_by { |g| -g.public_send(fallback_col) }
+
+      n = ranked.size
+      ranked.each_with_index do |g, idx|
         rank = idx + 1
         grade = n > 1 ? ((n - rank).to_f / (n - 1) * 10).round.clamp(0, 10) : 10
         g.update_columns(rank_col => rank, grade_col => grade)
       end
 
-      without_input.each { |g| g.update_columns(rank_col => nil, grade_col => nil) }
+      no_input.each_with_index do |g, idx|
+        g.update_columns(rank_col => n + idx + 1, grade_col => 0)
+      end
     end
 
     def usable?(value)
