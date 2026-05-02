@@ -93,7 +93,7 @@
                     <span class="badge"><%= p.team_short_name || p.team_name || "—" %></span>
                   </td>
                   <td class="px-3 py-3 text-center">
-                    <% cg = p.coverage_grade %>
+                    <% cg = p.coverage_grade_pff %>
                     <% if cg %>
                       <span class="text-sm font-bold rounded px-1.5 py-0.5 text-white" style="background: <%= grade_color(cg) %>;">
                         <%= cg.round(1) %>
@@ -103,7 +103,7 @@
                     <% end %>
                   </td>
                   <td class="px-3 py-3 text-center">
-                    <% dg = p.defense_grade %>
+                    <% dg = p.defense_grade_pff %>
                     <% if dg %>
                       <span class="text-sm font-bold rounded px-1.5 py-0.5 text-white" style="background: <%= grade_color(dg) %>;">
                         <%= dg.round(1) %>

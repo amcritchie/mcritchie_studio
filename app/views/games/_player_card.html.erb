@@ -1,13 +1,13 @@
 <%# Player card for lineup display
-    Locals: spot (RosterSpot), grade_key (symbol, default :overall_grade), display_position (string, optional override) %>
+    Locals: spot (RosterSpot), grade_key (symbol, default :overall_grade_pff), display_position (string, optional override) %>
 <%
-  grade_key        = local_assigns.fetch(:grade_key, :overall_grade)
+  grade_key        = local_assigns.fetch(:grade_key, :overall_grade_pff)
   display_position = local_assigns.fetch(:display_position, spot.position)
   person           = spot.person
   profile   = person&.athlete_profile
   grade_rec = profile&.grades&.first
   value     = grade_rec&.send(grade_key)
-  value   ||= grade_rec&.overall_grade  # fallback if column is nil
+  value   ||= grade_rec&.overall_grade_pff  # fallback if column is nil
 %>
 
 <div class="rounded-lg p-2 bg-surface-alt text-center">
@@ -41,4 +41,26 @@
   <% else %>
     <p class="text-xs text-muted">—</p>
   <% end %>
+
+  <%# Proprietary Pass + Run letter grades — show the one matching the scheme,
+      both when no scheme is in play (e.g. team grades page) %>
+  <%
+    mode_local = local_assigns.fetch(:mode, nil)
+    scheme = case mode_local
+             when "pass", "stop_pass" then :pass
+             when "run",  "stop_run"  then :run
+             end
+    pass_num    = grade_rec&.position_pass_grade
+    run_num     = grade_rec&.position_run_grade
+    pass_letter = letter_grade(pass_num)
+    run_letter  = letter_grade(run_num)
+  %>
+  <div class="flex items-center justify-center gap-1 mt-1.5">
+    <% if scheme.nil? || scheme == :pass %>
+      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded <%= letter_grade_class(pass_letter) %>" title="Pass grade <%= pass_num || "n/a" %>/10"><%= pass_letter %></span>
+    <% end %>
+    <% if scheme.nil? || scheme == :run %>
+      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded <%= letter_grade_class(run_letter) %>" title="Run grade <%= run_num || "n/a" %>/10"><%= run_letter %></span>
+    <% end %>
+  </div>
 </div>

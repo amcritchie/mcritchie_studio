@@ -1,0 +1,47 @@
+<% person = pick&.person %>
+<% athlete = person&.athlete_profile %>
+<% grade = athlete&.grades&.first %>
+<% pass_num = grade&.position_pass_grade %>
+<% run_num  = grade&.position_run_grade %>
+<% pass_letter = letter_grade(pass_num) %>
+<% run_letter  = letter_grade(run_num) %>
+<% slot_label = side == :offense ? offense_slot_label(slot, pick) : defense_slot_label(slot, pick) %>
+
+<div class="flex items-center gap-3 px-3 py-2">
+  <%# Slot badge %>
+  <span class="flex-shrink-0 inline-flex items-center justify-center w-12 h-7 rounded text-xs font-bold bg-surface-alt text-secondary">
+    <%= slot_label %>
+  </span>
+
+  <%# Headshot %>
+  <% headshot = athlete&.headshot_url(width: 400) %>
+  <% if headshot %>
+    <img src="<%= headshot %>" alt="<%= person.full_name %>" class="w-10 h-10 rounded-full object-cover bg-surface-alt flex-shrink-0">
+  <% else %>
+    <span class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold bg-surface-alt text-muted flex-shrink-0">
+      <%= person ? "#{person.first_name[0]}#{person.last_name[0]}" : "—" %>
+    </span>
+  <% end %>
+
+  <%# Name + position %>
+  <div class="flex-1 min-w-0">
+    <p class="text-heading font-semibold text-sm truncate"><%= person&.full_name || "—" %></p>
+    <p class="text-muted text-xs truncate"><%= athlete&.position || pick&.position || "—" %></p>
+  </div>
+
+  <%# Pass + Run badges %>
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <div class="text-center">
+      <span class="inline-flex w-8 h-8 items-center justify-center rounded-md font-bold text-base <%= letter_grade_class(pass_letter) %>" title="Pass grade <%= pass_num || "n/a" %>/10">
+        <%= pass_letter %>
+      </span>
+      <p class="text-[10px] text-muted uppercase tracking-wider mt-0.5">Pass</p>
+    </div>
+    <div class="text-center">
+      <span class="inline-flex w-8 h-8 items-center justify-center rounded-md font-bold text-base <%= letter_grade_class(run_letter) %>" title="Run grade <%= run_num || "n/a" %>/10">
+        <%= run_letter %>
+      </span>
+      <p class="text-[10px] text-muted uppercase tracking-wider mt-0.5">Run</p>
+    </div>
+  </div>
+</div>

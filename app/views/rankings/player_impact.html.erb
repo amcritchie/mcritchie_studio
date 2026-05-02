@@ -20,7 +20,7 @@
         if groups[:oline]&.any?
           concat(content_tag(:p, "O-Line", class: "text-xs text-muted uppercase tracking-wide mb-1"))
           concat(content_tag(:div, class: "grid grid-cols-5 gap-1 mb-3") {
-            safe_join(groups[:oline].map { |s| render_impact_card(s, :pass_block_grade, highlight_slug) })
+            safe_join(groups[:oline].map { |s| render_impact_card(s, :pass_block_grade_pff, highlight_slug) })
           })
         end
         # QB + RB
@@ -30,7 +30,7 @@
           cols = qb_rb.size >= 3 ? "grid-cols-3" : "grid-cols-#{qb_rb.size}"
           concat(content_tag(:div, class: "grid #{cols} gap-1 mb-3") {
             safe_join(qb_rb.map { |s|
-              key = s.position == "QB" ? :pass_grade : :run_grade
+              key = s.position == "QB" ? :pass_grade_pff : :run_grade_pff
               render_impact_card(s, key, highlight_slug)
             })
           })
@@ -41,7 +41,7 @@
           concat(content_tag(:p, "Receivers", class: "text-xs text-muted uppercase tracking-wide mb-1"))
           cols = receivers.size >= 4 ? "grid-cols-4" : "grid-cols-#{[receivers.size, 1].max}"
           concat(content_tag(:div, class: "grid #{cols} gap-1") {
-            safe_join(receivers.map { |s| render_impact_card(s, :pass_route_grade, highlight_slug) })
+            safe_join(receivers.map { |s| render_impact_card(s, :pass_route_grade_pff, highlight_slug) })
           })
         end
       else
@@ -50,14 +50,14 @@
         if front.any?
           concat(content_tag(:p, "Front", class: "text-xs text-muted uppercase tracking-wide mb-1"))
           concat(content_tag(:div, class: "grid grid-cols-5 gap-1 mb-3") {
-            safe_join(front.first(5).map { |s| render_impact_card(s, :pass_rush_grade, highlight_slug) })
+            safe_join(front.first(5).map { |s| render_impact_card(s, :pass_rush_grade_pff, highlight_slug) })
           })
         end
         # LB
         if groups[:lb]&.any?
           concat(content_tag(:p, "Linebackers", class: "text-xs text-muted uppercase tracking-wide mb-1"))
           concat(content_tag(:div, class: "grid grid-cols-2 gap-1 mb-3") {
-            safe_join(groups[:lb].map { |s| render_impact_card(s, :overall_grade, highlight_slug) })
+            safe_join(groups[:lb].map { |s| render_impact_card(s, :overall_grade_pff, highlight_slug) })
           })
         end
         # CB + S
@@ -66,7 +66,7 @@
           concat(content_tag(:p, "Secondary", class: "text-xs text-muted uppercase tracking-wide mb-1"))
           cols = secondary.size >= 5 ? "grid-cols-5" : "grid-cols-#{[secondary.size, 1].max}"
           concat(content_tag(:div, class: "grid #{cols} gap-1") {
-            safe_join(secondary.map { |s| render_impact_card(s, :coverage_grade, highlight_slug) })
+            safe_join(secondary.map { |s| render_impact_card(s, :coverage_grade_pff, highlight_slug) })
           })
         end
       end
@@ -78,7 +78,7 @@
     profile = person&.athlete_profile
     grade_rec = profile&.grades&.first
     value   = grade_rec&.send(grade_key)
-    value ||= grade_rec&.overall_grade
+    value ||= grade_rec&.overall_grade_pff
 
     is_new = person&.slug == highlight_slug
 
@@ -148,22 +148,22 @@
         <div class="flex items-center justify-between mb-3">
           <div>
             <h2 class="text-heading font-bold text-lg"><%= @person.full_name %></h2>
-            <p class="text-secondary text-sm"><%= @athlete.position %> <span class="text-muted">|</span> Overall: <span class="font-semibold" style="color: <%= grade_color(@grade.overall_grade) %>;"><%= @grade.overall_grade %></span></p>
+            <p class="text-secondary text-sm"><%= @athlete.position %> <span class="text-muted">|</span> Overall: <span class="font-semibold" style="color: <%= grade_color(@grade.overall_grade_pff) %>;"><%= @grade.overall_grade_pff %></span></p>
           </div>
           <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-surface-alt text-secondary"><%= @athlete.position %></span>
         </div>
         <div class="grid grid-cols-3 gap-3">
           <% grade_fields = case @athlete.position
-               when "QB" then [["Pass", @grade.pass_grade], ["Run", @grade.run_grade], ["Overall", @grade.overall_grade]]
-               when "WR", "TE" then [["Route", @grade.pass_route_grade], ["Run", @grade.run_grade], ["Overall", @grade.overall_grade]]
-               when "RB", "FB", "HB" then [["Run", @grade.run_grade], ["Route", @grade.pass_route_grade], ["Overall", @grade.overall_grade]]
-               when "OT", "OG", "C", "LT", "LG", "RT", "RG" then [["Pass Block", @grade.pass_block_grade], ["Run Block", @grade.run_block_grade], ["Overall", @grade.overall_grade]]
-               when "EDGE", "DE" then [["Pass Rush", @grade.pass_rush_grade], ["Rush Def", @grade.rush_defense_grade], ["Coverage", @grade.coverage_grade]]
-               when "DT", "NT", "DL" then [["Rush Def", @grade.rush_defense_grade], ["Pass Rush", @grade.pass_rush_grade], ["Coverage", @grade.coverage_grade]]
-               when "LB", "ILB", "OLB", "MLB" then [["Coverage", @grade.coverage_grade], ["Rush Def", @grade.rush_defense_grade], ["Pass Rush", @grade.pass_rush_grade]]
-               when "CB" then [["Coverage", @grade.coverage_grade], ["Rush Def", @grade.rush_defense_grade], ["Overall", @grade.overall_grade]]
-               when "S", "FS", "SS" then [["Coverage", @grade.coverage_grade], ["Rush Def", @grade.rush_defense_grade], ["Pass Rush", @grade.pass_rush_grade]]
-               else [["Overall", @grade.overall_grade], ["Pass", @grade.pass_grade], ["Run", @grade.run_grade]]
+               when "QB" then [["Pass", @grade.pass_grade_pff], ["Run", @grade.run_grade_pff], ["Overall", @grade.overall_grade_pff]]
+               when "WR", "TE" then [["Route", @grade.pass_route_grade_pff], ["Run", @grade.run_grade_pff], ["Overall", @grade.overall_grade_pff]]
+               when "RB", "FB", "HB" then [["Run", @grade.run_grade_pff], ["Route", @grade.pass_route_grade_pff], ["Overall", @grade.overall_grade_pff]]
+               when "OT", "OG", "C", "LT", "LG", "RT", "RG" then [["Pass Block", @grade.pass_block_grade_pff], ["Run Block", @grade.run_block_grade_pff], ["Overall", @grade.overall_grade_pff]]
+               when "EDGE", "DE" then [["Pass Rush", @grade.pass_rush_grade_pff], ["Rush Def", @grade.rush_defense_grade_pff], ["Coverage", @grade.coverage_grade_pff]]
+               when "DT", "NT", "DL" then [["Rush Def", @grade.rush_defense_grade_pff], ["Pass Rush", @grade.pass_rush_grade_pff], ["Coverage", @grade.coverage_grade_pff]]
+               when "LB", "ILB", "OLB", "MLB" then [["Coverage", @grade.coverage_grade_pff], ["Rush Def", @grade.rush_defense_grade_pff], ["Pass Rush", @grade.pass_rush_grade_pff]]
+               when "CB" then [["Coverage", @grade.coverage_grade_pff], ["Rush Def", @grade.rush_defense_grade_pff], ["Overall", @grade.overall_grade_pff]]
+               when "S", "FS", "SS" then [["Coverage", @grade.coverage_grade_pff], ["Rush Def", @grade.rush_defense_grade_pff], ["Pass Rush", @grade.pass_rush_grade_pff]]
+               else [["Overall", @grade.overall_grade_pff], ["Pass", @grade.pass_grade_pff], ["Run", @grade.run_grade_pff]]
              end
           %>
           <% grade_fields.each do |label, value| %>

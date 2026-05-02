@@ -98,12 +98,12 @@ class Pff::ImportCsvTest < ActiveSupport::TestCase
     Pff::ImportCsv.new(csv_path: file, season_slug: "2025-nfl").call
 
     grade = AthleteGrade.find_by(athlete_slug: "josh-allen-athlete", season_slug: "2025-nfl")
-    assert_equal 92.0, grade.pass_grade
-    assert_equal 91.2, grade.offense_grade
-    assert_equal 91.2, grade.overall_grade  # QB = offense side
+    assert_equal 92.0, grade.pass_grade_pff
+    assert_equal 91.2, grade.offense_grade_pff
+    assert_equal 91.2, grade.overall_grade_pff  # QB = offense side
   end
 
-  test "backfills defense_grade and sets overall for defense player" do
+  test "backfills defense_grade_pff and sets overall for defense player" do
     # Create a defensive player
     person = Person.find_or_create_by!(slug: "calais-campbell") do |p|
       p.first_name = "Calais"
@@ -122,11 +122,11 @@ class Pff::ImportCsvTest < ActiveSupport::TestCase
     Pff::ImportCsv.new(csv_path: file, season_slug: "2025-nfl").call
 
     grade = AthleteGrade.find_by(athlete_slug: "calais-campbell-athlete", season_slug: "2025-nfl")
-    assert_equal 82.3, grade.defense_grade
-    assert_equal 63.5, grade.coverage_grade
-    assert_equal 66.2, grade.pass_rush_grade
-    assert_equal 85.9, grade.rush_defense_grade
-    assert_equal 82.3, grade.overall_grade  # DI = defense side
+    assert_equal 82.3, grade.defense_grade_pff
+    assert_equal 63.5, grade.coverage_grade_pff
+    assert_equal 66.2, grade.pass_rush_grade_pff
+    assert_equal 85.9, grade.rush_defense_grade_pff
+    assert_equal 82.3, grade.overall_grade_pff  # DI = defense side
   end
 
   test "imports team-level CSV to PffTeamStat" do

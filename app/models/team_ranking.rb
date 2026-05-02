@@ -67,29 +67,29 @@ class TeamRanking < ApplicationRecord
       .select(
         "teams.slug AS t_slug",
         "athletes.position",
-        "athlete_grades.overall_grade",
-        "athlete_grades.pass_grade",
-        "athlete_grades.run_grade",
-        "athlete_grades.pass_route_grade",
-        "athlete_grades.pass_block_grade",
-        "athlete_grades.run_block_grade",
-        "athlete_grades.pass_rush_grade",
-        "athlete_grades.coverage_grade",
-        "athlete_grades.rush_defense_grade"
+        "athlete_grades.overall_grade_pff",
+        "athlete_grades.pass_grade_pff",
+        "athlete_grades.run_grade_pff",
+        "athlete_grades.pass_route_grade_pff",
+        "athlete_grades.pass_block_grade_pff",
+        "athlete_grades.run_block_grade_pff",
+        "athlete_grades.pass_rush_grade_pff",
+        "athlete_grades.coverage_grade_pff",
+        "athlete_grades.rush_defense_grade_pff"
       )
 
     result = Hash.new { |h, k| h[k] = Hash.new { |h2, k2| h2[k2] = [] } }
     rows.each do |r|
       result[r.t_slug][r.position] << {
-        overall: r.overall_grade.to_f,
-        pass: r.pass_grade.to_f,
-        run: r.run_grade.to_f,
-        route: r.pass_route_grade.to_f,
-        pass_block: r.pass_block_grade.to_f,
-        run_block: r.run_block_grade.to_f,
-        pass_rush: r.pass_rush_grade.to_f,
-        coverage: r.coverage_grade.to_f,
-        rush_def: r.rush_defense_grade.to_f
+        overall: r.overall_grade_pff.to_f,
+        pass: r.pass_grade_pff.to_f,
+        run: r.run_grade_pff.to_f,
+        route: r.pass_route_grade_pff.to_f,
+        pass_block: r.pass_block_grade_pff.to_f,
+        run_block: r.run_block_grade_pff.to_f,
+        pass_rush: r.pass_rush_grade_pff.to_f,
+        coverage: r.coverage_grade_pff.to_f,
+        rush_def: r.rush_defense_grade_pff.to_f
       }
     end
     result
@@ -178,15 +178,15 @@ class TeamRanking < ApplicationRecord
     target_grades.each { |pos, arr| modified_grades[pos] = arr.dup }
     modified_grades[athlete.position] ||= []
     modified_grades[athlete.position] << {
-      overall: grade.overall_grade.to_f,
-      pass: grade.pass_grade.to_f,
-      run: grade.run_grade.to_f,
-      route: grade.pass_route_grade.to_f,
-      pass_block: grade.pass_block_grade.to_f,
-      run_block: grade.run_block_grade.to_f,
-      pass_rush: grade.pass_rush_grade.to_f,
-      coverage: grade.coverage_grade.to_f,
-      rush_def: grade.rush_defense_grade.to_f
+      overall: grade.overall_grade_pff.to_f,
+      pass: grade.pass_grade_pff.to_f,
+      run: grade.run_grade_pff.to_f,
+      route: grade.pass_route_grade_pff.to_f,
+      pass_block: grade.pass_block_grade_pff.to_f,
+      run_block: grade.run_block_grade_pff.to_f,
+      pass_rush: grade.pass_rush_grade_pff.to_f,
+      coverage: grade.coverage_grade_pff.to_f,
+      rush_def: grade.rush_defense_grade_pff.to_f
     }
 
     # Compute unit scores for current vs modified

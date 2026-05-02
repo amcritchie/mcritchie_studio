@@ -25,7 +25,7 @@ class Roster < ApplicationRecord
     k:        { positions: %w[K], count: 1 },
     p:        { positions: %w[P], count: 1 },
     ls:       { positions: %w[LS], count: 1 },
-    returner: { positions: %w[WR RB FB], count: 1, sort_by: :return_grade }
+    returner: { positions: %w[WR RB FB], count: 1, sort_by: :return_grade_pff }
   }.freeze
 
   PickedSpot = Struct.new(:person, :position, :depth, :side, :slot, :formation_slot, keyword_init: true) do
@@ -46,7 +46,7 @@ class Roster < ApplicationRecord
   # Returns 12 ordered offensive starter slots, each mapped to a PickedSpot or nil:
   #   :qb, :rb, :wr1, :wr2, :wr3, :te, :flex, :lt, :lg, :c, :rg, :rt
   #
-  # Flex is filled by the highest offense_grade among (RB depth=2, WR depth=4,
+  # Flex is filled by the highest offense_grade_pff among (RB depth=2, WR depth=4,
   # TE depth=2) — overrides the depth chart's RB2 because most modern offenses
   # field a 2nd TE or 4th WR more often than a true RB2.
   def offense_starting_12
@@ -76,7 +76,7 @@ class Roster < ApplicationRecord
     result[:te] = take(tes, used)
 
     flex_pool = (rbs + wrs + tes).reject { |s| used.include?(s) }
-    result[:flex] = pick_max(flex_pool, used) { |s| grade_value(s, :offense_grade) }
+    result[:flex] = pick_max(flex_pool, used) { |s| grade_value(s, :offense_grade_pff) }
 
     result[:lt] = pick_ol_slot(spots, used, "LT", %w[OT T])
     used << result[:lt] if result[:lt]
@@ -132,29 +132,29 @@ class Roster < ApplicationRecord
 
     # Per-group: take the lowest-depth entry per formation_slot (the "starters"),
     # sort by the slot's grade criterion, and assign top N to the display slots.
-    assign_top_n(result, used, formation_starters(by_group[:edge] || []), :pass_rush_grade,    [:edge1, :edge2])
-    assign_top_n(result, used, formation_starters(by_group[:dl]   || []), :defense_grade,     [:dl1, :dl2])
+    assign_top_n(result, used, formation_starters(by_group[:edge] || []), :pass_rush_grade_pff,    [:edge1, :edge2])
+    assign_top_n(result, used, formation_starters(by_group[:dl]   || []), :defense_grade_pff,     [:dl1, :dl2])
 
-    # DL Flex: best pass_rush_grade among unselected EDGE+DL (covers depth-2
+    # DL Flex: best pass_rush_grade_pff among unselected EDGE+DL (covers depth-2
     # EDGE in 4-3, NT in 3-4, leftover starters from either group).
     flex_pool = ((by_group[:edge] || []) + (by_group[:dl] || [])).reject { |s| used.include?(s) }
-    assign(result, used, :dl_flex, flex_pool.max_by { |s| grade_value(s, :pass_rush_grade) })
+    assign(result, used, :dl_flex, flex_pool.max_by { |s| grade_value(s, :pass_rush_grade_pff) })
 
-    assign_top_n(result, used, formation_starters(by_group[:lb] || []), :rush_defense_grade, [:lb1, :lb2])
+    assign_top_n(result, used, formation_starters(by_group[:lb] || []), :rush_defense_grade_pff, [:lb1, :lb2])
 
     # SS / FS: lowest-depth entry per formation_slot (S group includes SS and FS).
     assign(result, used, :ss, (by_group[:ss] || []).reject { |s| used.include?(s) }.min_by(&:depth))
     assign(result, used, :fs, (by_group[:fs] || []).reject { |s| used.include?(s) }.min_by(&:depth))
 
-    assign_top_n(result, used, formation_starters(by_group[:cb] || []), :coverage_grade, [:cb1, :cb2])
+    assign_top_n(result, used, formation_starters(by_group[:cb] || []), :coverage_grade_pff, [:cb1, :cb2])
 
-    # Nickel Flex: NB entry first, then fall back to best unused CB/S by coverage_grade.
+    # Nickel Flex: NB entry first, then fall back to best unused CB/S by coverage_grade_pff.
     nickel_pool = (by_group[:nickel] || []).reject { |s| used.include?(s) }
     nickel_pick = nickel_pool.min_by(&:depth)
     if nickel_pick.nil?
       remaining = ((by_group[:cb] || []) + (by_group[:ss] || []) + (by_group[:fs] || []))
                     .reject { |s| used.include?(s) }
-      nickel_pick = remaining.max_by { |s| grade_value(s, :coverage_grade) }
+      nickel_pick = remaining.max_by { |s| grade_value(s, :coverage_grade_pff) }
     end
     assign(result, used, :flex, nickel_pick)
 
@@ -215,25 +215,25 @@ class Roster < ApplicationRecord
     used = Set.new
     result = DEFENSE_SLOTS.index_with { nil }
 
-    # EDGE: top 2 by depth, then resort by pass_rush_grade
+    # EDGE: top 2 by depth, then resort by pass_rush_grade_pff
     edge_pool = spots_at(spots, EDGE_POSITIONS).first(2)
-                                               .sort_by { |s| -grade_value(s, :pass_rush_grade) }
+                                               .sort_by { |s| -grade_value(s, :pass_rush_grade_pff) }
     result[:edge1] = edge_pool[0]; used << edge_pool[0] if edge_pool[0]
     result[:edge2] = edge_pool[1]; used << edge_pool[1] if edge_pool[1]
 
-    # DL: top 2 by depth, then resort by defense_grade
+    # DL: top 2 by depth, then resort by defense_grade_pff
     dl_pool = spots_at(spots, DL_POSITIONS).first(2)
-                                           .sort_by { |s| -grade_value(s, :defense_grade) }
+                                           .sort_by { |s| -grade_value(s, :defense_grade_pff) }
     result[:dl1] = dl_pool[0]; used << dl_pool[0] if dl_pool[0]
     result[:dl2] = dl_pool[1]; used << dl_pool[1] if dl_pool[1]
 
-    # DL Flex: highest pass_rush_grade among unselected EDGE/DL
+    # DL Flex: highest pass_rush_grade_pff among unselected EDGE/DL
     flex_dl_pool = spots.select { |s| DLINE_POOL.include?(s.position) }.reject { |s| used.include?(s) }
-    result[:dl_flex] = pick_max(flex_dl_pool, used) { |s| grade_value(s, :pass_rush_grade) }
+    result[:dl_flex] = pick_max(flex_dl_pool, used) { |s| grade_value(s, :pass_rush_grade_pff) }
 
-    # LB: top 2 by depth, then resort by rush_defense_grade (run-stop performance)
+    # LB: top 2 by depth, then resort by rush_defense_grade_pff (run-stop performance)
     lb_pool = spots_at(spots, LB_POSITIONS).first(2)
-                                           .sort_by { |s| -grade_value(s, :rush_defense_grade) }
+                                           .sort_by { |s| -grade_value(s, :rush_defense_grade_pff) }
     result[:lb1] = lb_pool[0]; used << lb_pool[0] if lb_pool[0]
     result[:lb2] = lb_pool[1]; used << lb_pool[1] if lb_pool[1]
 
@@ -247,16 +247,16 @@ class Roster < ApplicationRecord
     result[:fs] ||= spots_at(spots, %w[S]).reject { |s| used.include?(s) }.first
     used << result[:fs] if result[:fs]
 
-    # CB: top 2 by depth, then resort by coverage_grade
+    # CB: top 2 by depth, then resort by coverage_grade_pff
     cb_pool = spots_at(spots, CB_POSITIONS).first(2)
-                                           .sort_by { |s| -grade_value(s, :coverage_grade) }
+                                           .sort_by { |s| -grade_value(s, :coverage_grade_pff) }
     result[:cb1] = cb_pool[0]; used << cb_pool[0] if cb_pool[0]
     result[:cb2] = cb_pool[1]; used << cb_pool[1] if cb_pool[1]
 
-    # Flex (Nickel): highest coverage_grade among unselected CB/S
+    # Flex (Nickel): highest coverage_grade_pff among unselected CB/S
     nickel_pool = spots.select { |s| (CB_POSITIONS + S_POSITIONS).include?(s.position) }
                        .reject { |s| used.include?(s) }
-    result[:flex] = pick_max(nickel_pool, used) { |s| grade_value(s, :coverage_grade) }
+    result[:flex] = pick_max(nickel_pool, used) { |s| grade_value(s, :coverage_grade_pff) }
 
     DEFENSE_SLOTS.each_with_object({}) do |slot, h|
       pick = result[slot]
@@ -361,6 +361,6 @@ class Roster < ApplicationRecord
   def grade_value(spot, field)
     grade = spot.person&.athlete_profile&.grades&.first
     return -Float::INFINITY unless grade
-    grade.public_send(field) || grade.overall_grade || -Float::INFINITY
+    grade.public_send(field) || grade.overall_grade_pff || -Float::INFINITY
   end
 end

@@ -100,32 +100,32 @@
                   # Determine primary/secondary grade columns and labels
                   case pos
                   when "QB"
-                    primary_key = "pass_grade"; primary_label = "Pass"
-                    secondary_key = "run_grade"; secondary_label = "Rush"
+                    primary_key = "pass_grade_pff"; primary_label = "Pass"
+                    secondary_key = "run_grade_pff"; secondary_label = "Rush"
                   when "WR", "TE", "CB/WR"
-                    primary_key = "pass_route_grade"; primary_label = "Route"
-                    secondary_key = "run_grade"; secondary_label = "Run"
+                    primary_key = "pass_route_grade_pff"; primary_label = "Route"
+                    secondary_key = "run_grade_pff"; secondary_label = "Run"
                   when "RB", "FB", "HB"
-                    primary_key = "run_grade"; primary_label = "Rush"
-                    secondary_key = "pass_route_grade"; secondary_label = "Route"
+                    primary_key = "run_grade_pff"; primary_label = "Rush"
+                    secondary_key = "pass_route_grade_pff"; secondary_label = "Route"
                   when "OT", "OG", "C"
-                    primary_key = "pass_block_grade"; primary_label = "Pass Blk"
-                    secondary_key = "run_block_grade"; secondary_label = "Run Blk"
+                    primary_key = "pass_block_grade_pff"; primary_label = "Pass Blk"
+                    secondary_key = "run_block_grade_pff"; secondary_label = "Run Blk"
                   when "EDGE", "DE"
-                    primary_key = "pass_rush_grade"; primary_label = "Pass Rush"
-                    secondary_key = "rush_defense_grade"; secondary_label = "Run Def"
+                    primary_key = "pass_rush_grade_pff"; primary_label = "Pass Rush"
+                    secondary_key = "rush_defense_grade_pff"; secondary_label = "Run Def"
                   when "DT", "NT", "DL"
-                    primary_key = "rush_defense_grade"; primary_label = "Run Def"
-                    secondary_key = "pass_rush_grade"; secondary_label = "Pass Rush"
+                    primary_key = "rush_defense_grade_pff"; primary_label = "Run Def"
+                    secondary_key = "pass_rush_grade_pff"; secondary_label = "Pass Rush"
                   when "LB", "ILB", "OLB", "MLB"
-                    primary_key = "rush_defense_grade"; primary_label = "Run Def"
-                    secondary_key = "coverage_grade"; secondary_label = "Coverage"
+                    primary_key = "rush_defense_grade_pff"; primary_label = "Run Def"
+                    secondary_key = "coverage_grade_pff"; secondary_label = "Coverage"
                   when "CB"
-                    primary_key = "coverage_grade"; primary_label = "Coverage"
-                    secondary_key = "rush_defense_grade"; secondary_label = "Run Def"
+                    primary_key = "coverage_grade_pff"; primary_label = "Coverage"
+                    secondary_key = "rush_defense_grade_pff"; secondary_label = "Run Def"
                   when "S", "FS", "SS"
-                    primary_key = "coverage_grade"; primary_label = "Coverage"
-                    secondary_key = "rush_defense_grade"; secondary_label = "Run Def"
+                    primary_key = "coverage_grade_pff"; primary_label = "Coverage"
+                    secondary_key = "rush_defense_grade_pff"; secondary_label = "Run Def"
                   else
                     primary_key = nil; primary_label = nil
                     secondary_key = nil; secondary_label = nil
@@ -135,7 +135,7 @@
                   secondary_val = secondary_key ? p.send(secondary_key) : nil
                   primary_range = ranges[primary_key]
                   secondary_range = ranges[secondary_key]
-                  overall_range = ranges["overall_grade"]
+                  overall_range = ranges["overall_grade_pff"]
                 %>
                 <tr class="hover:bg-surface-alt transition-colors cursor-pointer"
                     onclick="window.location='<%= nfl_player_impact_path(player_id: p.person_slug_ref, team_id: p.team_slug_ref) %>'">
@@ -158,7 +158,7 @@
                     <span class="badge"><%= p.team_short_name || p.team_name || "—" %></span>
                   </td>
                   <td class="px-3 py-3 text-center">
-                    <% grade = p.overall_grade %>
+                    <% grade = p.overall_grade_pff %>
                     <% if grade %>
                       <span class="text-sm font-bold rounded px-1.5 py-0.5 text-white" style="background: <%= grade_color(grade) %>;">
                         <%= grade.round(1) %>

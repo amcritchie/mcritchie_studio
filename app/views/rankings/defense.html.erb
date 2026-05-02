@@ -95,7 +95,7 @@
                     <span class="badge"><%= p.team_short_name || p.team_name || "—" %></span>
                   </td>
                   <td class="px-3 py-3 text-center">
-                    <% dg = p.defense_grade %>
+                    <% dg = p.defense_grade_pff %>
                     <% if dg %>
                       <span class="text-sm font-bold rounded px-1.5 py-0.5 text-white" style="background: <%= grade_color(dg) %>;">
                         <%= dg.round(1) %>
@@ -105,7 +105,7 @@
                     <% end %>
                   </td>
                   <td class="hidden md:table-cell px-3 py-3 text-center">
-                    <% pr = p.pass_rush_grade %>
+                    <% pr = p.pass_rush_grade_pff %>
                     <% if pr %>
                       <span class="text-xs font-semibold" style="color: <%= grade_color(pr) %>;"><%= pr.round(1) %></span>
                     <% else %>
@@ -113,7 +113,7 @@
                     <% end %>
                   </td>
                   <td class="hidden md:table-cell px-3 py-3 text-center">
-                    <% cg = p.coverage_grade %>
+                    <% cg = p.coverage_grade_pff %>
                     <% if cg %>
                       <span class="text-xs font-semibold" style="color: <%= grade_color(cg) %>;"><%= cg.round(1) %></span>
                     <% else %>
@@ -121,7 +121,7 @@
                     <% end %>
                   </td>
                   <td class="hidden md:table-cell px-3 py-3 text-center">
-                    <% rd = p.rush_defense_grade %>
+                    <% rd = p.rush_defense_grade_pff %>
                     <% if rd %>
                       <span class="text-xs font-semibold" style="color: <%= grade_color(rd) %>;"><%= rd.round(1) %></span>
                     <% else %>

@@ -5,7 +5,7 @@ class AthleteGradeTest < ActiveSupport::TestCase
     grade = AthleteGrade.create!(
       athlete_slug: "lionel-messi-athlete",
       season_slug: "2025-nfl",
-      overall_grade: 88.5
+      overall_grade_pff: 88.5
     )
     assert_equal "lionel-messi-athlete-2025-nfl", grade.slug
   end
@@ -15,7 +15,7 @@ class AthleteGradeTest < ActiveSupport::TestCase
       AthleteGrade.create!(
         athlete_slug: "josh-allen-athlete",
         season_slug: "2025-nfl",
-        overall_grade: 85.0
+        overall_grade_pff: 85.0
       )
     end
   end

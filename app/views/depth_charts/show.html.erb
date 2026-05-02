@@ -74,8 +74,8 @@
                 <% if starter_slot %>
                   <span class="dc-starter-badge" title="Fills the <%= starter_slot %> slot in this team's starting 28"><%= starter_slot %></span>
                 <% end %>
-                <% if grade&.overall_grade %>
-                  <span class="text-xs font-mono text-secondary"><%= grade.overall_grade %></span>
+                <% if grade&.overall_grade_pff %>
+                  <span class="text-xs font-mono text-secondary"><%= grade.overall_grade_pff %></span>
                 <% end %>
                 <button type="button"
                         @click="toggleLock(<%= entry.id %>, $event.currentTarget)"

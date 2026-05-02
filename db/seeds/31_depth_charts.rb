@@ -3,7 +3,7 @@
 #
 # Re-seed semantics:
 #   * locked entries keep their (depth, position) — auto-rank slots around them
-#   * unlocked entries get reranked by overall_grade DESC, salary DESC
+#   * unlocked entries get reranked by overall_grade_pff DESC, salary DESC
 #   * new contracts get added; departed players' entries get dropped
 require_relative "../../app/models/concerns/position_concern"
 
@@ -28,7 +28,7 @@ if nfl_season
         person_slug: contract.person_slug,
         position:    pos,
         side:        side,
-        score:       grade&.overall_grade,
+        score:       grade&.overall_grade_pff,
         salary:      contract.annual_value_cents
       }
     end

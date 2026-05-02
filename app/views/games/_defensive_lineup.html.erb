@@ -21,24 +21,24 @@
 
   # Grade keys per position group based on mode
   dl_grade = case mode
-             when "stop_run"  then :rush_defense_grade
-             when "stop_pass" then :pass_rush_grade
-             else :overall_grade
+             when "stop_run"  then :rush_defense_grade_pff
+             when "stop_pass" then :pass_rush_grade_pff
+             else :overall_grade_pff
              end
   lb_grade = case mode
-             when "stop_run"  then :rush_defense_grade
-             when "stop_pass" then :coverage_grade
-             else :overall_grade
+             when "stop_run"  then :rush_defense_grade_pff
+             when "stop_pass" then :coverage_grade_pff
+             else :overall_grade_pff
              end
   db_grade = case mode
-             when "stop_run"  then :rush_defense_grade
-             when "stop_pass" then :coverage_grade
-             else :overall_grade
+             when "stop_run"  then :rush_defense_grade_pff
+             when "stop_pass" then :coverage_grade_pff
+             else :overall_grade_pff
              end
 
   # Front 5: edges + DL + flex, sorted by defense grade DESC
   front5 = (edges + dl_int + flex_dl).sort_by do |s|
-    grade = s.person&.athlete_profile&.grades&.first&.defense_grade
+    grade = s.person&.athlete_profile&.grades&.first&.defense_grade_pff
     -(grade || 0)
   end
 
@@ -89,7 +89,7 @@
     <% if front5.any? %>
       <div class="grid grid-cols-5 gap-1 mb-4">
         <% front5.each do |spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: dl_grade %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: dl_grade %>
         <% end %>
       </div>
     <% end %>
@@ -103,7 +103,7 @@
     <% if lbs.any? %>
       <div class="grid grid-cols-2 gap-1 mb-4">
         <% lbs.each do |spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: lb_grade %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: lb_grade %>
         <% end %>
       </div>
     <% end %>
@@ -117,7 +117,7 @@
     <% if safety_display.any? %>
       <div class="grid grid-cols-2 gap-1 mb-1">
         <% safety_display.each do |display_pos, spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: db_grade, display_position: display_pos %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: db_grade, display_position: display_pos %>
         <% end %>
       </div>
     <% end %>
@@ -126,7 +126,7 @@
     <% if cbs.any? %>
       <div class="grid grid-cols-3 gap-1">
         <% cbs.each do |spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: db_grade %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: db_grade %>
         <% end %>
       </div>
     <% end %>

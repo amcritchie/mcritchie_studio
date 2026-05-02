@@ -357,4 +357,10 @@ namespace :nfl do
       verbose: ENV["VERBOSE"] == "1"
     ).call
   end
+
+  desc "Compute proprietary position-bucketed pass/run rank + 0-10 grade from PFF inputs. SEASON=2025-nfl (default)."
+  task assign_grades: :environment do
+    season_slug = ENV["SEASON"] || "2025-nfl"
+    Athletes::ComputeProprietaryGrades.new(season_slug: season_slug).call
+  end
 end

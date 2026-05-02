@@ -9,9 +9,9 @@ class RankingsController < ApplicationController
     @sort_by = params[:sort].presence || "overall"
 
     grade_column = case @sort_by
-                   when "passing"  then "athlete_grades.pass_grade"
-                   when "rushing"  then "athlete_grades.run_grade"
-                   else                 "athlete_grades.overall_grade"
+                   when "passing"  then "athlete_grades.pass_grade_pff"
+                   when "rushing"  then "athlete_grades.run_grade_pff"
+                   else                 "athlete_grades.overall_grade_pff"
                    end
 
     @players = ranked_players(%w[QB], @season.slug, grade_column)
@@ -22,9 +22,9 @@ class RankingsController < ApplicationController
     @sort_by = params[:sort].presence || "pass_block"
 
     grade_column = case @sort_by
-                   when "run_block" then "athlete_grades.run_block_grade"
-                   when "offense"   then "athlete_grades.offense_grade"
-                   else                  "athlete_grades.pass_block_grade"
+                   when "run_block" then "athlete_grades.run_block_grade_pff"
+                   when "offense"   then "athlete_grades.offense_grade_pff"
+                   else                  "athlete_grades.pass_block_grade_pff"
                    end
 
     @players = ranked_players(%w[LT LG C RG RT OT OG], @season.slug, grade_column)
@@ -35,8 +35,8 @@ class RankingsController < ApplicationController
     @sort_by = params[:sort].presence || "route"
 
     grade_column = case @sort_by
-                   when "overall" then "athlete_grades.overall_grade"
-                   else                "athlete_grades.pass_route_grade"
+                   when "overall" then "athlete_grades.overall_grade_pff"
+                   else                "athlete_grades.pass_route_grade_pff"
                    end
 
     @players = ranked_players(%w[WR TE], @season.slug, grade_column)
@@ -47,8 +47,8 @@ class RankingsController < ApplicationController
     @sort_by = params[:sort].presence || "rushing"
 
     grade_column = case @sort_by
-                   when "overall" then "athlete_grades.overall_grade"
-                   else                "athlete_grades.run_grade"
+                   when "overall" then "athlete_grades.overall_grade_pff"
+                   else                "athlete_grades.run_grade_pff"
                    end
 
     @players = ranked_players(%w[RB FB HB], @season.slug, grade_column)
@@ -59,10 +59,10 @@ class RankingsController < ApplicationController
     @sort_by = params[:sort].presence || "overall"
 
     grade_column = case @sort_by
-                   when "pass_rush" then "athlete_grades.pass_rush_grade"
-                   when "coverage"  then "athlete_grades.coverage_grade"
-                   when "run_def"   then "athlete_grades.rush_defense_grade"
-                   else                  "athlete_grades.defense_grade"
+                   when "pass_rush" then "athlete_grades.pass_rush_grade_pff"
+                   when "coverage"  then "athlete_grades.coverage_grade_pff"
+                   when "run_def"   then "athlete_grades.rush_defense_grade_pff"
+                   else                  "athlete_grades.defense_grade_pff"
                    end
 
     @players = ranked_players(
@@ -76,8 +76,8 @@ class RankingsController < ApplicationController
     @sort_by = params[:sort].presence || "pass_rush"
 
     grade_column = case @sort_by
-                   when "defense" then "athlete_grades.defense_grade"
-                   else                "athlete_grades.pass_rush_grade"
+                   when "defense" then "athlete_grades.defense_grade_pff"
+                   else                "athlete_grades.pass_rush_grade_pff"
                    end
 
     @players = ranked_players(%w[EDGE DE DT NT], @season.slug, grade_column)
@@ -88,8 +88,8 @@ class RankingsController < ApplicationController
     @sort_by = params[:sort].presence || "coverage"
 
     grade_column = case @sort_by
-                   when "defense" then "athlete_grades.defense_grade"
-                   else                "athlete_grades.coverage_grade"
+                   when "defense" then "athlete_grades.defense_grade_pff"
+                   else                "athlete_grades.coverage_grade_pff"
                    end
 
     @players = ranked_players(%w[CB S FS SS], @season.slug, grade_column)
@@ -244,7 +244,7 @@ class RankingsController < ApplicationController
 
     case @sort_by
     when "grade"
-      query = query.order(Arel.sql("athlete_grades.overall_grade DESC NULLS LAST"))
+      query = query.order(Arel.sql("athlete_grades.overall_grade_pff DESC NULLS LAST"))
     when "position"
       query = query.order(Arel.sql("athletes.position ASC, athletes.draft_pick ASC"))
     else
@@ -377,25 +377,25 @@ class RankingsController < ApplicationController
 
   def pick_offense_12(spots)
     {
-      qb:    top_spots(spots, %w[QB], 1, :pass_grade),
-      rb:    top_spots(spots, %w[RB FB HB], 2, :run_grade),
-      wr:    top_spots(spots, %w[WR], 3, :pass_route_grade),
-      te:    top_spots(spots, %w[TE], 1, :pass_route_grade),
-      oline: top_spots(spots, %w[LT LG C RG RT OT OG T G], 5, :pass_block_grade)
+      qb:    top_spots(spots, %w[QB], 1, :pass_grade_pff),
+      rb:    top_spots(spots, %w[RB FB HB], 2, :run_grade_pff),
+      wr:    top_spots(spots, %w[WR], 3, :pass_route_grade_pff),
+      te:    top_spots(spots, %w[TE], 1, :pass_route_grade_pff),
+      oline: top_spots(spots, %w[LT LG C RG RT OT OG T G], 5, :pass_block_grade_pff)
     }
   end
 
   def pick_defense_12(spots)
-    edges = top_spots(spots, %w[EDGE DE], 2, :pass_rush_grade)
-    dl    = top_spots(spots, %w[DT NT DL DI], 2, :rush_defense_grade)
+    edges = top_spots(spots, %w[EDGE DE], 2, :pass_rush_grade_pff)
+    dl    = top_spots(spots, %w[DT NT DL DI], 2, :rush_defense_grade_pff)
     taken = edges + dl
     flex  = spots.select { |s| %w[EDGE DE DT NT DL DI].include?(s.position) && !taken.include?(s) }
-                 .sort_by { |s| -(spot_grade(s, :overall_grade) || 0) }.first(1)
+                 .sort_by { |s| -(spot_grade(s, :overall_grade_pff) || 0) }.first(1)
     {
       edge: edges, dl: dl, flex: flex,
-      lb:   top_spots(spots, %w[LB ILB OLB MLB], 2, :overall_grade),
-      cb:   top_spots(spots, %w[CB], 3, :coverage_grade),
-      s:    top_spots(spots, %w[S FS SS], 2, :coverage_grade)
+      lb:   top_spots(spots, %w[LB ILB OLB MLB], 2, :overall_grade_pff),
+      cb:   top_spots(spots, %w[CB], 3, :coverage_grade_pff),
+      s:    top_spots(spots, %w[S FS SS], 2, :coverage_grade_pff)
     }
   end
 

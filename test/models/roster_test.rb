@@ -100,15 +100,15 @@ class RosterTest < ActiveSupport::TestCase
     assert_equal 12, picks.size
   end
 
-  test "defense_starting_12 EDGE slots resort by pass_rush_grade" do
+  test "defense_starting_12 EDGE slots resort by pass_rush_grade_pff" do
     roster = rosters(:bills_offseason)
     result = roster.defense_starting_12
-    pr1 = result[:edge1].person.athlete_profile.grades.first.pass_rush_grade
-    pr2 = result[:edge2].person.athlete_profile.grades.first.pass_rush_grade
+    pr1 = result[:edge1].person.athlete_profile.grades.first.pass_rush_grade_pff
+    pr2 = result[:edge2].person.athlete_profile.grades.first.pass_rush_grade_pff
     assert pr1 >= pr2 if pr1 && pr2
   end
 
-  test "defense_starting_12 dl_flex picks highest pass_rush_grade among unselected DLine" do
+  test "defense_starting_12 dl_flex picks highest pass_rush_grade_pff among unselected DLine" do
     roster = rosters(:bills_offseason)
     result = roster.defense_starting_12
     flex = result[:dl_flex]

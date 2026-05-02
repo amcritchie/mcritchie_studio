@@ -19,22 +19,22 @@
 
   # Grade keys per position group based on mode
   ol_grade = case mode
-             when "run"  then :run_block_grade
-             when "pass" then :pass_block_grade
-             else :overall_grade
+             when "run"  then :run_block_grade_pff
+             when "pass" then :pass_block_grade_pff
+             else :overall_grade_pff
              end
   qb_grade = case mode
-             when "run"  then :offense_grade
-             when "pass" then :pass_grade
-             else :overall_grade
+             when "run"  then :offense_grade_pff
+             when "pass" then :pass_grade_pff
+             else :overall_grade_pff
              end
   rb_grade = case mode
-             when "run"  then :run_grade
-             else :overall_grade
+             when "run"  then :run_grade_pff
+             else :overall_grade_pff
              end
   wr_grade = case mode
-             when "pass" then :pass_route_grade
-             else :overall_grade
+             when "pass" then :pass_route_grade_pff
+             else :overall_grade_pff
              end
 
   # Detect left-handed QB from roster
@@ -87,7 +87,7 @@
   blind_side = ol_display.select { |pos, _| blind_keys.include?(pos) }
   rest_ol    = ol_display.select { |pos, _| rest_keys.include?(pos) }
 
-  # Skill position splits — flex slot now picked by offense_grade
+  # Skill position splits — flex slot now picked by offense_grade_pff
   # across (RB depth=2, WR depth=4, TE depth=2), not just RB2 + TE.
   rb1 = rbs
   flex = (tes + [flex_pick]).compact.uniq
@@ -131,19 +131,19 @@
       <%# Mobile: blind-side pair %>
       <div class="grid grid-cols-2 gap-1 mb-1 md:hidden">
         <% blind_side.each do |display_pos, spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: ol_grade, display_position: display_pos %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: ol_grade, display_position: display_pos %>
         <% end %>
       </div>
       <%# Mobile: center + strong-side %>
       <div class="grid grid-cols-3 gap-1 mb-4 md:hidden">
         <% rest_ol.each do |display_pos, spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: ol_grade, display_position: display_pos %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: ol_grade, display_position: display_pos %>
         <% end %>
       </div>
       <%# Tablet+: all 5 in one row %>
       <div class="hidden md:grid grid-cols-5 gap-1 mb-4">
         <% ol_display.each do |display_pos, spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: ol_grade, display_position: display_pos %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: ol_grade, display_position: display_pos %>
         <% end %>
       </div>
     <% end %>
@@ -157,10 +157,10 @@
     <%# QB + RB1 %>
     <div class="grid grid-cols-2 gap-1 mb-1">
       <% qbs.each do |spot| %>
-        <%= render "games/player_card", spot: spot, grade_key: qb_grade %>
+        <%= render "games/player_card", mode: mode, spot: spot, grade_key: qb_grade %>
       <% end %>
       <% rb1.each do |spot| %>
-        <%= render "games/player_card", spot: spot, grade_key: rb_grade %>
+        <%= render "games/player_card", mode: mode, spot: spot, grade_key: rb_grade %>
       <% end %>
     </div>
 
@@ -173,7 +173,7 @@
     <% if wrs.any? %>
       <div class="grid grid-cols-3 gap-1 mb-1">
         <% wrs.each do |spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: wr_grade %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: wr_grade %>
         <% end %>
       </div>
     <% end %>
@@ -183,7 +183,7 @@
       <% flex_cols = flex.size >= 3 ? "grid-cols-3" : flex.size == 2 ? "grid-cols-2" : "grid-cols-1" %>
       <div class="grid <%= flex_cols %> gap-1">
         <% flex.each do |spot| %>
-          <%= render "games/player_card", spot: spot, grade_key: wr_grade %>
+          <%= render "games/player_card", mode: mode, spot: spot, grade_key: wr_grade %>
         <% end %>
       </div>
     <% end %>

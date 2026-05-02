@@ -94,7 +94,7 @@
                     <span class="badge"><%= p.team_short_name || p.team_name || "—" %></span>
                   </td>
                   <td class="px-3 py-3 text-center">
-                    <% pb = p.pass_block_grade %>
+                    <% pb = p.pass_block_grade_pff %>
                     <% if pb %>
                       <span class="text-sm font-bold rounded px-1.5 py-0.5 text-white" style="background: <%= grade_color(pb) %>;">
                         <%= pb.round(1) %>
@@ -104,7 +104,7 @@
                     <% end %>
                   </td>
                   <td class="px-3 py-3 text-center">
-                    <% rb = p.run_block_grade %>
+                    <% rb = p.run_block_grade_pff %>
                     <% if rb %>
                       <span class="text-sm font-bold rounded px-1.5 py-0.5 text-white" style="background: <%= grade_color(rb) %>;">
                         <%= rb.round(1) %>
@@ -114,7 +114,7 @@
                     <% end %>
                   </td>
                   <td class="hidden md:table-cell px-3 py-3 text-center">
-                    <% og = p.offense_grade %>
+                    <% og = p.offense_grade_pff %>
                     <% if og %>
                       <span class="text-xs font-semibold" style="color: <%= grade_color(og) %>;"><%= og.round(1) %></span>
                     <% else %>

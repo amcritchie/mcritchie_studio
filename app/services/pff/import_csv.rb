@@ -37,62 +37,62 @@ module Pff
     # Maps stat_type → { csv_column → AthleteGrade column }
     GRADE_BACKFILL = {
       "passing_summary" => {
-        "grades_pass" => :pass_grade,
-        "grades_run" => :run_grade,
-        "grades_offense" => :offense_grade
+        "grades_pass" => :pass_grade_pff,
+        "grades_run" => :run_grade_pff,
+        "grades_offense" => :offense_grade_pff
       },
       "rushing_summary" => {
-        "grades_run" => :run_grade,
-        "grades_offense" => :offense_grade
+        "grades_run" => :run_grade_pff,
+        "grades_offense" => :offense_grade_pff
       },
       "receiving_summary" => {
-        "grades_pass_route" => :pass_route_grade,
-        "grades_offense" => :offense_grade
+        "grades_pass_route" => :pass_route_grade_pff,
+        "grades_offense" => :offense_grade_pff
       },
       "offense_blocking" => {
-        "grades_pass_block" => :pass_block_grade,
-        "grades_run_block" => :run_block_grade
+        "grades_pass_block" => :pass_block_grade_pff,
+        "grades_run_block" => :run_block_grade_pff
       },
       "offense_pass_blocking" => {
-        "grades_pass_block" => :pass_block_grade
+        "grades_pass_block" => :pass_block_grade_pff
       },
       "offense_run_blocking" => {
-        "grades_run_block" => :run_block_grade
+        "grades_run_block" => :run_block_grade_pff
       },
       "offense_run_blockng" => {
-        "grades_run_block" => :run_block_grade
+        "grades_run_block" => :run_block_grade_pff
       },
       "defense_summary" => {
-        "grades_defense" => :defense_grade,
-        "grades_coverage_defense" => :coverage_grade,
-        "grades_pass_rush_defense" => :pass_rush_grade,
-        "grades_run_defense" => :rush_defense_grade
+        "grades_defense" => :defense_grade_pff,
+        "grades_coverage_defense" => :coverage_grade_pff,
+        "grades_pass_rush_defense" => :pass_rush_grade_pff,
+        "grades_run_defense" => :rush_defense_grade_pff
       },
       "pass_rush_summary" => {
-        "grades_pass_rush_defense" => :pass_rush_grade
+        "grades_pass_rush_defense" => :pass_rush_grade_pff
       },
       "run_defense_summary" => {
-        "grades_run_defense" => :rush_defense_grade
+        "grades_run_defense" => :rush_defense_grade_pff
       },
       "defense_coverage_summary" => {
-        "grades_coverage_defense" => :coverage_grade
+        "grades_coverage_defense" => :coverage_grade_pff
       },
       "field_goal_summary" => {
-        "grades_fgep_kicker" => :fg_grade
+        "grades_fgep_kicker" => :fg_grade_pff
       },
       "kickoff_summary" => {
-        "grades_kickoff_kicker" => :kickoff_grade
+        "grades_kickoff_kicker" => :kickoff_grade_pff
       },
       "punting_summary" => {
-        "grades_punter" => :punting_grade
+        "grades_punter" => :punting_grade_pff
       },
       "return_summary" => {
-        "grades_return" => :return_grade
+        "grades_return" => :return_grade_pff
       },
       "special_teams_summary" => {
-        "grades_fgep_kicker" => :fg_grade,
-        "grades_kickoff_kicker" => :kickoff_grade,
-        "grades_punter" => :punting_grade
+        "grades_fgep_kicker" => :fg_grade_pff,
+        "grades_kickoff_kicker" => :kickoff_grade_pff,
+        "grades_punter" => :punting_grade_pff
       }
     }.freeze
 
@@ -281,26 +281,26 @@ module Pff
         changed = true
       end
 
-      # Set overall_grade based on side of ball
+      # Set overall_grade_pff based on side of ball
       if changed
         side = PositionConcern.side_for(position)
         if side == "defense" && data["grades_defense"].is_a?(Numeric)
-          grade.overall_grade = data["grades_defense"]
+          grade.overall_grade_pff = data["grades_defense"]
         elsif side == "defense"
           # Defense sub-CSV without grades_defense (e.g. pass_rush_summary) — derive from sub-grades
-          parts = [grade.coverage_grade, grade.pass_rush_grade, grade.rush_defense_grade].compact
-          grade.overall_grade = (parts.sum / parts.size).round(1) if parts.any?
+          parts = [grade.coverage_grade_pff, grade.pass_rush_grade_pff, grade.rush_defense_grade_pff].compact
+          grade.overall_grade_pff = (parts.sum / parts.size).round(1) if parts.any?
         elsif side == "special_teams"
           # Use the primary ST grade as overall for special teamers
           st_grade = data["grades_fgep_kicker"] || data["grades_punter"] || data["grades_return"]
-          grade.overall_grade = st_grade if st_grade.is_a?(Numeric)
+          grade.overall_grade_pff = st_grade if st_grade.is_a?(Numeric)
         elsif data["grades_offense"].is_a?(Numeric)
-          grade.overall_grade = data["grades_offense"]
+          grade.overall_grade_pff = data["grades_offense"]
         elsif %w[offense_pass_blocking offense_run_blockng offense_blocking].include?(stat_type)
           # Blocking CSVs have no grades_offense — derive overall from the block grades we have
-          pb, rb = grade.pass_block_grade, grade.run_block_grade
+          pb, rb = grade.pass_block_grade_pff, grade.run_block_grade_pff
           derived = pb && rb ? (pb + rb) / 2.0 : (pb || rb)
-          grade.overall_grade = derived.round(1) if derived
+          grade.overall_grade_pff = derived.round(1) if derived
         end
 
         grade.save!

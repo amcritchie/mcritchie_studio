@@ -21,24 +21,24 @@ PROSPECT_TIERS = [
 ]
 
 POSITION_OFFSETS = {
-  "QB"   => { pass_grade: 2,         run_grade: -10 },
-  "WR"   => { pass_route_grade: 2,   run_grade: -10 },
-  "TE"   => { pass_route_grade: 2,   run_grade: -6 },
-  "RB"   => { run_grade: 2,          pass_route_grade: -8 },
-  "FB"   => { run_grade: 2,          pass_route_grade: -8 },
-  "HB"   => { run_grade: 2,          pass_route_grade: -8 },
-  "OT"   => { pass_block_grade: 2,   run_block_grade: -2 },
-  "OG"   => { pass_block_grade: 2,   run_block_grade: -2 },
-  "C"    => { pass_block_grade: 2,   run_block_grade: -2 },
-  "EDGE" => { pass_rush_grade: 2,    rush_defense_grade: -5,  coverage_grade: -12 },
-  "DE"   => { pass_rush_grade: 2,    rush_defense_grade: -5,  coverage_grade: -12 },
-  "DT"   => { rush_defense_grade: 2, pass_rush_grade: -3,     coverage_grade: -15 },
-  "DL"   => { rush_defense_grade: 2, pass_rush_grade: -3,     coverage_grade: -15 },
-  "NT"   => { rush_defense_grade: 2, pass_rush_grade: -3,     coverage_grade: -15 },
-  "LB"   => { rush_defense_grade: 0, coverage_grade: -2,      pass_rush_grade: -6 },
-  "CB"   => { coverage_grade: 2,     rush_defense_grade: -10 },
-  "S"    => { coverage_grade: 2,     rush_defense_grade: -4,  pass_rush_grade: -12 },
-  "CB/WR" => { coverage_grade: 2, pass_route_grade: 0, rush_defense_grade: -8 }
+  "QB"   => { pass_grade_pff: 2,         run_grade_pff: -10 },
+  "WR"   => { pass_route_grade_pff: 2,   run_grade_pff: -10 },
+  "TE"   => { pass_route_grade_pff: 2,   run_grade_pff: -6 },
+  "RB"   => { run_grade_pff: 2,          pass_route_grade_pff: -8 },
+  "FB"   => { run_grade_pff: 2,          pass_route_grade_pff: -8 },
+  "HB"   => { run_grade_pff: 2,          pass_route_grade_pff: -8 },
+  "OT"   => { pass_block_grade_pff: 2,   run_block_grade_pff: -2 },
+  "OG"   => { pass_block_grade_pff: 2,   run_block_grade_pff: -2 },
+  "C"    => { pass_block_grade_pff: 2,   run_block_grade_pff: -2 },
+  "EDGE" => { pass_rush_grade_pff: 2,    rush_defense_grade_pff: -5,  coverage_grade_pff: -12 },
+  "DE"   => { pass_rush_grade_pff: 2,    rush_defense_grade_pff: -5,  coverage_grade_pff: -12 },
+  "DT"   => { rush_defense_grade_pff: 2, pass_rush_grade_pff: -3,     coverage_grade_pff: -15 },
+  "DL"   => { rush_defense_grade_pff: 2, pass_rush_grade_pff: -3,     coverage_grade_pff: -15 },
+  "NT"   => { rush_defense_grade_pff: 2, pass_rush_grade_pff: -3,     coverage_grade_pff: -15 },
+  "LB"   => { rush_defense_grade_pff: 0, coverage_grade_pff: -2,      pass_rush_grade_pff: -6 },
+  "CB"   => { coverage_grade_pff: 2,     rush_defense_grade_pff: -10 },
+  "S"    => { coverage_grade_pff: 2,     rush_defense_grade_pff: -4,  pass_rush_grade_pff: -12 },
+  "CB/WR" => { coverage_grade_pff: 2, pass_route_grade_pff: 0, rush_defense_grade_pff: -8 }
 }.freeze
 
 OFFENSE_POSITIONS = %w[QB WR TE RB FB HB OT OG C LT LG RT RG CB/WR].freeze
@@ -70,7 +70,7 @@ def prospect_grade_ranges(position, overall, _slug, pick)
     ranges[grade_key.to_s] = [low, high]
   end
 
-  ranges["overall_grade"] = [[overall - spread, 40.0].max.round(1), [overall + spread, 99.9].min.round(1)]
+  ranges["overall_grade_pff"] = [[overall - spread, 40.0].max.round(1), [overall + spread, 99.9].min.round(1)]
   ranges
 end
 
@@ -82,7 +82,7 @@ if nfl_season
          .where(sport: "football")
          .distinct.find_each do |athlete|
     AthleteGrade.find_or_create_by!(athlete_slug: athlete.slug, season_slug: nfl_season.slug) do |g|
-      g.overall_grade = 50.0
+      g.overall_grade_pff = 50.0
       g.games_played  = 17
     end
   end
@@ -96,14 +96,14 @@ if nfl_season
 
     computed = offsets.transform_values { |o| (overall + o).clamp(40.0, 99.9).round(1) }
     if OFFENSE_POSITIONS.include?(pos)
-      computed[:offense_grade] = overall
-      computed[:defense_grade] = overall if pos == "CB/WR"
+      computed[:offense_grade_pff] = overall
+      computed[:defense_grade_pff] = overall if pos == "CB/WR"
     else
-      computed[:defense_grade] = overall
+      computed[:defense_grade_pff] = overall
     end
 
     AthleteGrade.find_or_create_by!(athlete_slug: athlete.slug, season_slug: nfl_season.slug) do |g|
-      g.overall_grade = overall
+      g.overall_grade_pff = overall
       g.games_played  = rand(10..14)
       g.snaps         = rand(400..900)
       g.grade_ranges  = prospect_grade_ranges(pos, overall, athlete.slug, pick)

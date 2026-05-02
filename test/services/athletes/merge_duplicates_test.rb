@@ -102,7 +102,7 @@ class Athletes::MergeDuplicatesTest < ActiveSupport::TestCase
 
   test "non-dry-run moves grades (with conflict drop)" do
     _, _canonical, dup_athlete, can_athlete = make_pair
-    AthleteGrade.create!(athlete_slug: dup_athlete.slug, season_slug: "2025-nfl", overall_grade: 70.0)
+    AthleteGrade.create!(athlete_slug: dup_athlete.slug, season_slug: "2025-nfl", overall_grade_pff: 70.0)
 
     Athletes::MergeDuplicates.new(dry_run: false).call
 

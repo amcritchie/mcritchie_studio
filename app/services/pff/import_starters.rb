@@ -66,7 +66,7 @@ module Pff
         # Find or create AthleteGrade
         if grade_value && grade_value > 0
           AthleteGrade.find_or_create_by!(athlete_slug: athlete.slug, season_slug: season_slug) do |g|
-            g.overall_grade = grade_value
+            g.overall_grade_pff = grade_value
           end
           @stats[:grades] += 1
         end
