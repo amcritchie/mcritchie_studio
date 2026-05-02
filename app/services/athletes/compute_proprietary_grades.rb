@@ -6,7 +6,7 @@ module Athletes
   #
   # Rank is 1..N within the bucket (1 = best). Grade is the linear percentile
   # mapping 0..10: best rank = 10, worst = 0. Letter conversion (A/B/C/D)
-  # happens at the view layer via LetterGradeHelper.
+  # happens at the view layer via GradeHelper.
   #
   # Input cascade per athlete:
   #   1. Bucket's position-specific input (e.g. coverage_grade_pff for LB pass)

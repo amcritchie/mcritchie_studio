@@ -1,4 +1,4 @@
-module LetterGradeHelper
+module GradeHelper
   # Maps a 0-10 numeric proprietary grade to a letter:
   #   10-8 = A, 7-5 = B, 4-2 = C, 1-0 = D, nil = "—"
   def letter_grade(numeric)
