@@ -194,8 +194,8 @@ end
 - **Starter Post (TikTok) workflow** — `Content.workflow = "starter_post_tiktok_offense"` and `"starter_post_tiktok_defense"`. Two new workflows, one per side of the ball, that mirror the X pipeline but post 19-second vertical-friendly clips to TikTok via the Content Posting API.
   - **Routes**: `POST /contents/starter_post_tiktok_offense?team_slug=...` and `POST /contents/starter_post_tiktok_defense?team_slug=...` (creates Content at stage=script). `POST /contents/:slug/post_to_tiktok` (member, posts the rendered MP4).
   - **Lineup graphic page** — same `GET /teams/:slug/lineup-graphic` URL, controlled by query params:
-    - `?side=offense` — renders `app/views/lineup_graphics/_offense.html.erb` (5×2 grid: row 1 LT, LG, C, RG, RT; row 2 QB, RB, WR1, WR2, TE). No header.
-    - `?side=defense` — renders `app/views/lineup_graphics/_defense.html.erb` (3×3 grid: row 1 EG1, DL1, EG2; row 2 LB1, LB2, SS; row 3 FS, CB1, CB2). No header.
+    - `?side=offense` — renders `app/views/lineup_graphics/offense.html.erb` (5×2 grid: row 1 LT, LG, C, RG, RT; row 2 QB, RB, WR1, WR2, TE). No header.
+    - `?side=defense` — renders `app/views/lineup_graphics/defense.html.erb` (3×3 grid: row 1 EG1, DL1, EG2; row 2 LB1, LB2, SS; row 3 FS, CB1, CB2). No header.
     - No `side` param → existing full graphic (X workflow, header included, 12+12+4 grid).
   - **Reveal animation matrix** (URL-selectable so we can A/B without rebuild):
     - Offense (`?reveal=hike|spotlight|domino`, default `hike`)
