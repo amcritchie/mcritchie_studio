@@ -199,17 +199,22 @@ class ContentsController < ApplicationController
 
   def post_step
     rescue_and_log(target: @content) do
-      # starter_post_x skips assembly (video is already final at assets stage).
-      allowed_stages = @content.workflow == "starter_post_x" ? %w[assets assembly] : %w[assembly]
+      # Lineup-graphic workflows skip the AI assembly step (the captured MP4 is final at the assets stage).
+      lineup_workflows = %w[starter_post_x starter_post_tiktok_offense starter_post_tiktok_defense]
+      allowed_stages = lineup_workflows.include?(@content.workflow) ? %w[assets assembly] : %w[assembly]
       unless allowed_stages.include?(@content.stage)
         raise "Content must be in #{allowed_stages.join(' or ')} stage (currently #{@content.stage})"
       end
 
       url = params[:post_url].to_s.strip
-      raise "X post URL required" if url.blank?
+      raise "post URL required" if url.blank?
 
-      platform = params[:platform].presence || (@content.workflow == "starter_post_x" ? "x" : nil)
-      post_id  = params[:post_id].presence || extract_x_post_id(url)
+      default_platform = case @content.workflow
+                         when "starter_post_x"                                       then "x"
+                         when "starter_post_tiktok_offense", "starter_post_tiktok_defense" then "tiktok"
+                         end
+      platform = params[:platform].presence || default_platform
+      post_id  = params[:post_id].presence || extract_post_id(url, platform)
 
       Content::Post.new(@content).call(
         platform: platform,
@@ -320,8 +325,11 @@ class ContentsController < ApplicationController
     redirect_to nfl_rosters_path, alert: e.message
   end
 
-  def extract_x_post_id(url)
-    url.to_s.match(%r{/status/(\d+)})&.captures&.first
+  def extract_post_id(url, platform)
+    case platform
+    when "x"      then url.to_s.match(%r{/status/(\d+)})&.captures&.first
+    when "tiktok" then url.to_s.match(%r{/video/(\d+)})&.captures&.first
+    end
   end
 
   def set_content
