@@ -289,11 +289,11 @@ class ContentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
   end
 
-  test "generate_lineup_assets requires starter_post_x workflow" do
+  test "generate_lineup_assets requires a lineup-graphic workflow" do
     log_in_as(@admin)
     post generate_lineup_assets_content_path(@idea_content.slug)
     assert_redirected_to content_path(@idea_content.slug)
-    assert_match(/starter_post_x/, flash[:alert].to_s)
+    assert_match(/lineup-graphic workflows/, flash[:alert].to_s)
   end
 
   test "generate_lineup_assets requires admin" do

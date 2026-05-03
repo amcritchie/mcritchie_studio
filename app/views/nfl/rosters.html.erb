@@ -88,6 +88,12 @@
                   class: "btn btn-outline btn-sm", target: "_blank" %>
             <%= button_to "🐦 New X Post", starter_post_x_contents_path(team_slug: team.slug),
                   class: "btn btn-primary btn-sm", form: { class: "inline-block" } %>
+            <%= button_to "🎵 Post Off → TikTok",
+                  starter_post_tiktok_offense_contents_path(team_slug: team.slug),
+                  class: "btn btn-secondary btn-sm", form: { class: "inline-block" } %>
+            <%= button_to "🛡️ Post Def → TikTok",
+                  starter_post_tiktok_defense_contents_path(team_slug: team.slug),
+                  class: "btn btn-secondary btn-sm", form: { class: "inline-block" } %>
           </div>
         </div>
 

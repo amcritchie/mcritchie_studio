@@ -1,0 +1,419 @@
+<%
+  primary    = @team.color_primary.presence   || "#1A1535"
+  secondary  = @team.color_secondary.presence || "#0b0b14"
+  text_dark  = @team.color_text_light
+  on_primary = text_dark ? "#0b0b14" : "#ffffff"
+  reveal     = %w[heat blitz crack].include?(params[:reveal].to_s) ? params[:reveal] : "heat"
+  pace_ms    = params[:pace].to_i.positive? ? params[:pace].to_i : 1700
+  attack_red = "#FF2E2E"
+%>
+
+<style>
+  .stage {
+    width: 1080px;
+    height: 1920px;
+    background:
+      radial-gradient(ellipse at top, <%= attack_red %>1c 0%, transparent 50%),
+      radial-gradient(ellipse at bottom, <%= primary %>40 0%, transparent 60%),
+      linear-gradient(180deg, #0b0b14 0%, #1a0f12 100%);
+    color: #fff;
+    padding: 130px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stage::before {
+    /* faint diagonal "blitz" lines baked into the stage */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 60px,
+      rgba(255,46,46,0.04) 60px,
+      rgba(255,46,46,0.04) 62px
+    );
+    pointer-events: none;
+  }
+  .stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 110px;
+    position: relative;
+    z-index: 2;
+  }
+  .row:last-of-type { margin-bottom: 0; }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 4px;
+    position: relative;
+  }
+
+  .pos-badge {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    color: <%= on_primary %>;
+    background: <%= primary %>;
+    padding: 8px 18px;
+    border-radius: 999px;
+    margin-bottom: 22px;
+    min-width: 70px;
+    text-align: center;
+    box-shadow: 0 4px 18px <%= primary %>88;
+  }
+
+  .photo {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    perspective: 1200px;
+  }
+  .photo-card {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+    transition:
+      transform 720ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 720ms ease-out;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+  }
+  .photo-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border: 4px solid rgba(255,255,255,0.16);
+  }
+  .photo-front {
+    background: linear-gradient(160deg, <%= primary %> 0%, <%= secondary %> 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: <%= on_primary %>;
+    font-weight: 900;
+    font-size: 60px;
+    letter-spacing: 0.04em;
+  }
+  .photo-front::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(255,46,46,0.32) 25%, transparent 50%);
+    opacity: 0;
+    transition: opacity 300ms ease;
+    animation: spin 2.5s linear infinite;
+    animation-play-state: paused;
+  }
+  .photo-back {
+    transform: rotateY(180deg);
+    background: <%= secondary %>;
+  }
+  .photo-back img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo:not(.revealed) .photo-front::before {
+    opacity: 1;
+    animation-play-state: running;
+  }
+  .photo.revealed .photo-card {
+    transform: rotateY(180deg);
+  }
+
+  .name {
+    margin-top: 22px;
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.1;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  }
+  .name .last { display: block; font-weight: 900; font-size: 32px; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===========================================================
+     REVEAL VARIANT: HEAT
+     A red thermal targeting reticle locks onto each card before
+     it flips, then pulses outward in heat-vision red.
+     =========================================================== */
+  .reveal-heat .reticle {
+    position: absolute;
+    inset: -16px;
+    border-radius: 50%;
+    border: 3px solid <%= attack_red %>;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.4);
+  }
+  .reveal-heat .reticle::before,
+  .reveal-heat .reticle::after {
+    content: "";
+    position: absolute;
+    background: <%= attack_red %>;
+  }
+  .reveal-heat .reticle::before { /* horizontal crosshair */
+    left: -22px; right: -22px;
+    top: 50%; height: 2px;
+    transform: translateY(-50%);
+  }
+  .reveal-heat .reticle::after { /* vertical crosshair */
+    top: -22px; bottom: -22px;
+    left: 50%; width: 2px;
+    transform: translateX(-50%);
+  }
+  .reveal-heat .photo.locking .reticle {
+    animation: reticleLock 500ms ease-out forwards;
+  }
+  @keyframes reticleLock {
+    0%   { opacity: 0; transform: scale(1.8) rotate(0deg); }
+    60%  { opacity: 1; transform: scale(1.05) rotate(45deg); }
+    100% { opacity: 1; transform: scale(1) rotate(45deg); }
+  }
+  .reveal-heat .photo.revealed .reticle {
+    animation: reticlePulse 700ms ease-out forwards;
+  }
+  @keyframes reticlePulse {
+    0%   { opacity: 1; transform: scale(1) rotate(45deg); }
+    100% { opacity: 0; transform: scale(2.2) rotate(45deg); }
+  }
+  .reveal-heat .photo.revealed .photo-card {
+    animation: heatGlow 800ms ease-out;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 0 3px <%= attack_red %>55;
+  }
+  @keyframes heatGlow {
+    0%   { box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 0 0 <%= attack_red %>00; }
+    35%  { box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 80px 24px <%= attack_red %>cc; }
+    100% { box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 0 3px <%= attack_red %>55; }
+  }
+
+  /* ===========================================================
+     REVEAL VARIANT: BLITZ
+     Diagonal red scanline sweeps in attack-pattern order
+     (front 3 → LBs → secondary).
+     =========================================================== */
+  .reveal-blitz .blitz-streak {
+    position: absolute;
+    top: -200px;
+    left: -400px;
+    width: 240px;
+    height: 2400px;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      <%= attack_red %>00 20%,
+      <%= attack_red %>cc 50%,
+      <%= attack_red %>00 80%,
+      transparent 100%);
+    transform: rotate(20deg);
+    transform-origin: top left;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 4;
+    mix-blend-mode: screen;
+    filter: blur(4px);
+  }
+  .reveal-blitz.streak-active .blitz-streak {
+    animation: blitzSweep <%= (pace_ms * 9 + 1500) %>ms linear forwards;
+  }
+  @keyframes blitzSweep {
+    0%   { left: -600px; opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { left: 1400px; opacity: 0; }
+  }
+  .reveal-blitz .photo.revealed .photo-card {
+    animation: blitzImpact 600ms ease-out;
+  }
+  @keyframes blitzImpact {
+    0%   { box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 0 0 <%= attack_red %>00; transform: rotateY(180deg) scale(1); }
+    20%  { transform: rotateY(180deg) scale(1.06); box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 60px 18px <%= attack_red %>ff; }
+    100% { transform: rotateY(180deg) scale(1); box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 0 0 <%= attack_red %>00; }
+  }
+
+  /* ===========================================================
+     REVEAL VARIANT: CRACK
+     Each card "shatters into view" with a glass-crack overlay
+     that fades out post-reveal.
+     =========================================================== */
+  .reveal-crack .crack {
+    position: absolute;
+    inset: -20px;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 5;
+  }
+  .reveal-crack .crack svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .reveal-crack .crack line {
+    stroke: <%= attack_red %>;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 8px <%= attack_red %>);
+  }
+  .reveal-crack .photo.revealed .crack {
+    animation: crackFlash 900ms ease-out forwards;
+  }
+  @keyframes crackFlash {
+    0%   { opacity: 0; transform: scale(0.6); }
+    20%  { opacity: 1; transform: scale(1.1); }
+    50%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1); }
+  }
+  .reveal-crack .photo.revealed .photo-card {
+    animation: crackShake 350ms ease-out;
+  }
+  @keyframes crackShake {
+    0%, 100% { transform: rotateY(180deg) translate(0, 0); }
+    15%  { transform: rotateY(180deg) translate(-8px, 4px); }
+    30%  { transform: rotateY(180deg) translate(7px, -3px); }
+    45%  { transform: rotateY(180deg) translate(-5px, 5px); }
+    60%  { transform: rotateY(180deg) translate(4px, -2px); }
+    80%  { transform: rotateY(180deg) translate(-2px, 1px); }
+  }
+
+  .footer {
+    position: absolute;
+    bottom: 50px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+  }
+  .footer .at { color: <%= attack_red %>; }
+</style>
+
+<%
+  crack_svg = <<~SVG.html_safe
+    <svg viewBox="0 0 200 200" preserveAspectRatio="none">
+      <line x1="100" y1="100" x2="0"   y2="20" />
+      <line x1="100" y1="100" x2="55"  y2="0"  />
+      <line x1="100" y1="100" x2="170" y2="-5" />
+      <line x1="100" y1="100" x2="220" y2="60" />
+      <line x1="100" y1="100" x2="210" y2="160"/>
+      <line x1="100" y1="100" x2="135" y2="220"/>
+      <line x1="100" y1="100" x2="40"  y2="215"/>
+      <line x1="100" y1="100" x2="-15" y2="130"/>
+      <line x1="60"  y1="60"  x2="20"  y2="40" />
+      <line x1="140" y1="140" x2="180" y2="170"/>
+    </svg>
+  SVG
+%>
+
+<div class="stage reveal-<%= reveal %>" data-team-slug="<%= @team.slug %>" data-pace="<%= pace_ms %>" data-reveal="<%= reveal %>">
+  <% if reveal == "blitz" %><div class="blitz-streak"></div><% end %>
+
+  <% @defense_rows.each_with_index do |row_pairs, ri| %>
+    <div class="row" data-row="<%= ri %>">
+      <% row_pairs.each do |slot_label, pick| %>
+        <%
+          person  = pick&.person
+          athlete = person&.athlete_profile
+          small   = athlete&.headshot_url(width: 100)
+          large   = athlete&.headshot_url(width: 400)
+          first_name = person&.first_name.to_s
+          last_name  = person&.last_name.to_s
+        %>
+        <div class="tile">
+          <div class="pos-badge"><%= slot_label %></div>
+          <div class="photo" data-photo>
+            <% if reveal == "heat"  %><div class="reticle"></div><% end %>
+            <% if reveal == "crack" %><div class="crack"><%= crack_svg %></div><% end %>
+            <div class="photo-card">
+              <div class="photo-face photo-front"><span><%= slot_label %></span></div>
+              <div class="photo-face photo-back">
+                <% if (large || small) %>
+                  <img src="<%= large || small %>" alt="" loading="eager" decoding="sync">
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <div class="name">
+            <span><%= first_name %></span>
+            <span class="last"><%= last_name.presence || "—" %></span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="footer">@TURF<span class="at">·</span>MONSTER</div>
+</div>
+
+<script>
+  (function () {
+    const stage  = document.querySelector('.stage');
+    const photos = Array.from(document.querySelectorAll('[data-photo]'));
+    if (!stage || !photos.length) return;
+    const pace   = parseInt(stage.dataset.pace, 10) || 1700;
+    const reveal = stage.dataset.reveal;
+
+    const imgs = photos.map(p => p.querySelector('img')).filter(Boolean);
+    const ready = Promise.all(imgs.map(img => (
+      img.complete ? Promise.resolve() : new Promise(res => {
+        img.addEventListener('load', res, { once: true });
+        img.addEventListener('error', res, { once: true });
+      })
+    )));
+
+    // Order is row-by-row for all variants (front 3 → mid 3 → back 3).
+    const order = photos.slice();
+
+    let revealsStarted = false;
+    function startReveals() {
+      if (revealsStarted) return;
+      revealsStarted = true;
+
+      if (reveal === 'blitz') {
+        stage.classList.add('streak-active');
+      }
+
+      order.forEach((el, i) => {
+        // Heat variant: lock the reticle ~350ms before flip for anticipation.
+        if (reveal === 'heat') {
+          setTimeout(() => el.classList.add('locking'), (i + 1) * pace - 400);
+        }
+        setTimeout(() => {
+          el.classList.add('revealed');
+          if (i === order.length - 1) {
+            setTimeout(() => {
+              document.body.setAttribute('data-reveal-complete', 'true');
+            }, 3500);
+          }
+        }, (i + 1) * pace);
+      });
+    }
+    window.startLineupReveals = startReveals;
+
+    ready.then(() => {
+      document.body.setAttribute('data-images-ready', 'true');
+      setTimeout(startReveals, 1500);
+    });
+  })();
+</script>

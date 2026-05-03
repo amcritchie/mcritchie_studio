@@ -15,6 +15,13 @@ Rails.application.routes.draw do
 
   Studio.routes(self)
 
+  # TikTok OAuth handshake (one-time, admin-only) — visit /admin/tiktok/connect
+  # to authorize @turfmonstershow and capture refresh_token + open_id.
+  namespace :admin do
+    get "tiktok/connect",  to: "tiktok#connect",  as: :tiktok_connect
+    get "tiktok/callback", to: "tiktok#callback", as: :tiktok_callback
+  end
+
   # HTML
   resources :agents, only: [:index, :show], param: :slug
   resources :tasks, param: :slug do
@@ -46,7 +53,9 @@ Rails.application.routes.draw do
   resources :contents, param: :slug do
     collection do
       post :reorder
-      post :starter_post_x, action: :create_starter_post_x
+      post :starter_post_x,                action: :create_starter_post_x
+      post :starter_post_tiktok_offense,   action: :create_starter_post_tiktok_offense
+      post :starter_post_tiktok_defense,   action: :create_starter_post_tiktok_defense
     end
     member do
       post :hook_step
@@ -62,6 +71,7 @@ Rails.application.routes.draw do
       post :metadata_step
       post :generate_lineup_assets
       post :post_to_x
+      post :post_to_tiktok
     end
   end
   resources :teams, only: [:index], param: :slug

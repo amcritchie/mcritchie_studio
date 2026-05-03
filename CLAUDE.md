@@ -191,6 +191,30 @@ end
   - Rake tasks: `content:hook`, `content:script`, `content:assets`, `content:assemble`, `content:post`, `content:review` (manual). `content:script_agent`, `content:assets_agent`, `content:assemble_agent`, `content:finalize`, `content:metadata` (AI). `content:generate SLUG=xxx` (full pipeline). All support `SLUG=` override.
   - **Feature status: ON ICE** — Services are built and wired up but not yet tested end-to-end with real API calls.
 
+- **Starter Post (TikTok) workflow** — `Content.workflow = "starter_post_tiktok_offense"` and `"starter_post_tiktok_defense"`. Two new workflows, one per side of the ball, that mirror the X pipeline but post 19-second vertical-friendly clips to TikTok via the Content Posting API.
+  - **Routes**: `POST /contents/starter_post_tiktok_offense?team_slug=...` and `POST /contents/starter_post_tiktok_defense?team_slug=...` (creates Content at stage=script). `POST /contents/:slug/post_to_tiktok` (member, posts the rendered MP4).
+  - **Lineup graphic page** — same `GET /teams/:slug/lineup-graphic` URL, controlled by query params:
+    - `?side=offense` — renders `app/views/lineup_graphics/_offense.html.erb` (5×2 grid: row 1 LT, LG, C, RG, RT; row 2 QB, RB, WR1, WR2, TE). No header.
+    - `?side=defense` — renders `app/views/lineup_graphics/_defense.html.erb` (3×3 grid: row 1 EG1, DL1, EG2; row 2 LB1, LB2, SS; row 3 FS, CB1, CB2). No header.
+    - No `side` param → existing full graphic (X workflow, header included, 12+12+4 grid).
+  - **Reveal animation matrix** (URL-selectable so we can A/B without rebuild):
+    - Offense (`?reveal=hike|spotlight|domino`, default `hike`)
+      - `hike` — OL row flips L→R first, then C "snaps" a glowing pulse backward to QB, skill players reveal radially outward from QB.
+      - `spotlight` — single bright vertical sweep moves L→R, illuminating each card as it passes (QB pre-snap-read vibe).
+      - `domino` — cards drop in from above with a bounce, L→R top-to-bottom.
+    - Defense (`?reveal=heat|blitz|crack`, default `heat`)
+      - `heat` — red thermal targeting reticle locks onto each card before flip, pulses outward in heat-vision red.
+      - `blitz` — diagonal red scanline sweeps in attack-pattern order (front 3 → LBs → secondary).
+      - `crack` — each card "shatters into view" with a glass-crack overlay that fades out post-reveal.
+    - `?pace=N` — milliseconds between reveals (default 1700; 1500 for offense gives ~19s clip).
+  - **Capture script** — `script/capture_lineup.js` accepts a `side` arg (`offense|defense|full`, default `full`) and a `?reveal=` URL passthrough. The `?duration=` URL param requests a target clip length (default 19s for sides, 7s for full). Output paths embed side: `tmp/lineup-graphics/{slug}-{side}-frames/`, `tmp/lineup-graphics/{slug}-{side}.{png,mp4}`.
+  - **Asset generation** — `Content::GenerateLineupAssets` dispatches by workflow: `starter_post_x` → side=full, `starter_post_tiktok_offense` → side=offense, `starter_post_tiktok_defense` → side=defense. S3 path: `tiktok_posts/{team_slug}/{content_slug}_{side}.{png,mp4}`.
+  - **Captions** (auto-populated on create, editable on edit page):
+    - Offense: `"Find the mistake on my {Mascot} OFFENSE 🚨"`
+    - Defense: `"Find the mistake on my {Mascot} DEFENSE 🛡️"`
+  - **TikTok posting** — `Tiktok::OAuthClient` (refresh-token flow) + `Tiktok::PostMedia` (Content Posting API, `PULL_FROM_URL` pointed at the S3 MP4). `Content::PostToTiktok` orchestrates. ENV: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`, `TIKTOK_OPEN_ID`. 1Password item: 🐊 TikTok in Bots vault (must be present before posting works).
+  - **Music** — `Tiktok::PostMedia` accepts `music_id` (Commercial Music Library, requires Business account) or `publish_type=INBOX` to send to drafts so a human can attach a trending sound on the phone. Default flow is INBOX (draft) for trend-chasing, with optional `?music_id=` for fully-automated posts. Royalty-free fallback: `LineupGraphic::AssembleVideo` accepts `music_path:` to mux audio into the MP4 itself.
+
 - **Starter Post (X) workflow** — `Content.workflow = "starter_post_x"` branches the form, services, and show-page UI for an automated "find the mistake in my lineup" X post from @turfmonstershow. Live end-to-end. Pipeline:
   1. **Create**: button on `/nfl-rosters` per team → `POST /contents/starter_post_x?team_slug=…` → `ContentsController#create_starter_post_x` creates a Content with `workflow=starter_post_x`, `team_slug`, `source_type=studio`, `stage=script`, and a default `captions` of `"Find the mistake in my <Mascot> lineup 👀\n\n#<Hashtag> <emoji>"`. Redirects to `/contents/:slug/edit`.
   2. **Generate assets**: button on the show page (when `stage in [idea, hook, script]`) → `POST /contents/:slug/generate_lineup_assets` → `Content::GenerateLineupAssets` shells out to `script/capture_lineup.js` (Playwright + CDP screencast at 2x device pixels), assembles the PNG-frame sequence into MP4 via `LineupGraphic::AssembleVideo` (lanczos downsample to 1200×1500, **fps=30 cap**, libx264 CRF 16), uploads PNG + MP4 to S3 at `starter_posts/{team_slug}/{content_slug}.{png,mp4}`, saves `hook_image_url` + `final_video_url`, advances stage to `assets`.

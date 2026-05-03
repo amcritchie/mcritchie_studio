@@ -1,0 +1,32 @@
+<section class="max-w-3xl mx-auto px-4 py-10 space-y-6">
+  <h1 class="text-3xl font-bold text-heading">TikTok connected ✅</h1>
+  <p class="text-secondary">
+    Copy the values below into <code class="text-primary">/Users/alex/projects/.env</code>
+    AND the <strong>🐊 TikTok</strong> item in the Bots vault. The refresh token is long-lived
+    (~365 days) — keep it secret. After that, restart the dev server to pick up the new env vars.
+  </p>
+
+  <div class="card p-4 space-y-3 font-mono text-sm">
+    <div>
+      <div class="text-muted text-xs mb-1">TIKTOK_REFRESH_TOKEN</div>
+      <div class="bg-inset p-3 rounded break-all"><%= @refresh_token %></div>
+    </div>
+    <div>
+      <div class="text-muted text-xs mb-1">TIKTOK_OPEN_ID</div>
+      <div class="bg-inset p-3 rounded break-all"><%= @open_id %></div>
+    </div>
+    <div>
+      <div class="text-muted text-xs mb-1">access_token (short-lived, do NOT save)</div>
+      <div class="bg-inset p-3 rounded break-all opacity-60"><%= @access_token %></div>
+    </div>
+    <div class="text-xs text-muted">
+      scope: <code><%= @scope %></code> · expires_in: <%= @expires_in %>s
+    </div>
+  </div>
+
+  <pre class="bg-inset p-3 rounded text-xs overflow-x-auto"># add to .env
+TIKTOK_CLIENT_KEY=<from 1Password 🐊 TikTok>
+TIKTOK_CLIENT_SECRET=<from 1Password 🐊 TikTok>
+TIKTOK_REFRESH_TOKEN=<%= @refresh_token %>
+TIKTOK_OPEN_ID=<%= @open_id %></pre>
+</section>

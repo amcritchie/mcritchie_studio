@@ -1,0 +1,349 @@
+<%
+  primary    = @team.color_primary.presence   || "#1A1535"
+  secondary  = @team.color_secondary.presence || "#0b0b14"
+  text_dark  = @team.color_text_light
+  on_primary = text_dark ? "#0b0b14" : "#ffffff"
+  reveal     = %w[hike spotlight domino].include?(params[:reveal].to_s) ? params[:reveal] : "hike"
+  pace_ms    = params[:pace].to_i.positive? ? params[:pace].to_i : 1500
+%>
+
+<style>
+  .stage {
+    width: 1080px;
+    height: 1920px;
+    background:
+      radial-gradient(ellipse at top, <%= primary %>33 0%, transparent 55%),
+      radial-gradient(ellipse at bottom, <%= secondary %>55 0%, transparent 60%),
+      linear-gradient(180deg, #0b0b14 0%, #14111f 100%);
+    color: #fff;
+    padding: 80px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 100% 60px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    position: relative;
+    z-index: 2;
+  }
+  .row + .row { margin-top: 110px; }
+  .row-line {
+    /* OL row gets a heavier base (line of scrimmage feel) */
+    margin-top: 320px;
+  }
+  .row-skill {
+    margin-top: 80px;
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 4px;
+  }
+
+  .pos-badge {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    color: <%= on_primary %>;
+    background: <%= primary %>;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+    min-width: 56px;
+    text-align: center;
+    box-shadow: 0 4px 16px <%= primary %>66;
+  }
+
+  .photo {
+    position: relative;
+    width: 168px;
+    height: 168px;
+    border-radius: 50%;
+    perspective: 1000px;
+  }
+  .photo-card {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+    transition:
+      transform 700ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 700ms ease-out;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .photo-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border: 3px solid rgba(255,255,255,0.14);
+  }
+  .photo-front {
+    background: linear-gradient(160deg, <%= primary %> 0%, <%= secondary %> 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: <%= on_primary %>;
+    font-weight: 900;
+    font-size: 44px;
+    letter-spacing: 0.04em;
+  }
+  .photo-front::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.22) 25%, transparent 50%);
+    opacity: 0;
+    transition: opacity 300ms ease;
+    animation: spin 3s linear infinite;
+    animation-play-state: paused;
+  }
+  .photo-back {
+    transform: rotateY(180deg);
+    background: <%= secondary %>;
+  }
+  .photo-back img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo:not(.revealed) .photo-front::before {
+    opacity: 1;
+    animation-play-state: running;
+  }
+  .photo.revealed .photo-card {
+    transform: rotateY(180deg);
+  }
+
+  .name {
+    margin-top: 18px;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.1;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  }
+  .name .last { display: block; font-weight: 900; font-size: 26px; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===========================================================
+     REVEAL VARIANT: HIKE
+     OL flips L→R first, then C "snaps" a glowing pulse backward
+     to QB, skill players reveal radially outward from QB.
+     =========================================================== */
+  .reveal-hike .photo.revealed .photo-card {
+    animation: hikeGlow 800ms ease-out;
+  }
+  @keyframes hikeGlow {
+    0%   { box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 0 <%= primary %>00; }
+    35%  { box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 64px 18px <%= primary %>cc; }
+    100% { box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 0 <%= primary %>00; }
+  }
+  .reveal-hike .snap-pulse {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, <%= primary %> 50%, transparent 70%);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .reveal-hike.snap-fired .snap-pulse {
+    animation: snapPulse 900ms ease-out;
+  }
+  @keyframes snapPulse {
+    0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    50%  { transform: translate(-50%, 60%) scale(8); opacity: 0.8; }
+    100% { transform: translate(-50%, 60%) scale(20); opacity: 0; }
+  }
+
+  /* ===========================================================
+     REVEAL VARIANT: SPOTLIGHT
+     A vertical light beam sweeps L→R, illuminating each card
+     as it passes (QB pre-snap-read vibe).
+     =========================================================== */
+  .reveal-spotlight .spotlight-beam {
+    position: absolute;
+    top: 0;
+    left: -200px;
+    width: 200px;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      <%= primary %>33 30%,
+      rgba(255,255,255,0.45) 50%,
+      <%= primary %>33 70%,
+      transparent 100%);
+    pointer-events: none;
+    z-index: 4;
+    mix-blend-mode: screen;
+  }
+  .reveal-spotlight.beam-active .spotlight-beam {
+    animation: beamSweep <%= (pace_ms * 10 + 2000) %>ms ease-in-out forwards;
+  }
+  @keyframes beamSweep {
+    from { left: -200px; }
+    to   { left: 1080px; }
+  }
+  .reveal-spotlight .photo.revealed .photo-card {
+    animation: spotlightGlow 600ms ease-out;
+  }
+  @keyframes spotlightGlow {
+    0%   { box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 0 #ffffff00; }
+    40%  { box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 50px 12px #ffffffcc; }
+    100% { box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 0 #ffffff00; }
+  }
+
+  /* ===========================================================
+     REVEAL VARIANT: DOMINO
+     Cards drop in from above with a bounce, L→R top-to-bottom.
+     =========================================================== */
+  .reveal-domino .photo {
+    transform: translateY(-180px);
+    opacity: 0;
+    transition: transform 0ms;
+  }
+  .reveal-domino .photo.revealed {
+    animation: dominoDrop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes dominoDrop {
+    0%   { transform: translateY(-180px); opacity: 0; }
+    60%  { transform: translateY(20px); opacity: 1; }
+    80%  { transform: translateY(-8px); opacity: 1; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .reveal-domino .photo.revealed .photo-card {
+    transform: rotateY(180deg);
+    transition: transform 1ms;
+  }
+
+  .footer {
+    position: absolute;
+    bottom: 50px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+  }
+  .footer .at { color: <%= primary %>; }
+</style>
+
+<div class="stage reveal-<%= reveal %>" data-team-slug="<%= @team.slug %>" data-pace="<%= pace_ms %>" data-reveal="<%= reveal %>">
+  <% if reveal == "hike" %><div class="snap-pulse"></div><% end %>
+  <% if reveal == "spotlight" %><div class="spotlight-beam"></div><% end %>
+
+  <div class="row row-line">
+    <% @offense_line.each do |slot_label, pick| %>
+      <%= render "lineup_graphics/tile_xl", slot_label: slot_label, pick: pick %>
+    <% end %>
+  </div>
+
+  <div class="row row-skill">
+    <% @offense_skill.each do |slot_label, pick| %>
+      <%= render "lineup_graphics/tile_xl", slot_label: slot_label, pick: pick %>
+    <% end %>
+  </div>
+
+  <div class="footer">@TURF<span class="at">·</span>MONSTER</div>
+</div>
+
+<script>
+  (function () {
+    const stage  = document.querySelector('.stage');
+    const photos = Array.from(document.querySelectorAll('[data-photo]'));
+    if (!stage || !photos.length) return;
+    const pace   = parseInt(stage.dataset.pace, 10) || 1500;
+    const reveal = stage.dataset.reveal;
+
+    const imgs = photos.map(p => p.querySelector('img')).filter(Boolean);
+    const ready = Promise.all(imgs.map(img => (
+      img.complete ? Promise.resolve() : new Promise(res => {
+        img.addEventListener('load', res, { once: true });
+        img.addEventListener('error', res, { once: true });
+      })
+    )));
+
+    // Order photos based on reveal variant.
+    let order = photos.slice();
+    if (reveal === 'hike') {
+      // OL row L→R first (5), then C-snap pulse, then skill players radially from QB (center).
+      const olRow = Array.from(document.querySelectorAll('.row-line [data-photo]'));
+      const skillRow = Array.from(document.querySelectorAll('.row-skill [data-photo]'));
+      // skill order: QB (0), then radially outward — RB(1), WR1(2), WR2(3), TE(4) → 0,1,2,3,4
+      const skillRadial = skillRow.length === 5
+        ? [skillRow[0], skillRow[1], skillRow[2], skillRow[3], skillRow[4]]
+        : skillRow;
+      order = olRow.concat(skillRadial);
+    } else if (reveal === 'spotlight' || reveal === 'domino') {
+      // Strict L→R top-to-bottom.
+      order = photos.slice();
+    }
+
+    let revealsStarted = false;
+    function startReveals() {
+      if (revealsStarted) return;
+      revealsStarted = true;
+
+      if (reveal === 'spotlight') {
+        stage.classList.add('beam-active');
+      }
+
+      const olCount = document.querySelectorAll('.row-line [data-photo]').length;
+
+      order.forEach((el, i) => {
+        setTimeout(() => {
+          el.classList.add('revealed');
+          // After the OL row finishes (hike variant), trigger the snap pulse.
+          if (reveal === 'hike' && i === olCount - 1) {
+            setTimeout(() => stage.classList.add('snap-fired'), 200);
+          }
+          if (i === order.length - 1) {
+            // Final hold to let consumer absorb the lineup, then mark complete.
+            setTimeout(() => {
+              document.body.setAttribute('data-reveal-complete', 'true');
+            }, 3500);
+          }
+        }, (i + 1) * pace);
+      });
+    }
+    window.startLineupReveals = startReveals;
+
+    ready.then(() => {
+      document.body.setAttribute('data-images-ready', 'true');
+      setTimeout(startReveals, 1500);
+    });
+  })();
+</script>

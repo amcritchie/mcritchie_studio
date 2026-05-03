@@ -2,13 +2,15 @@
 // (via Chrome DevTools Protocol screencast) plus a static PNG of the final state.
 //
 // Usage: node script/capture_lineup.js <team-slug> [base-url]
-// Env: HEADLESS=0 to watch the run
+// Env:
+//   HEADLESS=0       to watch the run
+//   SIDE=full|offense|defense   default: full
+//   REVEAL=<variant>            e.g. hike|spotlight|domino (offense), heat|blitz|crack (defense)
+//   PACE=<ms>                   ms between reveals; default 1500 (offense), 1700 (defense)
 //
-// Output:
-//   tmp/lineup-graphics/<slug>-frames/frame_NNNNN.png   (sequence)
-//   tmp/lineup-graphics/<slug>.png                      (final static frame)
-//
-// Assemble to MP4 separately via ffmpeg (see Content::GenerateLineupAssets / rake).
+// Output (file naming embeds side so X and TikTok captures don't collide):
+//   tmp/lineup-graphics/<slug>[-<side>]-frames/frame_NNNNN.png   (sequence)
+//   tmp/lineup-graphics/<slug>[-<side>].png                      (final static frame)
 
 const { chromium } = require("@playwright/test");
 const fs = require("fs");
@@ -20,10 +22,27 @@ if (!slug) {
   process.exit(1);
 }
 const baseUrl = process.argv[3] || "http://localhost:3000";
-const url = `${baseUrl}/teams/${slug}/lineup-graphic`;
 
+const SIDE   = (process.env.SIDE   || "full").toLowerCase();
+const REVEAL = process.env.REVEAL || "";
+const PACE   = parseInt(process.env.PACE || "0", 10);
+
+if (!["full", "offense", "defense"].includes(SIDE)) {
+  console.error(`invalid SIDE=${SIDE} (full|offense|defense)`);
+  process.exit(1);
+}
+
+// Build URL with side/reveal/pace query params for non-default captures.
+const qs = [];
+if (SIDE !== "full") qs.push(`side=${encodeURIComponent(SIDE)}`);
+if (REVEAL)          qs.push(`reveal=${encodeURIComponent(REVEAL)}`);
+if (PACE > 0)        qs.push(`pace=${PACE}`);
+const url = `${baseUrl}/teams/${slug}/lineup-graphic${qs.length ? "?" + qs.join("&") : ""}`;
+
+// Side-aware output paths so the X capture (full) doesn't clobber TikTok captures.
+const fileSuffix = SIDE === "full" ? "" : `-${SIDE}`;
 const outDir = path.resolve(__dirname, "..", "tmp", "lineup-graphics");
-const framesDir = path.join(outDir, `${slug}-frames`);
+const framesDir = path.join(outDir, `${slug}${fileSuffix}-frames`);
 fs.mkdirSync(framesDir, { recursive: true });
 
 // Wipe any stale frames from a previous capture so ffmpeg sees a clean sequence.
@@ -31,15 +50,19 @@ for (const f of fs.readdirSync(framesDir)) {
   if (f.startsWith("frame_") && f.endsWith(".png")) fs.unlinkSync(path.join(framesDir, f));
 }
 
-const VIEWPORT = { width: 1200, height: 1500 };
-const REVEAL_TIMEOUT_MS = 30_000;
-const HOLD_FINAL_MS = 1500;
+// TikTok partials render at 1080×1920 (9:16). The X full graphic is 1200×1500 (4:5).
+const VIEWPORT = SIDE === "full"
+  ? { width: 1200, height: 1500 }
+  : { width: 1080, height: 1920 };
+
+const REVEAL_TIMEOUT_MS = 45_000; // generous: 19s clips can take 18-20s of reveals
+const HOLD_FINAL_MS     = SIDE === "full" ? 1500 : 500; // partials already hold 3.5s before signaling complete
 
 (async () => {
   const browser = await chromium.launch({ headless: process.env.HEADLESS !== "0" });
   const context = await browser.newContext({
     viewport: VIEWPORT,
-    deviceScaleFactor: 2, // page renders at 2x; downsampled by ffmpeg → AA effect
+    deviceScaleFactor: 2,
   });
   const page = await context.newPage();
 
@@ -47,9 +70,6 @@ const HOLD_FINAL_MS = 1500;
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForSelector("body[data-images-ready='true']", { timeout: 30_000 });
 
-  // Start a CDP screencast BEFORE triggering the reveal cascade so the recorder
-  // is already streaming frames when reveals begin (avoids losing the first ~1s).
-  // Frames come as base64 PNG at 2x device pixels for ffmpeg lanczos downsample.
   const client = await context.newCDPSession(page);
   let frameCount = 0;
   const timestamps = [];
@@ -73,7 +93,6 @@ const HOLD_FINAL_MS = 1500;
   console.log("screencast started; settling 600ms before triggering reveals");
   await page.waitForTimeout(600);
 
-  // Trigger the reveal cascade only now that screencast is live.
   await page.evaluate(() => window.startLineupReveals && window.startLineupReveals());
 
   await page.waitForSelector("body[data-reveal-complete='true']", { timeout: REVEAL_TIMEOUT_MS });
@@ -82,14 +101,12 @@ const HOLD_FINAL_MS = 1500;
 
   await client.send("Page.stopScreencast");
 
-  // Record actual capture rate so ffmpeg can play back at real-time speed.
   const elapsed = timestamps.length >= 2 ? timestamps.at(-1) - timestamps[0] : 1;
   const fps = ((timestamps.length - 1) / elapsed).toFixed(3);
   fs.writeFileSync(path.join(framesDir, "framerate.txt"), fps);
   console.log(`captured ${frameCount} frames @ ${fps} fps → ${framesDir}`);
 
-  // Static PNG of the final fully-revealed state (also at 2x).
-  const pngPath = path.join(outDir, `${slug}.png`);
+  const pngPath = path.join(outDir, `${slug}${fileSuffix}.png`);
   await page.screenshot({ path: pngPath, fullPage: false });
   console.log(`png  → ${pngPath}`);
 
