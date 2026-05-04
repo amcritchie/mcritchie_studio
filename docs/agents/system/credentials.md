@@ -62,27 +62,27 @@ Wallet credentials are stored in the `alex@mcritchie.studio` 1Password account. 
 **Account ID**: `MWOV5OT5BRHATI4EGMN26C5DPA`
 
 **Vault layout**:
-- `🦞 Bots` — All agent wallet credentials
+- `agents` — All agent wallet credentials (renamed from "🦞 Bots" 2026-05-03)
 - `🧱 Blockchain` — General blockchain credentials
 
-**Retrieve a wallet's private key**:
+**Retrieve a wallet's private key** (items renamed 2026-05-03 to `agent.*` convention):
 ```bash
 # Alex Bot
-op item get "🧑🏻👻 Alex Solana" --vault "🦞 Bots" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key"
+op item get "agent.solana" --vault "agents" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key"
 
 # Mason
-op item get "🐩👻 Mason Solana" --vault "🦞 Bots" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key"
+op item get "agent.mason.solana" --vault "agents" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key"
 
 # Mack
-op item get "🐷👻 Mack Solana" --vault "🦞 Bots" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key"
+op item get "agent.mack.solana" --vault "agents" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key"
 
 # Turf Monster
-op item get "🐊👻 Turf Solana" --vault "🦞 Bots" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key"
+op item get "agent.turf.solana" --vault "agents" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key"
 ```
 
 **Set as env var (one-liner)**:
 ```bash
-export SOLANA_ADMIN_KEY=$(op item get "🧑🏻👻 Alex Solana" --vault "🦞 Bots" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key")
+export SOLANA_ADMIN_KEY=$(op item get "agent.solana" --vault "agents" --account MWOV5OT5BRHATI4EGMN26C5DPA --fields "private key")
 ```
 
 **Item fields**: Each wallet entry contains `recovery phrase`, `private key` (base58), and `wallet address` (base58 public key).

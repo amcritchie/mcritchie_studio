@@ -16,7 +16,7 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 - **Database**: Heroku Postgres (essential-0)
 - **DNS**: Google Domains — `app` CNAME → Heroku DNS target
 - **Deploy**: `git push heroku main` (then `heroku run bin/rails db:migrate --app mcritchie-studio` if new migrations)
-- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ANTHROPIC_API_KEY` (for AI chat + content script/metadata agents), `X_BEARER_TOKEN` (read-only, News intake), `X_API_KEY`/`X_API_SECRET`/`X_ACCESS_TOKEN`/`X_ACCESS_TOKEN_SECRET` (OAuth 1.0a write creds for `X::PostMedia` — must be from an X app with "Read and Write" permissions), `HIGGSFIELD_API_KEY`, `HIGGSFIELD_API_SECRET` (for content image/video generation via Nano Banana + Kling 3)
+- **Env vars**: `RAILS_MASTER_KEY`, `RAILS_SERVE_STATIC_FILES`, `DATABASE_URL` (auto), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ANTHROPIC_API_KEY` (for AI chat + content script/metadata agents), `X_BEARER_TOKEN` (read-only, News intake), `X_API_KEY`/`X_API_SECRET`/`X_ACCESS_TOKEN`/`X_ACCESS_TOKEN_SECRET` (OAuth 1.0a write creds for `X::PostMedia` — must be from an X app with "Read and Write" permissions), `HIGGSFIELD_API_KEY`, `HIGGSFIELD_API_SECRET` (for content image/video generation via Nano Banana + Kling 3 — 1Password item `agent.higgesfield` in `agents` vault)
 - **ACM**: Enabled (auto SSL via Let's Encrypt)
 
 ## Public Assets
@@ -212,7 +212,7 @@ end
   - **Captions** (auto-populated on create, editable on edit page):
     - Offense: `"Find the mistake on my {Mascot} OFFENSE 🚨"`
     - Defense: `"Find the mistake on my {Mascot} DEFENSE 🛡️"`
-  - **TikTok posting** — `Tiktok::OAuthClient` (refresh-token flow) + `Tiktok::PostMedia` (Content Posting API, `PULL_FROM_URL` pointed at the S3 MP4). `Content::PostToTiktok` orchestrates. ENV: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`, `TIKTOK_OPEN_ID`. 1Password item: 🐊 TikTok in Bots vault (must be present before posting works).
+  - **TikTok posting** — `Tiktok::OAuthClient` (refresh-token flow) + `Tiktok::PostMedia` (Content Posting API, `PULL_FROM_URL` pointed at the S3 MP4). `Content::PostToTiktok` orchestrates. ENV: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`, `TIKTOK_OPEN_ID`. 1Password item: 🐊 TikTok in `agents` vault (must be present before posting works).
   - **Music** — `Tiktok::PostMedia` accepts `music_id` (Commercial Music Library, requires Business account) or `publish_type=INBOX` to send to drafts so a human can attach a trending sound on the phone. Default flow is INBOX (draft) for trend-chasing, with optional `?music_id=` for fully-automated posts. Royalty-free fallback: `LineupGraphic::AssembleVideo` accepts `music_path:` to mux audio into the MP4 itself.
 
 - **Starter Post (X) workflow** — `Content.workflow = "starter_post_x"` branches the form, services, and show-page UI for an automated "find the mistake in my lineup" X post from @turfmonstershow. Live end-to-end. Pipeline:

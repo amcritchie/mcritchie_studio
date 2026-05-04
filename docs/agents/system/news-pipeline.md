@@ -89,7 +89,7 @@ bin/rails news:intake    # Fetch latest Schefter tweet
 
 ### X (Twitter) API — Bearer Token
 
-1. **1Password**: Stored in `🐊 X | Login & Tokens` in the `🦞 Bots` vault
+1. **1Password**: Stored in `agent.turf.x` in the `agents` vault
    ```bash
    op item get zz3uigmkrwjlnnksst33butc4e --vault txqp6ijdo3ujsfhsfzdj5h5dzq --field "Bearer Token" --reveal
    ```
@@ -106,7 +106,7 @@ bin/rails news:intake    # Fetch latest Schefter tweet
 
 ### X Developer Portal
 
-- **Login**: `alex@turfmonster.com` (credentials in 1Password `🐊 X | Login & Tokens`)
+- **Login**: `alex@turfmonster.com` (credentials in 1Password `agent.turf.x`)
 - **Portal**: https://developer.x.com/en/portal/dashboard
 - **Tier**: Free (read-only, 1 app, 1500 tweets/month read)
 - **Rate limits**: 1 request per 15 minutes for user tweets endpoint

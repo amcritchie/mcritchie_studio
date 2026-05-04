@@ -12,7 +12,12 @@
     <div class="mb-5">
       <label class="block text-sm text-secondary mb-2 font-medium">Workflow</label>
       <%= f.select :workflow,
-            [["Video", "video"], ["Starter Post (X)", "starter_post_x"]],
+            [
+              ["Video", "video"],
+              ["Starter Post (X)", "starter_post_x"],
+              ["Starter Post (TikTok Offense)", "starter_post_tiktok_offense"],
+              ["Starter Post (TikTok Defense)", "starter_post_tiktok_defense"]
+            ],
             {},
             class: "input-field", "x-model": "workflow" %>
     </div>
