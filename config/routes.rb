@@ -74,6 +74,9 @@ Rails.application.routes.draw do
       post :generate_lineup_assets
       post :post_to_x
       post :post_to_tiktok
+      post :prep_for_tiktok
+      post :use_caption_variant
+      post :mark_posted
     end
   end
   resources :teams, only: [:index], param: :slug

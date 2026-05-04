@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_02_095750) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_04_042522) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -229,6 +229,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_02_095750) do
     t.jsonb "music_suggestions", default: []
     t.string "workflow", default: "video", null: false
     t.string "team_slug"
+    t.jsonb "caption_variants", default: []
     t.index ["rival_team_slug"], name: "index_contents_on_rival_team_slug"
     t.index ["slug"], name: "index_contents_on_slug", unique: true
     t.index ["source_news_slug"], name: "index_contents_on_source_news_slug"

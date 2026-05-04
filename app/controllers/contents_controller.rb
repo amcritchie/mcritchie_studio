@@ -2,7 +2,7 @@ class ContentsController < ApplicationController
   skip_before_action :verify_authenticity_token, if: -> { request.format.json? }
   skip_before_action :require_authentication, only: [:index, :show]
   before_action :require_admin, except: [:index, :show]
-  before_action :set_content, only: [:show, :edit, :update, :destroy, :hook_step, :script_step, :assets_step, :assemble_step, :post_step, :review_step, :script_agent_step, :assets_agent_step, :assemble_agent_step, :finalize_step, :metadata_step, :generate_lineup_assets, :post_to_x, :post_to_tiktok]
+  before_action :set_content, only: [:show, :edit, :update, :destroy, :hook_step, :script_step, :assets_step, :assemble_step, :post_step, :review_step, :script_agent_step, :assets_agent_step, :assemble_agent_step, :finalize_step, :metadata_step, :generate_lineup_assets, :post_to_x, :post_to_tiktok, :prep_for_tiktok, :use_caption_variant, :mark_posted]
 
   def index
     @contents = Content.ordered
@@ -58,6 +58,43 @@ class ContentsController < ApplicationController
     end
   rescue StandardError => e
     redirect_to content_path(@content.slug), alert: "Post to TikTok failed: #{e.message}"
+  end
+
+  def prep_for_tiktok
+    rescue_and_log(target: @content) do
+      raise "Only available for TikTok workflows" unless @content.tiktok_workflow?
+      raise "Content must be in assets stage (currently #{@content.stage})" unless @content.stage == "assets"
+      Content::PrepForTiktok.new(@content).call
+      redirect_to content_path(@content.slug), notice: "Prepped for post — pick a caption and click Begin Post."
+    end
+  rescue StandardError => e
+    redirect_to content_path(@content.slug), alert: "Prep failed: #{e.message}"
+  end
+
+  def use_caption_variant
+    rescue_and_log(target: @content) do
+      idx = params[:index].to_i
+      variants = Array(@content.caption_variants)
+      raise "Variant index #{idx} out of range" unless idx.between?(0, variants.length - 1)
+      @content.update!(captions: variants[idx])
+      redirect_to content_path(@content.slug), notice: "Caption updated to variant #{idx + 1}."
+    end
+  rescue StandardError => e
+    redirect_to content_path(@content.slug), alert: e.message
+  end
+
+  def mark_posted
+    rescue_and_log(target: @content) do
+      raise "Content must be in assembly or assets stage (currently #{@content.stage})" unless %w[assets assembly].include?(@content.stage)
+      Content::Post.new(@content).call(
+        platform: params[:platform].presence || (@content.tiktok_workflow? ? "tiktok" : nil),
+        post_url: params[:post_url].presence,  # nil OK — user can paste later via Edit
+        post_id:  params[:post_id].presence
+      )
+      redirect_to content_path(@content.slug), notice: "Marked as posted. Paste the URL later via Edit if you want to track it."
+    end
+  rescue StandardError => e
+    redirect_to content_path(@content.slug), alert: e.message
   end
 
   def create_starter_post_x
