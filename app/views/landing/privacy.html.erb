@@ -1,0 +1,78 @@
+<% content_for :title, "Privacy Policy · McRitchie Studio" %>
+
+<section class="max-w-3xl mx-auto px-4 py-10 prose-custom">
+  <h1 class="text-3xl font-bold text-heading mb-2">Privacy Policy</h1>
+  <p class="text-muted text-sm mb-8">Last updated: May 3, 2026</p>
+
+  <div class="space-y-6 text-body leading-relaxed">
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">1. Who We Are</h2>
+      <p>McRitchie Studio ("we", "us") is an internal content production tool operated by Alex McRitchie. The Service is invitation-only and is used to produce and publish social media content for the @turfmonstershow brand and related projects.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">2. Information We Collect</h2>
+      <p><strong>Account information:</strong> When an authorized user signs in (via email/password or Google OAuth), we store the user's name, email address, and a hashed password.</p>
+      <p><strong>Third-party platform credentials:</strong> When the operator authorizes the Service to post on behalf of brand accounts on X or TikTok, we store the OAuth tokens (access token, refresh token) and account identifier (open_id) issued by those platforms. These tokens are stored in environment variables on our server, not in the application database.</p>
+      <p><strong>Content data:</strong> We store content you create through the Service — titles, captions, hashtags, video URLs, and references to sports data (player names, team names, statistics) sourced from public sports-data providers.</p>
+      <p><strong>Usage data:</strong> Standard server logs (IP address, request path, timestamp, user agent) for operational monitoring and security.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">3. What We Don't Collect</h2>
+      <p>The Service is not open to the public and does not collect data from end users of TikTok, X, or any other social platform. We do not track viewers of the content we publish.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">4. How We Use Information</h2>
+      <p>We use the information described above solely to (a) authenticate authorized users; (b) generate and publish content to the brand accounts we operate; (c) maintain operational security; and (d) communicate with authorized users about the Service.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">5. How We Share Information</h2>
+      <p>We do not sell or rent your information. We share information only with:</p>
+      <ul class="list-disc pl-6 space-y-1">
+        <li><strong>Infrastructure providers:</strong> Heroku (application hosting + Postgres) and Amazon Web Services (S3 in us-east-2 for media storage).</li>
+        <li><strong>Third-party APIs we publish to:</strong> X and TikTok, when you instruct the Service to publish content.</li>
+        <li><strong>AI providers:</strong> Anthropic (for content generation) when you invoke an AI agent.</li>
+        <li><strong>Authentication providers:</strong> Google (for OAuth sign-in).</li>
+        <li><strong>Legal:</strong> if required by law or to protect rights, safety, and property.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">6. Data Retention</h2>
+      <p>We retain account, content, and credential data for as long as the Service is operated, or until you request deletion. Server logs are retained for up to 90 days.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">7. Security</h2>
+      <p>We use industry-standard practices: TLS for all transport, hashed passwords (bcrypt), encrypted secrets (Rails encrypted credentials, AWS KMS, 1Password), and access controls limiting application secrets to a single service account.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">8. Cookies</h2>
+      <p>We use a single first-party session cookie to keep authorized users signed in. We do not use advertising or analytics cookies.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">9. Your Rights</h2>
+      <p>If you are an authorized user, you may request access to, correction of, or deletion of your data at any time by emailing <a href="mailto:alex@mcritchie.studio" class="text-primary hover:underline">alex@mcritchie.studio</a>. We will respond within 30 days.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">10. Children</h2>
+      <p>The Service is not directed to children under 13 and we do not knowingly collect data from children.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">11. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. The "Last updated" date at the top of this page indicates when the Policy was last revised.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-semibold text-heading mb-2">12. Contact</h2>
+      <p>Privacy questions or data requests: <a href="mailto:alex@mcritchie.studio" class="text-primary hover:underline">alex@mcritchie.studio</a>.</p>
+    </section>
+  </div>
+</section>

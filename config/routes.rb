@@ -6,6 +6,8 @@ Rails.application.routes.draw do
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
   root "landing#index"
+  get "terms",   to: "landing#terms",   as: :terms
+  get "privacy", to: "landing#privacy", as: :privacy
 
   get "dashboard", to: "dashboard#index"
   get "toast_test", to: "toast_test#index"
