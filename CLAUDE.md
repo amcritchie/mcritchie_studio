@@ -212,7 +212,7 @@ end
   - **Captions** (auto-populated on create, editable on edit page):
     - Offense: `"Find the mistake on my {Mascot} OFFENSE 🚨"`
     - Defense: `"Find the mistake on my {Mascot} DEFENSE 🛡️"`
-  - **TikTok posting** — `Tiktok::OAuthClient` (refresh-token flow) + `Tiktok::PostMedia` (Content Posting API, `PULL_FROM_URL` pointed at the S3 MP4). `Content::PostToTiktok` orchestrates. ENV: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`, `TIKTOK_OPEN_ID`. 1Password item: 🐊 TikTok in `agents` vault (must be present before posting works).
+  - **TikTok posting** — `Tiktok::OAuthClient` (refresh-token flow) + `Tiktok::PostMedia` (Content Posting API, `PULL_FROM_URL` pointed at the S3 MP4). `Content::PostToTiktok` orchestrates. ENV: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`, `TIKTOK_OPEN_ID` (all in `.env`; client key/secret come from developer.tiktok.com, refresh token + open_id from the `/admin/tiktok/connect` OAuth flow).
   - **Music** — `Tiktok::PostMedia` accepts `music_id` (Commercial Music Library, requires Business account) or `publish_type=INBOX` to send to drafts so a human can attach a trending sound on the phone. Default flow is INBOX (draft) for trend-chasing, with optional `?music_id=` for fully-automated posts. Royalty-free fallback: `LineupGraphic::AssembleVideo` accepts `music_path:` to mux audio into the MP4 itself.
 
 - **Starter Post (X) workflow** — `Content.workflow = "starter_post_x"` branches the form, services, and show-page UI for an automated "find the mistake in my lineup" X post from @turfmonstershow. Live end-to-end. Pipeline:

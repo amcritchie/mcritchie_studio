@@ -77,6 +77,7 @@ Rails.application.routes.draw do
       post :prep_for_tiktok
       post :use_caption_variant
       post :mark_posted
+      post :studio_upload_to_tiktok
     end
   end
   resources :teams, only: [:index], param: :slug

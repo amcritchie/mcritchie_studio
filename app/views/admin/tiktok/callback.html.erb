@@ -1,9 +1,8 @@
 <section class="max-w-3xl mx-auto px-4 py-10 space-y-6">
   <h1 class="text-3xl font-bold text-heading">TikTok connected ✅</h1>
   <p class="text-secondary">
-    Copy the values below into <code class="text-primary">/Users/alex/projects/.env</code>
-    AND the <strong>🐊 TikTok</strong> item in the <code>agents</code> vault. The refresh token is long-lived
-    (~365 days) — keep it secret. After that, restart the dev server to pick up the new env vars.
+    Copy the values below into <code class="text-primary">/Users/alex/projects/.env</code>.
+    The refresh token is long-lived (~365 days) — keep it secret. After that, restart the dev server to pick up the new env vars.
   </p>
 
   <div class="card p-4 space-y-3 font-mono text-sm">
@@ -25,8 +24,8 @@
   </div>
 
   <pre class="bg-inset p-3 rounded text-xs overflow-x-auto"># add to .env
-TIKTOK_CLIENT_KEY=<from 1Password 🐊 TikTok>
-TIKTOK_CLIENT_SECRET=<from 1Password 🐊 TikTok>
+TIKTOK_CLIENT_KEY=<from developer.tiktok.com>
+TIKTOK_CLIENT_SECRET=<from developer.tiktok.com>
 TIKTOK_REFRESH_TOKEN=<%= @refresh_token %>
 TIKTOK_OPEN_ID=<%= @open_id %></pre>
 </section>

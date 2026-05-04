@@ -1,7 +1,7 @@
 module Admin
   # One-time OAuth handshake to obtain TIKTOK_REFRESH_TOKEN + TIKTOK_OPEN_ID
   # for the @turfmonstershow account. After getting these values, copy them
-  # into ~/projects/.env and the 🐊 TikTok 1Password item.
+  # into ~/projects/.env.
   class TiktokController < ApplicationController
     before_action :require_admin
 

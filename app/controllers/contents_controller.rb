@@ -2,7 +2,7 @@ class ContentsController < ApplicationController
   skip_before_action :verify_authenticity_token, if: -> { request.format.json? }
   skip_before_action :require_authentication, only: [:index, :show]
   before_action :require_admin, except: [:index, :show]
-  before_action :set_content, only: [:show, :edit, :update, :destroy, :hook_step, :script_step, :assets_step, :assemble_step, :post_step, :review_step, :script_agent_step, :assets_agent_step, :assemble_agent_step, :finalize_step, :metadata_step, :generate_lineup_assets, :post_to_x, :post_to_tiktok, :prep_for_tiktok, :use_caption_variant, :mark_posted]
+  before_action :set_content, only: [:show, :edit, :update, :destroy, :hook_step, :script_step, :assets_step, :assemble_step, :post_step, :review_step, :script_agent_step, :assets_agent_step, :assemble_agent_step, :finalize_step, :metadata_step, :generate_lineup_assets, :post_to_x, :post_to_tiktok, :prep_for_tiktok, :use_caption_variant, :mark_posted, :studio_upload_to_tiktok]
 
   def index
     @contents = Content.ordered
@@ -58,6 +58,16 @@ class ContentsController < ApplicationController
     end
   rescue StandardError => e
     redirect_to content_path(@content.slug), alert: "Post to TikTok failed: #{e.message}"
+  end
+
+  def studio_upload_to_tiktok
+    rescue_and_log(target: @content) do
+      raise "Only available for TikTok workflows" unless @content.tiktok_workflow?
+      result = Tiktok::StudioUpload.new(@content).call
+      redirect_to content_path(@content.slug), notice: "🤖 Browser opening with video + caption pre-loaded. Review and click Post in TikTok Studio. (pid #{result[:pid]})"
+    end
+  rescue StandardError => e
+    redirect_to content_path(@content.slug), alert: "Studio upload failed: #{e.message}"
   end
 
   def prep_for_tiktok

@@ -218,7 +218,7 @@
           <% end %>
 
           <%# BEGIN POST HANDOFF — clipboard + download + open Studio %>
-          <div class="pt-4 border-t border-subtle"
+          <div class="pt-4 border-t border-subtle space-y-3"
                data-controller-stub="begin-post"
                data-caption="<%= ERB::Util.html_escape(full_caption) %>"
                data-mp4="<%= mp4_url %>"
@@ -229,9 +229,22 @@
                     <%= "disabled" if mp4_url.blank? %>>
               🚀 Begin Post — copy caption + download MP4 + open TikTok Studio
             </button>
-            <p class="text-xs text-muted mt-2 text-center">
+            <p class="text-xs text-muted text-center">
               One click does three things: copies caption to clipboard, downloads the MP4, opens TikTok Studio in a new tab.
             </p>
+
+            <%# Auto-upload via Playwright — local dev only (needs Chromium with display) %>
+            <% if Rails.env.development? %>
+              <%= button_to "🤖 Auto-Upload to TikTok Studio (you click Post)",
+                    studio_upload_to_tiktok_content_path(@content.slug),
+                    class: "btn btn-secondary btn-lg w-full",
+                    disabled: mp4_url.blank?,
+                    form: { class: "w-full", "data-turbo": "false" },
+                    data: { confirm: "Launches Chromium, uploads video + types caption, leaves browser open. ~30-60s. Continue?" } %>
+              <p class="text-xs text-muted text-center">
+                Agent does the upload + caption typing. You review and click Post in the browser. Requires <code>npm run tiktok:login</code> first.
+              </p>
+            <% end %>
           </div>
 
           <%# AFTER POSTING — paste URL OR use the no-URL escape hatch %>

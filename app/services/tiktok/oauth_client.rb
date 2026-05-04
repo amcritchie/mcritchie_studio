@@ -10,7 +10,7 @@ module Tiktok
   #   2. User logs into @turfmonstershow + grants video.upload + video.publish
   #   3. TikTok redirects back to /admin/tiktok/callback with ?code=...
   #   4. Callback page exchanges code for refresh_token + open_id
-  #   5. User copies the displayed values into .env / 1Password (🐊 TikTok)
+  #   5. User copies the displayed values into .env
   #
   # Per-post flow:
   #   Tiktok::OAuthClient.access_token  → exchanges refresh_token for short-lived access_token (cached 1 hour)
