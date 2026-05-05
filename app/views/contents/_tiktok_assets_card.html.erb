@@ -1,0 +1,72 @@
+<%# TikTok API call-to-action card. Shows on the Content show page when
+    workflow is starter_post_tiktok_* AND stage = "assets". Three publish
+    paths, all gated on TikTok OAuth creds being set in .env:
+      - Send to drafts (recommended, INBOX endpoint, attach sound in app)
+      - Direct post (auto-publish, optional CML music_id)
+      - Manual fallback (download MP4 + paste resulting URL) %>
+<%
+  tiktok_creds_set = Tiktok::OAuthClient.runtime_creds_present?
+  side_label       = @content.lineup_side.to_s.upcase
+%>
+<div class="card p-6 border border-primary/30">
+  <p class="label-upper mb-2 text-primary">Post <%= side_label %> to TikTok</p>
+
+  <%# DRAFT (INBOX) — recommended so you can attach a trending sound %>
+  <div class="mb-4 pb-4 border-b border-subtle">
+    <p class="text-sm text-body mb-3">
+      <span class="font-semibold">Send to drafts (recommended):</span>
+      uploads the video to your TikTok inbox so you can attach a trending sound and publish from the app.
+      <% unless tiktok_creds_set %>
+        <span class="text-warning text-xs block mt-1">⚠ TIKTOK_CLIENT_KEY / SECRET / REFRESH_TOKEN / OPEN_ID not set in .env — run /admin/tiktok/connect first.</span>
+      <% end %>
+    </p>
+    <%= button_to "📥 Send to TikTok Drafts",
+          post_to_tiktok_content_path(@content.slug, publish_type: "inbox"),
+          class: "btn btn-primary",
+          disabled: !tiktok_creds_set,
+          form: { class: "inline-block", "data-turbo": "false" },
+          data: { confirm: "Send to your TikTok app drafts. ~10–30s. Continue?" } %>
+  </div>
+
+  <%# DIRECT POST — fully automated, no music unless music_id provided %>
+  <div class="mb-4 pb-4 border-b border-subtle">
+    <p class="text-sm text-body mb-3">
+      <span class="font-semibold">Direct post:</span>
+      publishes immediately to your public feed. No music unless you supply a Commercial Music Library ID (Business account).
+    </p>
+    <%= form_with url: post_to_tiktok_content_path(@content.slug), method: :post, local: true,
+                  html: { class: "flex flex-col sm:flex-row gap-2", "data-turbo": "false" } do |f| %>
+      <input type="hidden" name="publish_type" value="direct_post">
+      <input type="text"
+             name="music_id"
+             placeholder="optional CML music_id"
+             class="input-field flex-1">
+      <%= f.submit "🚀 Post to TikTok (auto)",
+            class: "btn btn-primary",
+            disabled: !tiktok_creds_set,
+            data: { confirm: "Publish immediately to TikTok. Continue?" } %>
+    <% end %>
+  </div>
+
+  <%# MANUAL FALLBACK — download MP4 + paste resulting URL %>
+  <p class="text-sm text-body mb-3">
+    <span class="font-semibold">Manual fallback:</span>
+    download → upload via TikTok app → paste the URL here.
+  </p>
+  <div class="flex flex-wrap items-center gap-2 mb-3">
+    <% if @content.final_video_url.present? %>
+      <%= link_to "⬇ Download Video", @content.final_video_url,
+            class: "btn btn-outline btn-sm", target: "_blank", download: "" %>
+    <% end %>
+  </div>
+  <%= form_with url: post_step_content_path(@content.slug), method: :post, local: true,
+                html: { class: "flex flex-col sm:flex-row gap-2" } do %>
+    <input type="hidden" name="platform" value="tiktok">
+    <input type="url"
+           name="post_url"
+           required
+           placeholder="https://www.tiktok.com/@turfmonstershow/video/1234567890"
+           class="input-field flex-1">
+    <button type="submit" class="btn btn-secondary">Mark as Posted</button>
+  <% end %>
+</div>
