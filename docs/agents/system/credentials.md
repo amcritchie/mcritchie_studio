@@ -1,5 +1,7 @@
 # Credentials
 
+> **Restoring credentials on a fresh Mac?** `bin/ecosystem-build` does this automatically: it pulls `RAILS_MASTER_KEY` and other env vars from `heroku config` and `SOLANA_ADMIN_KEY` from 1Password (`agent.solana`), then writes `.env` for both Rails apps. See [house-burn-down.md](house-burn-down.md). This doc is the canonical reference for what each value is and where it lives.
+
 ## Environment Variables
 
 All sensitive credentials are stored as environment variables, never in code.

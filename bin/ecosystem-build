@@ -1,0 +1,500 @@
+#!/usr/bin/env bash
+# bin/ecosystem-build — idempotent McRitchie ecosystem setup + verification.
+#
+# Detects what's already installed/configured, installs/configures what's
+# missing, and bounces the Rails servers so you end at a known-good steady
+# state. Safe to re-run anytime; on a healthy machine it just walks through
+# checkmarks.
+#
+# Prereqs (NOT auto-installed):
+#   - macOS with Xcode Command Line Tools (xcode-select --install)
+#   - Homebrew
+#   - git
+#   - 1Password service account token (set up via bin/setup-1pass-token first)
+#
+# Usage:
+#   bin/ecosystem-build
+#
+# Run from any directory; the script locates itself.
+
+set -uo pipefail   # no -e: phases report their own failures and we keep going where safe
+
+# ─── Constants ──────────────────────────────────────────────────────────────
+HOMEBREW_PKGS=(ruby@3.1 mise postgresql@14 redis 1password-cli gh ffmpeg imagemagick libpq jq)
+HOMEBREW_CASK_PKGS=(heroku/brew/heroku)
+RUBY_PREFIX=/opt/homebrew/opt/ruby@3.1
+SOLANA_PREFIX=$HOME/.local/share/solana/install/active_release
+CARGO_PREFIX=$HOME/.cargo
+MISE_SHIMS=$HOME/.local/share/mise/shims
+PROJECTS_DIR=${PROJECTS_DIR:-$HOME/projects}
+SIBLING_REPOS=(turf_monster studio solana_studio turf_vault)
+GH_OWNER=amcritchie
+RAILS_APPS=(mcritchie_studio turf_monster)
+HEROKU_APPS=(mcritchie-studio turf-monster)
+RAILS_PORTS=(3000 3001)
+
+# ─── Logging ────────────────────────────────────────────────────────────────
+if [ -t 1 ]; then
+  GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RED=$'\033[31m'; DIM=$'\033[2m'; BOLD=$'\033[1m'; RESET=$'\033[0m'
+else
+  GREEN=""; YELLOW=""; RED=""; DIM=""; BOLD=""; RESET=""
+fi
+
+log_phase() { echo; echo "${BOLD}${YELLOW}═══ $1 ═══${RESET}"; }
+log_ok()    { local detail="${2:-}"; echo "  ${GREEN}✓${RESET} $1${detail:+  ${DIM}$detail${RESET}}"; }
+log_act()   { echo "  ${YELLOW}→${RESET} $1"; }
+log_fail()  { local detail="${2:-}"; echo "  ${RED}✗${RESET} $1${detail:+  ${DIM}$detail${RESET}}"; }
+
+# ─── Helpers ────────────────────────────────────────────────────────────────
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# Build PATH for child processes (idempotent)
+export PATH="$RUBY_PREFIX/bin:/opt/homebrew/lib/ruby/gems/3.1.0/bin:$MISE_SHIMS:$SOLANA_PREFIX/bin:$CARGO_PREFIX/bin:/opt/homebrew/bin:$PATH"
+
+# Pull OP_SERVICE_ACCOUNT_TOKEN + HEROKU_API_KEY from ~/.zprofile if they live there
+if [ -f "$HOME/.zprofile" ]; then
+  # shellcheck disable=SC1091
+  set +u; source "$HOME/.zprofile" 2>/dev/null || true; set -u
+fi
+
+# ─── Phase 1: System tools ──────────────────────────────────────────────────
+phase_system_tools() {
+  log_phase "Phase 1: System tools"
+
+  if ! have brew; then
+    log_fail "Homebrew not installed"
+    echo
+    echo "  Install Homebrew first:"
+    echo '    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+    return 1
+  fi
+  log_ok "Homebrew" "$(brew --version | head -1)"
+
+  local missing=()
+  for pkg in "${HOMEBREW_PKGS[@]}" "${HOMEBREW_CASK_PKGS[@]}"; do
+    if ! brew list "${pkg##*/}" >/dev/null 2>&1; then
+      missing+=("$pkg")
+    fi
+  done
+
+  if [ ${#missing[@]} -gt 0 ]; then
+    log_act "installing ${#missing[@]} brew package(s): ${missing[*]}"
+    brew install "${missing[@]}" >/dev/null
+  fi
+
+  for pkg in ruby@3.1 mise postgresql@14 redis 1password-cli gh ffmpeg imagemagick jq heroku; do
+    if brew list "$pkg" >/dev/null 2>&1; then
+      log_ok "$pkg"
+    else
+      log_fail "$pkg install verification failed"
+    fi
+  done
+
+  # The Ruby/socket gotcha — verify the brew Ruby has the socket extension
+  if "$RUBY_PREFIX/bin/ruby" -e "require 'socket'" 2>/dev/null; then
+    log_ok "ruby socket extension"
+  else
+    log_fail "ruby missing socket extension" "try: brew reinstall ruby@3.1"
+  fi
+
+  # Background services
+  for svc in postgresql@14 redis; do
+    if brew services list 2>/dev/null | grep -qE "^$svc\s+started"; then
+      log_ok "$svc service" "running"
+    else
+      log_act "starting $svc"
+      brew services start "$svc" >/dev/null
+      log_ok "$svc service" "started"
+    fi
+  done
+}
+
+# ─── Phase 2: Languages ─────────────────────────────────────────────────────
+phase_languages() {
+  log_phase "Phase 2: Languages"
+
+  # Node 20 via mise (20+ required for turf_vault yarn deps — gotcha)
+  if ! mise list 2>/dev/null | grep -qE "^node\s+20"; then
+    log_act "installing node@20 via mise"
+    mise use --global node@20 >/dev/null
+  fi
+  log_ok "Node" "$(node --version 2>/dev/null)"
+
+  if ! have yarn; then
+    log_act "installing yarn (required by anchor test)"
+    npm install -g yarn >/dev/null 2>&1
+  fi
+  log_ok "yarn" "$(yarn --version 2>/dev/null)"
+
+  # Rust 1.89.0 (pinned for Anchor 0.32.1 compatibility)
+  if ! have rustc; then
+    log_act "installing Rust via rustup (non-interactive)"
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.89.0 >/dev/null
+    # shellcheck disable=SC1091
+    set +u; source "$CARGO_PREFIX/env"; set -u
+  fi
+  log_ok "Rust" "$(rustc --version)"
+
+  # Solana CLI via Anza (release.solana.com is deprecated — gotcha)
+  if ! have solana; then
+    log_act "installing Solana CLI from release.anza.xyz"
+    sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)" >/dev/null
+    export PATH="$SOLANA_PREFIX/bin:$PATH"
+  fi
+  log_ok "Solana CLI" "$(solana --version 2>&1 | head -1)"
+
+  # Anchor 0.32.1
+  if ! have anchor; then
+    log_act "installing Anchor 0.32.1 via cargo (~5 min — large compile)"
+    cargo install anchor-cli --version 0.32.1 --locked >/dev/null 2>&1
+  fi
+  log_ok "Anchor" "$(anchor --version)"
+
+  # Local Solana dev keypair (NOT one of the agent vault wallets)
+  if [ ! -f "$HOME/.config/solana/id.json" ]; then
+    log_act "generating local Solana dev keypair"
+    mkdir -p "$HOME/.config/solana"
+    solana-keygen new --no-bip39-passphrase --silent --outfile "$HOME/.config/solana/id.json"
+    solana config set --url devnet >/dev/null
+  fi
+  log_ok "Solana keypair" "$(solana address 2>/dev/null) (devnet)"
+}
+
+# ─── Phase 3: Shell config ──────────────────────────────────────────────────
+phase_shell_config() {
+  log_phase "Phase 3: Shell config"
+
+  local zshrc_lines=(
+    'export PATH="/opt/homebrew/opt/ruby@3.1/bin:$PATH"'
+    'export PATH="/opt/homebrew/lib/ruby/gems/3.1.0/bin:$PATH"'
+    'eval "$(/opt/homebrew/bin/mise activate zsh)"'
+    'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"'
+    'export PATH="$HOME/.cargo/bin:$PATH"'
+  )
+
+  touch "$HOME/.zshrc"
+  local added=0
+  for line in "${zshrc_lines[@]}"; do
+    if ! grep -qF "$line" "$HOME/.zshrc"; then
+      echo "$line" >> "$HOME/.zshrc"
+      added=$((added+1))
+    fi
+  done
+
+  if [ "$added" -gt 0 ]; then
+    log_act "added $added missing line(s) to ~/.zshrc"
+  fi
+  log_ok "~/.zshrc" "all required PATH/activation lines present"
+
+  if [ -f "$HOME/.zprofile" ]; then
+    local mode
+    mode=$(stat -f "%Op" "$HOME/.zprofile" | tail -c4)
+    if [ "$mode" != "600" ]; then
+      chmod 600 "$HOME/.zprofile"
+      log_ok "~/.zprofile chmod" "fixed from $mode → 600"
+    else
+      log_ok "~/.zprofile" "chmod 600"
+    fi
+  else
+    log_ok "~/.zprofile" "not yet present (created by bin/setup-1pass-token)"
+  fi
+}
+
+# ─── Phase 4: Secrets ───────────────────────────────────────────────────────
+phase_secrets() {
+  log_phase "Phase 4: Secrets"
+
+  # OP service token is the key to everything else
+  if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+    log_fail "OP_SERVICE_ACCOUNT_TOKEN not set"
+    echo
+    echo "  ${BOLD}The 1Password service token is the key to everything else.${RESET}"
+    echo "  To set it up:"
+    echo "    1. Sign in to https://start.1password.com as alex@mcritchie.studio"
+    echo "    2. Developer Tools → Service Accounts → New (grant read on 'agents' vault)"
+    echo "    3. Copy the token (ops_...) to your clipboard"
+    echo "    4. Run: ${BOLD}bin/setup-1pass-token${RESET}"
+    echo "    5. Re-run: ${BOLD}bin/ecosystem-build${RESET}"
+    return 1
+  fi
+
+  if op vault list 2>/dev/null | grep -qw agents; then
+    log_ok "OP_SERVICE_ACCOUNT_TOKEN" "set, 'agents' vault visible"
+  else
+    log_fail "OP token set but can't read 'agents' vault" "check the token's vault grants"
+    return 1
+  fi
+
+  # Heroku API key (auto-pull from 1P if not set)
+  if [ -z "${HEROKU_API_KEY:-}" ]; then
+    log_act "fetching agent.heroku from 1Password"
+    HEROKU_API_KEY=$(op item get "agent.heroku" --vault agents --format json 2>/dev/null \
+      | jq -r '.urls[]? | select(.label == "api key") | .href')
+    if [ -z "$HEROKU_API_KEY" ]; then
+      log_fail "agent.heroku item missing or 'api key' URL field empty"
+      echo "    Expected: agents/agent.heroku with a URL labeled 'api key' = HRKU-..."
+      return 1
+    fi
+    export HEROKU_API_KEY
+    sed -i '' '/HEROKU_API_KEY/d' "$HOME/.zprofile" 2>/dev/null || true
+    echo "export HEROKU_API_KEY=$HEROKU_API_KEY" >> "$HOME/.zprofile"
+    chmod 600 "$HOME/.zprofile"
+    log_ok "HEROKU_API_KEY saved to ~/.zprofile"
+  fi
+
+  local who
+  who=$(heroku auth:whoami 2>&1 | grep -v "Warning" | tail -1)
+  if [[ "$who" == *@* ]]; then
+    log_ok "Heroku auth" "$who"
+  else
+    log_fail "Heroku auth failed" "$who"
+    return 1
+  fi
+
+  # .env files for each Rails app
+  for i in 0 1; do
+    local app="${RAILS_APPS[$i]}"
+    local heroku_app="${HEROKU_APPS[$i]}"
+    local env_path="$PROJECTS_DIR/$app/.env"
+
+    if [ ! -d "$PROJECTS_DIR/$app" ]; then
+      log_ok "$app/.env" "skipped (repo not yet cloned — Phase 5 will fix)"
+      continue
+    fi
+
+    if [ ! -f "$env_path" ] || [ ! -s "$env_path" ]; then
+      log_act "restoring $app/.env from $heroku_app config"
+      heroku config --app "$heroku_app" --shell 2>/dev/null \
+        | grep -vE "^DATABASE_URL=|^RAILS_SERVE_STATIC_FILES=|^REDIS_URL=" \
+        > "$env_path"
+      chmod 600 "$env_path"
+    fi
+    local count
+    count=$(grep -cE "^[A-Z_]+=" "$env_path" || echo 0)
+    log_ok "$app/.env" "$count env vars"
+  done
+
+  # 1Password-only secrets that aren't in Heroku config but the app needs for full
+  # functionality. Mapping: env_var_name -> "vault/item/field". Always re-fetched
+  # (cheap) so rotated tokens propagate without manual intervention.
+  local op_secrets=(
+    "turf_monster|SOLANA_ADMIN_KEY|agents/agent.solana/private key"
+  )
+  for entry in "${op_secrets[@]}"; do
+    IFS='|' read -r app var ref <<< "$entry"
+    local env_path="$PROJECTS_DIR/$app/.env"
+    [ -f "$env_path" ] || continue
+    local value
+    value=$(op read "op://$ref" 2>/dev/null)
+    if [ -z "$value" ]; then
+      log_fail "$var (op://$ref)" "not retrievable — does the token have read on that vault?"
+      continue
+    fi
+    sed -i '' "/^$var=/d" "$env_path"
+    echo "$var=$value" >> "$env_path"
+    chmod 600 "$env_path"
+    log_ok "$app/$var" "from op://$ref"
+  done
+}
+
+# ─── Phase 5: Sibling repos ─────────────────────────────────────────────────
+phase_repos() {
+  log_phase "Phase 5: Sibling repos"
+
+  mkdir -p "$PROJECTS_DIR"
+
+  for repo in "${SIBLING_REPOS[@]}"; do
+    local path="$PROJECTS_DIR/$repo"
+    if [ -d "$path/.git" ]; then
+      local branch
+      branch=$(git -C "$path" branch --show-current 2>/dev/null || echo "?")
+      local clean="clean"
+      if [ -n "$(git -C "$path" status --porcelain 2>/dev/null)" ]; then
+        clean="dirty"
+      fi
+      log_ok "$repo" "branch: $branch ($clean)"
+    else
+      log_act "cloning $GH_OWNER/$repo"
+      if ! gh repo clone "$GH_OWNER/$repo" "$path" >/dev/null 2>&1; then
+        log_fail "gh repo clone failed" "try: gh auth login"
+        return 1
+      fi
+      log_ok "$repo" "cloned"
+    fi
+  done
+}
+
+# ─── Phase 6: Bundles + databases ───────────────────────────────────────────
+phase_bundles_dbs() {
+  log_phase "Phase 6: Bundles + databases"
+
+  for app in "${RAILS_APPS[@]}"; do
+    local path="$PROJECTS_DIR/$app"
+    [ -d "$path" ] || { log_fail "$path missing"; continue; }
+
+    (
+      cd "$path" || exit 1
+
+      if bundle check >/dev/null 2>&1; then
+        log_ok "$app gems" "satisfied"
+      else
+        log_act "$app: bundle install"
+        bundle install --quiet
+        log_ok "$app gems" "installed"
+      fi
+
+      local db_name
+      db_name=$(ruby -r yaml -e "puts YAML.load_file('config/database.yml', aliases: true)['development']['database']")
+      if /opt/homebrew/opt/postgresql@14/bin/psql -lqt 2>/dev/null | cut -d'|' -f1 | grep -qw "$db_name"; then
+        bundle exec rails db:migrate >/dev/null 2>&1
+        local user_count
+        user_count=$(bundle exec rails runner "puts User.count" 2>/dev/null | tail -1)
+        log_ok "$app DB" "$db_name ($user_count users)"
+      else
+        log_act "$app: db:create db:migrate db:seed"
+        if ! bundle exec rails db:create db:migrate db:seed >/dev/null 2>&1; then
+          log_fail "$app DB setup failed" "check .env has RAILS_MASTER_KEY + try: cd $path && bin/rails db:seed"
+          exit 1
+        fi
+        log_ok "$app DB" "seeded"
+      fi
+    )
+  done
+
+  # solana_studio is a library gem — bundle only, no DB
+  if [ -d "$PROJECTS_DIR/solana_studio" ]; then
+    (
+      cd "$PROJECTS_DIR/solana_studio" || exit 1
+      if bundle check >/dev/null 2>&1; then
+        log_ok "solana_studio gems" "satisfied"
+      else
+        log_act "solana_studio: bundle install"
+        bundle install --quiet
+        log_ok "solana_studio gems" "installed"
+      fi
+    )
+  fi
+}
+
+# ─── Phase 7: Anchor (turf_vault) + e2e deps (Playwright) ───────────────────
+phase_anchor() {
+  log_phase "Phase 7: Anchor build + e2e Playwright deps"
+
+  # turf_vault: yarn deps + anchor build
+  local vault_path="$PROJECTS_DIR/turf_vault"
+  if [ -d "$vault_path" ]; then
+    (
+      cd "$vault_path" || exit 1
+
+      if [ ! -d node_modules ]; then
+        log_act "turf_vault: yarn install (test deps for anchor test)"
+        yarn install --silent 2>/dev/null
+      fi
+      log_ok "turf_vault yarn deps"
+
+      if [ ! -f target/deploy/turf_vault.so ]; then
+        log_act "turf_vault: anchor build (~3-5 min first time)"
+        anchor build >/dev/null 2>&1
+      fi
+      if [ -f target/deploy/turf_vault.so ]; then
+        log_ok "turf_vault built" "target/deploy/turf_vault.so"
+      else
+        log_fail "anchor build did not produce target/deploy/turf_vault.so"
+      fi
+    )
+  else
+    log_fail "turf_vault not cloned"
+  fi
+
+  # turf_monster + mcritchie_studio: npm + Playwright chromium for e2e tests.
+  # Skip silently if no package.json (gem apps).
+  for app in "${RAILS_APPS[@]}"; do
+    local app_path="$PROJECTS_DIR/$app"
+    [ -f "$app_path/package.json" ] || continue
+    (
+      cd "$app_path" || exit 1
+
+      if [ ! -d node_modules ]; then
+        log_act "$app: npm install"
+        npm install --silent --no-fund --no-audit >/dev/null 2>&1
+      fi
+      log_ok "$app npm deps"
+    )
+  done
+
+  # Playwright Chromium download (~90 MB, one-time, cached at ~/Library/Caches/ms-playwright)
+  if [ -d "$PROJECTS_DIR/turf_monster/node_modules/@playwright/test" ] && \
+     [ -z "$(find "$HOME/Library/Caches/ms-playwright" -maxdepth 1 -name 'chromium*' -print -quit 2>/dev/null)" ]; then
+    log_act "downloading Playwright chromium (~90 MB, one-time)"
+    (cd "$PROJECTS_DIR/turf_monster" && npx playwright install chromium >/dev/null 2>&1)
+  fi
+  if [ -d "$HOME/Library/Caches/ms-playwright" ] && \
+     [ -n "$(find "$HOME/Library/Caches/ms-playwright" -maxdepth 1 -name 'chromium*' -print -quit 2>/dev/null)" ]; then
+    log_ok "Playwright chromium" "cached"
+  fi
+}
+
+# ─── Phase 8: Servers (always bounce) ───────────────────────────────────────
+phase_servers() {
+  log_phase "Phase 8: Rails servers (always reset on build)"
+
+  for i in 0 1; do
+    local app="${RAILS_APPS[$i]}"
+    local port="${RAILS_PORTS[$i]}"
+    local path="$PROJECTS_DIR/$app"
+
+    [ -d "$path" ] || { log_fail "$app not cloned"; continue; }
+
+    # Kill any existing server on the port (and via pidfile)
+    if [ -f "$path/tmp/pids/server.pid" ]; then
+      local pid
+      pid=$(cat "$path/tmp/pids/server.pid")
+      kill "$pid" 2>/dev/null || true
+      rm -f "$path/tmp/pids/server.pid"
+    fi
+    # macOS xargs has no `-r`; pipe through a guard instead.
+    local existing_pids
+    existing_pids=$(lsof -ti :"$port" 2>/dev/null || true)
+    [ -n "$existing_pids" ] && echo "$existing_pids" | xargs kill -9 2>/dev/null || true
+    sleep 1
+
+    log_act "starting $app on :$port"
+    (cd "$path" && bundle exec rails server -p "$port" -d >/dev/null 2>&1)
+    sleep 3
+
+    local code
+    code=$(curl -sS -o /dev/null -w "%{http_code}" "http://localhost:$port/" 2>/dev/null)
+    if [[ "$code" =~ ^[23] ]]; then
+      log_ok "$app responding" "http://localhost:$port (HTTP $code)"
+    else
+      log_fail "$app HTTP $code" "tail -50 $path/log/development.log"
+    fi
+  done
+}
+
+# ─── Main ───────────────────────────────────────────────────────────────────
+main() {
+  echo "${BOLD}${YELLOW}McRitchie ecosystem build${RESET}"
+  echo "${DIM}Detects state, fills gaps, bounces servers. Idempotent.${RESET}"
+
+  phase_system_tools     || { echo; echo "${RED}Stopped at Phase 1.${RESET}"; exit 1; }
+  phase_languages        || { echo; echo "${RED}Stopped at Phase 2.${RESET}"; exit 1; }
+  phase_shell_config
+  phase_secrets          || { echo; echo "${RED}Stopped at Phase 4.${RESET}"; exit 1; }
+  phase_repos            || { echo; echo "${RED}Stopped at Phase 5.${RESET}"; exit 1; }
+  phase_bundles_dbs
+  phase_anchor
+  phase_servers
+
+  echo
+  echo "${GREEN}${BOLD}═══════════════════════════════════════════════${RESET}"
+  echo "${GREEN}${BOLD}  Ecosystem at steady state${RESET}"
+  echo "${GREEN}${BOLD}═══════════════════════════════════════════════${RESET}"
+  echo
+  echo "  McRitchie Studio:  http://localhost:3000"
+  echo "  Turf Monster:      http://localhost:3001"
+  echo "  Login:             alex@mcritchie.studio / password"
+  echo
+}
+
+main "$@"

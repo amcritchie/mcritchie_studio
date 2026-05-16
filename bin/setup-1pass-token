@@ -1,0 +1,68 @@
+#!/bin/zsh
+# bin/setup-1pass-token — install a 1Password service account token into ~/.zprofile
+#
+# Usage:
+#   1. Copy your service account token to the clipboard (Cmd+C from 1Password)
+#      It should start with "ops_".
+#   2. Run:  bin/setup-1pass-token
+#
+# Why this exists:
+#   Pasting a multi-hundred-character token directly into a shell command
+#   reliably breaks on macOS Terminal:
+#     - "Smart quotes" setting converts " to “ ” which zsh doesn't honor
+#     - Long lines wrap mid-paste, inserting literal newlines that split args
+#       like `chmod 600` into `chmod 60` + newline + `0`
+#     - Tokens carry whitespace from word-wrapped copies
+#   pbpaste sidesteps every one of those: the token never touches shell parsing.
+#
+# Prereqs:
+#   brew install 1password-cli
+#
+# After running, either `source ~/.zprofile` in your current shell or open a
+# new terminal — the export takes effect on next shell init.
+
+set -e
+
+PROFILE="$HOME/.zprofile"
+
+if ! command -v op >/dev/null 2>&1; then
+  echo "ERROR: 1Password CLI (op) is not installed."
+  echo "       Run: brew install 1password-cli"
+  exit 1
+fi
+
+if ! command -v pbpaste >/dev/null 2>&1; then
+  echo "ERROR: pbpaste not found. This script is macOS-only."
+  exit 1
+fi
+
+TOKEN=$(pbpaste | tr -d '[:space:]')
+
+if [[ -z "$TOKEN" ]]; then
+  echo "ERROR: clipboard is empty."
+  echo "       Copy your ops_... service account token first, then re-run."
+  exit 1
+fi
+
+if [[ "$TOKEN" != ops_* ]]; then
+  echo "ERROR: clipboard does not look like an op service token."
+  echo "       Expected something starting with 'ops_', got: '${TOKEN:0:8}...'"
+  echo "       Did you copy the right value? Tokens look like: ops_eyJzaWdu..."
+  exit 1
+fi
+
+touch "$PROFILE"
+# Remove any prior OP_SERVICE_ACCOUNT_TOKEN line so re-runs replace cleanly.
+/usr/bin/sed -i '' '/OP_SERVICE_ACCOUNT_TOKEN/d' "$PROFILE"
+echo "export OP_SERVICE_ACCOUNT_TOKEN=$TOKEN" >> "$PROFILE"
+chmod 600 "$PROFILE"
+
+echo "Token installed in $PROFILE (length: ${#TOKEN} chars)"
+echo ""
+echo "Verifying with 'op vault list'..."
+export OP_SERVICE_ACCOUNT_TOKEN="$TOKEN"
+op vault list
+
+echo ""
+echo "Done. Either run 'source ~/.zprofile' in your current shell or open a"
+echo "new terminal for the env var to take effect outside this script."
