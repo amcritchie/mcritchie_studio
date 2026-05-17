@@ -12,12 +12,12 @@ module ApplicationHelper
 
   def news_stage_scheme(stage)
     case stage.to_s
-    when "new"        then "info"
-    when "reviewed"   then "warning"
-    when "processed"  then "success"
-    when "refined"    then "emerald"
-    when "concluded"  then "violet"
-    when "archived"   then "gray"
+    when "new"        then "stage-fresh"
+    when "reviewed"   then "stage-shaping"
+    when "processed"  then "stage-structured"
+    when "refined"    then "stage-refined"
+    when "concluded"  then "stage-cohered"
+    when "archived"   then "stage-closed"
     else "neutral"
     end
   end
