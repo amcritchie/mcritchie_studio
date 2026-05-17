@@ -25,8 +25,13 @@ class TeamRanking < ApplicationRecord
 
   # Compute all team rankings for a given season (and optional week).
   # Builds unit scores from AthleteGrade data, then computes aggregates.
-  def self.compute_all!(season_slug:, week: nil)
-    team_grades = fetch_team_grades(season_slug)
+  #
+  # `grades_season_slug:` lets you decouple "what season am I ranking" from
+  # "which grades do I score against". Useful for preseason: compute
+  # 2026-nfl rankings against 2025-nfl grades since this year's PFF data
+  # doesn't exist until games play out.
+  def self.compute_all!(season_slug:, week: nil, grades_season_slug: nil)
+    team_grades = fetch_team_grades(grades_season_slug || season_slug)
     unit_scores = compute_unit_scores(team_grades)
     aggregate_scores = compute_aggregate_scores(unit_scores)
     all_scores = unit_scores.merge(aggregate_scores) { |_type, u, a| u.merge(a) }

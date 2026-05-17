@@ -376,6 +376,19 @@ namespace :nfl do
     stats[:slate_counts].each { |type, count| puts "    #{type.ljust(15)} #{count} games" }
   end
 
+  desc "Compute TeamRanking rows for SEASON, scoring against GRADES_FROM (defaults to SEASON). Preseason use: SEASON=2026-nfl GRADES_FROM=2025-nfl."
+  task rankings_compute: :environment do
+    season_slug = ENV.fetch("SEASON", "2026-nfl")
+    grades_slug = ENV["GRADES_FROM"]
+    Season.find_by!(slug: season_slug)
+    Season.find_by!(slug: grades_slug) if grades_slug
+
+    before = TeamRanking.where(season_slug: season_slug).count
+    TeamRanking.compute_all!(season_slug: season_slug, grades_season_slug: grades_slug)
+    after = TeamRanking.where(season_slug: season_slug).count
+    puts "TeamRankings for #{season_slug}: #{before} → #{after}#{grades_slug ? " (scored against #{grades_slug} grades)" : ""}"
+  end
+
   desc "Snapshot current DepthChart → per-slate Roster+RosterSpot. SEASON=2026-nfl WEEK=N (default: current week)."
   task rosters_snapshot: :environment do
     season_slug = ENV.fetch("SEASON", "2026-nfl")
