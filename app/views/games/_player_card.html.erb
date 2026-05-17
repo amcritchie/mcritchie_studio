@@ -21,6 +21,22 @@
     <% end %>
   </div>
 
+  <%# Headshot (falls back to initials when /nfl:upload_headshots hasn't been run for this athlete) %>
+  <% headshot = profile&.headshot_url(width: 100) %>
+  <div class="flex justify-center mb-1">
+    <% if headshot %>
+      <img src="<%= headshot %>" alt="<%= person&.full_name %>" loading="lazy"
+           class="w-12 h-12 rounded-full object-cover bg-surface" />
+    <% elsif person %>
+      <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary"
+           title="<%= person.full_name %>">
+        <%= "#{person.first_name.to_s[0]}#{person.last_name.to_s[0]}".upcase %>
+      </div>
+    <% else %>
+      <div class="w-12 h-12 rounded-full bg-surface flex items-center justify-center text-xs text-muted">—</div>
+    <% end %>
+  </div>
+
   <%# Player name %>
   <% if person %>
     <p class="text-xs text-muted leading-tight"><%= person.first_name %></p>
