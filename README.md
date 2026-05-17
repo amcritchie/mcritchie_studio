@@ -6,6 +6,8 @@ Task management and orchestration hub for the McRitchie AI agent system. Four ag
 
 McRitchie Studio is the **flagship app** of a 5-repo ecosystem ([turf_monster](https://github.com/amcritchie/turf_monster), [studio](https://github.com/amcritchie/studio), [solana_studio](https://github.com/amcritchie/solana_studio), [turf_vault](https://github.com/amcritchie/turf_vault)). Clone this repo first; it carries the scripts that bootstrap everything else.
 
+> **New here?** Read [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) first — it's the canonical 2-minute orientation surface for the whole 5-repo ecosystem.
+
 ---
 
 ## Fresh-Mac ecosystem recovery (the canonical path)
