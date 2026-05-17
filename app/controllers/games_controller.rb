@@ -71,8 +71,11 @@ class GamesController < ApplicationController
     @game = @slate.games.includes(:home_team, :away_team).find_by(slug: params[:slug])
     return redirect_to games_week_path(@year, @week), alert: "Game not found" unless @game
 
-    # Load rosters for this slate (or fall back to offseason)
-    roster_includes = { roster_spots: { person: { athlete_profile: :grades } } }
+    # Load rosters for this slate (or fall back to offseason).
+    # :image_caches must be eager-loaded — the player_card partial calls
+    # athlete.headshot_url which reads through image_caches; without this
+    # we N+1 ~48 queries per game page render.
+    roster_includes = { roster_spots: { person: { athlete_profile: [:grades, :image_caches] } } }
 
     @home_roster = Roster.includes(roster_includes)
                          .find_by(team_slug: @game.home_team_slug, slate_slug: @slate.slug)

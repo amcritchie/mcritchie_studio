@@ -405,8 +405,12 @@ phase_nfl_data() {
       && log_ok "nfl:rosters_snapshot" "$(bundle exec rails runner "puts Roster.where(slate_slug: Season.find_by(slug: \"${NFL_YEAR:-2026}-nfl\")&.slates&.where(slate_type: 'regular_season')&.where('ends_at >= ?', Date.current)&.order(:sequence)&.first&.slug).count" 2>/dev/null | tail -1) team rosters for current week" \
       || log_fail "nfl:rosters_snapshot failed"
 
-    log_act "nfl:rankings_compute SEASON=${NFL_YEAR:-2026}-nfl GRADES_FROM=2025-nfl (preseason snapshot using last season's grades)"
-    bundle exec rails nfl:rankings_compute SEASON="${NFL_YEAR:-2026}-nfl" GRADES_FROM=2025-nfl >/dev/null 2>&1 \
+    # GRADES_FROM defaults to last year's NFL season slug. Override via env
+    # once current-year PFF grades land (mid-season) — set GRADES_FROM=2026-nfl
+    # to score 2026 rankings against 2026 grades.
+    local grades_from="${NFL_GRADES_FROM:-$((${NFL_YEAR:-2026} - 1))-nfl}"
+    log_act "nfl:rankings_compute SEASON=${NFL_YEAR:-2026}-nfl GRADES_FROM=${grades_from} (preseason snapshot)"
+    bundle exec rails nfl:rankings_compute SEASON="${NFL_YEAR:-2026}-nfl" GRADES_FROM="${grades_from}" >/dev/null 2>&1 \
       && log_ok "nfl:rankings_compute" "$(bundle exec rails runner "puts TeamRanking.where(season_slug: \"${NFL_YEAR:-2026}-nfl\").count" 2>/dev/null | tail -1) rank rows populated" \
       || log_fail "nfl:rankings_compute failed"
   )
