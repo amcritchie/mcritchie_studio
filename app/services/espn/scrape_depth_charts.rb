@@ -181,20 +181,99 @@ class Espn::ScrapeDepthCharts
     RECONCILE_FRONT7.include?(chart_pos) && RECONCILE_FRONT7.include?(athlete_pos)
   end
 
+  # Fetch the team's depth chart in the shape the downstream parser expects:
+  #   [{ "name" => "Base 4-3 D", "rows" => [[position_label, athlete_hash, ...], ...] }, ...]
+  #
+  # Source: ESPN's JSON API (site.core.api.espn.com), since the legacy HTML
+  # scrape at www.espn.com/nfl/team/depth/_/name/{abbrev} is now blocked by
+  # CloudFront WAF (HTTP 202 + x-amzn-waf-action: challenge). The JSON API
+  # endpoint is public and doesn't require challenge handshakes.
+  #
+  # The JSON API gives athletes as $ref URLs only — we extract espn_id from the
+  # ref and look up the player's name from a one-call-per-team roster fetch so
+  # the existing name-fallback path in match_person still works.
+  ESPN_DEPTHCHART_URL  = ->(year, team_id) { "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/#{year}/teams/#{team_id}/depthcharts" }
+  ESPN_ROSTER_URL      = ->(team_id)       { "https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/#{team_id}/roster" }
+  ESPN_TEAMS_INDEX_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams".freeze
+
   def fetch_groups(abbrev)
-    url = URI("https://www.espn.com/nfl/team/depth/_/name/#{abbrev}")
+    team_id = team_id_for(abbrev)
+    unless team_id
+      puts "  [!] No ESPN team_id for abbrev #{abbrev}"
+      return nil
+    end
+
+    names = fetch_roster_names(team_id) # espn_id (String) => display_name
+
+    year = current_nfl_year
+    body = fetch_json(ESPN_DEPTHCHART_URL.call(year, team_id))
+    # Try previous season if current is 404 (ESPN may not have published yet)
+    body ||= fetch_json(ESPN_DEPTHCHART_URL.call(year - 1, team_id))
+    return nil unless body
+
+    (body["items"] || []).map do |item|
+      rows = (item["positions"] || {}).map do |_key, pos_data|
+        pos_label = pos_data.dig("position", "abbreviation").to_s.upcase
+        athletes = (pos_data["athletes"] || []).sort_by { |a| a["slot"].to_i }.map do |a|
+          espn_id = a.dig("athlete", "$ref").to_s[%r{/athletes/(\d+)}, 1]
+          name = names[espn_id]
+          {
+            "href" => espn_id ? "https://www.espn.com/nfl/player/_/id/#{espn_id}/" : nil,
+            "name" => name,
+            "displayName" => name,
+            "uid" => "espn:#{espn_id}"
+          }
+        end
+        [pos_label] + athletes
+      end
+      { "name" => item["name"], "rows" => rows }
+    end
+  rescue StandardError => e
+    puts "  [!] Fetch error for #{abbrev}: #{e.class}: #{e.message}"
+    nil
+  end
+
+  # ESPN's API uses numeric team_ids. Map our abbrev (e.g. "ari") → ESPN id ("22").
+  # Cached for the lifetime of this service instance — one HTTP call per scrape run.
+  def team_id_for(abbrev)
+    @team_ids ||= begin
+      body = fetch_json(ESPN_TEAMS_INDEX_URL)
+      teams = body&.dig("sports", 0, "leagues", 0, "teams") || []
+      teams.each_with_object({}) do |entry, h|
+        team = entry["team"] || {}
+        h[team["abbreviation"].to_s.downcase] = team["id"]
+      end
+    end
+    @team_ids[abbrev]
+  end
+
+  # One call per team — returns { espn_id_string => "Jacoby Brissett" }.
+  def fetch_roster_names(team_id)
+    body = fetch_json(ESPN_ROSTER_URL.call(team_id))
+    out = {}
+    (body&.dig("athletes") || []).each do |group|
+      (group["items"] || []).each do |ath|
+        out[ath["id"].to_s] = ath["displayName"] || ath["fullName"]
+      end
+    end
+    out
+  end
+
+  def fetch_json(url_str)
+    url = URI(url_str)
     req = Net::HTTP::Get.new(url)
     req["User-Agent"] = USER_AGENT
-    res = Net::HTTP.start(url.host, url.port, use_ssl: true) { |http| http.request(req) }
+    req["Accept"] = "application/json"
+    res = Net::HTTP.start(url.host, url.port, use_ssl: true, read_timeout: 30) { |http| http.request(req) }
     return nil unless res.is_a?(Net::HTTPSuccess)
+    JSON.parse(res.body)
+  end
 
-    m = res.body.match(/__espnfitt__.*?=\s*(\{.*?\});\s*<\/script>/m)
-    return nil unless m
-    data = JSON.parse(m[1])
-    data.dig("page", "content", "depth", "dethTeamGroups")
-  rescue StandardError => e
-    puts "  [!] Fetch error for #{abbrev}: #{e.message}"
-    nil
+  def current_nfl_year
+    # The NFL season is named by its start year; e.g. games played Sep 2026 → Feb 2027
+    # are "2026 season". From Jan-Feb we're still in the prior season's playoffs.
+    today = Date.current
+    today.month <= 2 ? today.year - 1 : today.year
   end
 
   def side_for_group(name)

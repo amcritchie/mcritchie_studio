@@ -55,6 +55,8 @@ That's it. ~25-30 min wall time on a fresh machine; the only thing you actually 
 
 **Custom project layout:** set `PROJECTS_DIR` to override `~/projects` (e.g. `PROJECTS_DIR=~/code bin/ecosystem-build`). The script clones siblings into that directory.
 
+**Full NFL data (opt-in):** the default build seeds players from a Spotrac snapshot but skips ESPN headshots + the real schedule (so `/nfl-rosters` shows empty position-labeled circles). To populate the full NFL pipeline, run `WITH_NFL_DATA=1 bin/ecosystem-build` — adds ~10-15 min for nflverse schedule pull + ESPN headshot caching to S3. Requires AWS creds in `.env` (auto-restored by Phase 4).
+
 The manual phase-by-phase steps below are kept as a fallback for debugging when the script can't complete a phase.
 
 ---
@@ -426,6 +428,7 @@ Eight phases, executed in order. Each phase: detect current state → install/co
 | 4. Secrets | Verifies `OP_SERVICE_ACCOUNT_TOKEN` works; pulls `agent.heroku` from 1Password into `HEROKU_API_KEY`; restores `.env` for both Rails apps from `heroku config` |
 | 5. Sibling repos | `gh repo clone` for `turf_monster`, `studio`, `solana_studio`, `turf_vault` (skips ones already present) |
 | 6. Bundles + DBs | `bundle install` + `db:create db:migrate db:seed` for each Rails app; bundle for `solana_studio` |
+| 6b. NFL data (opt-in) | Only runs when `WITH_NFL_DATA=1`. Chains `nfl:schedule_seed YEAR=2026` (real schedule from nflverse) + `nfl:players_seed` (espn_ids + S3 headshot cache) + `espn:scrape_depth_charts` (live depth charts from ESPN) + `nfl:rosters_snapshot SEASON=2026-nfl` (snapshot fresh depth charts → current-week Rosters so `/games/2026/week/N/...` show pages render) + `nfl:upload_headshots`. ~10-15 min, needs AWS creds in `.env`. Without this, `/nfl-rosters` shows position-labeled placeholder circles and 2026 game show pages have no lineup data. |
 | 7. Anchor + e2e | `yarn install` + `anchor build` for `turf_vault`; `npm install` for both Rails apps; `npx playwright install chromium` (~90 MB cached for e2e tests) |
 | 8. Servers | Always kills + restarts: bounces both Rails apps on :3000 and :3001, curls each to verify HTTP 2xx/3xx |
 

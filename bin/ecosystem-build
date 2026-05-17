@@ -376,6 +376,44 @@ phase_bundles_dbs() {
   fi
 }
 
+# ─── Phase 6b: NFL data refresh (opt-in: WITH_NFL_DATA=1) ───────────────────
+phase_nfl_data() {
+  [ "${WITH_NFL_DATA:-}" = "1" ] || return 0
+  log_phase "Phase 6b: NFL data refresh (WITH_NFL_DATA=1)"
+
+  local mcr_path="$PROJECTS_DIR/mcritchie_studio"
+  [ -d "$mcr_path" ] || { log_fail "mcritchie_studio not cloned"; return; }
+
+  (
+    cd "$mcr_path" || exit 1
+
+    log_act "nfl:schedule_seed YEAR=${NFL_YEAR:-2026} (~30s)"
+    bundle exec rails nfl:schedule_seed YEAR="${NFL_YEAR:-2026}" >/dev/null 2>&1 \
+      && log_ok "nfl:schedule_seed" "$(bundle exec rails runner "puts Game.where(slate_slug: Season.find_by(slug: \"${NFL_YEAR:-2026}-nfl\")&.slates&.pluck(:slug) || []).count" 2>/dev/null | tail -1) games" \
+      || log_fail "nfl:schedule_seed failed"
+
+    log_act "nfl:players_seed (~5-10 min — nflverse master CSV + S3 headshot cache)"
+    bundle exec rails nfl:players_seed >/dev/null 2>&1 \
+      && log_ok "nfl:players_seed" "$(bundle exec rails runner 'puts Athlete.where.not(espn_id: nil).count' 2>/dev/null | tail -1) athletes with espn_id" \
+      || log_fail "nfl:players_seed failed (check AWS creds in .env)"
+
+    log_act "espn:scrape_depth_charts (~3-5 min)"
+    bundle exec rails espn:scrape_depth_charts >/dev/null 2>&1 \
+      && log_ok "espn:scrape_depth_charts" "depth charts refreshed" \
+      || log_fail "espn:scrape_depth_charts failed"
+
+    log_act "nfl:rosters_snapshot SEASON=${NFL_YEAR:-2026}-nfl (snapshot fresh depth charts → current-week rosters)"
+    bundle exec rails nfl:rosters_snapshot SEASON="${NFL_YEAR:-2026}-nfl" >/dev/null 2>&1 \
+      && log_ok "nfl:rosters_snapshot" "$(bundle exec rails runner "puts Roster.where(slate_slug: Season.find_by(slug: \"${NFL_YEAR:-2026}-nfl\")&.slates&.where(slate_type: 'regular_season')&.where('ends_at >= ?', Date.current)&.order(:sequence)&.first&.slug).count" 2>/dev/null | tail -1) team rosters for current week" \
+      || log_fail "nfl:rosters_snapshot failed"
+
+    log_act "nfl:upload_headshots (catches any newly-discovered espn_ids)"
+    bundle exec rails nfl:upload_headshots >/dev/null 2>&1 \
+      && log_ok "nfl:upload_headshots" "$(bundle exec rails runner 'puts ImageCache.where(owner_type: "Athlete", purpose: "headshot").count' 2>/dev/null | tail -1) cached variants" \
+      || log_fail "nfl:upload_headshots failed"
+  )
+}
+
 # ─── Phase 7: Anchor (turf_vault) + e2e deps (Playwright) ───────────────────
 phase_anchor() {
   log_phase "Phase 7: Anchor build + e2e Playwright deps"
@@ -483,6 +521,7 @@ main() {
   phase_secrets          || { echo; echo "${RED}Stopped at Phase 4.${RESET}"; exit 1; }
   phase_repos            || { echo; echo "${RED}Stopped at Phase 5.${RESET}"; exit 1; }
   phase_bundles_dbs
+  phase_nfl_data
   phase_anchor
   phase_servers
 
