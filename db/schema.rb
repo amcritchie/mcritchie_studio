@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_04_042522) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_17_192804) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -310,6 +310,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_04_042522) do
     t.string "status", default: "scheduled"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "location"
     t.index ["away_team_slug"], name: "index_games_on_away_team_slug"
     t.index ["home_team_slug"], name: "index_games_on_home_team_slug"
     t.index ["slate_slug"], name: "index_games_on_slate_slug"

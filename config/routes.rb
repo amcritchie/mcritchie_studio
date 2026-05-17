@@ -113,6 +113,7 @@ Rails.application.routes.draw do
   get "nfl-contracts",                to: "contracts#index",         as: :nfl_contracts
 
   # NFL game slate pages
+  get "games/:year", to: "games#season", as: :games_season, constraints: { year: /\d{4}/ }
   get "games/:year/week/:week", to: "games#week", as: :games_week
   get "games/:year/week/:week/:slug", to: "games#show", as: :game_show
   get "people/search", to: "people#search", as: :search_people

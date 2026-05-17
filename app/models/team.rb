@@ -23,6 +23,13 @@ class Team < ApplicationRecord
     rosters.joins(:slate).order("slates.sequence DESC").first
   end
 
+  # Team nickname derived from name - location.
+  # e.g. "Los Angeles Rams" - "Los Angeles" => "Rams"; "San Francisco 49ers" - "San Francisco" => "49ers"
+  def mascot
+    return name if location.blank?
+    name.sub(/\A#{Regexp.escape(location)}\s*/, "").strip
+  end
+
   def name_slug
     name.parameterize
   end

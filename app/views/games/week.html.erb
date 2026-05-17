@@ -1,6 +1,21 @@
 <% content_for :title, "NFL Week #{@week} — #{@year} Season" %>
 
 <section class="py-6">
+  <%# Week nav: prev | season | next %>
+  <div class="flex items-center justify-between mb-6 text-sm">
+    <div class="flex-1">
+      <% if @prev_week %>
+        <%= link_to "← Week #{@prev_week}", games_week_path(@year, @prev_week), class: "text-secondary hover:text-primary transition" %>
+      <% end %>
+    </div>
+    <%= link_to "All weeks · #{@year}", games_season_path(@year), class: "text-muted hover:text-primary transition font-mono text-xs" %>
+    <div class="flex-1 text-right">
+      <% if @next_week %>
+        <%= link_to "Week #{@next_week} →", games_week_path(@year, @next_week), class: "text-secondary hover:text-primary transition" %>
+      <% end %>
+    </div>
+  </div>
+
   <%# Hero %>
   <div class="text-center mb-8">
     <h1 class="text-3xl md:text-4xl font-extrabold text-heading tracking-tight">

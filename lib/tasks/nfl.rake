@@ -363,4 +363,39 @@ namespace :nfl do
     season_slug = ENV["SEASON"] || "2025-nfl"
     Athletes::ComputeProprietaryGrades.new(season_slug: season_slug).call
   end
+
+  desc "Pull NFL season schedule from nflverse for YEAR (default 2026). Creates Season + Slates (PRE/REG/playoffs) + Games. Idempotent."
+  task schedule_seed: :environment do
+    year = (ENV["YEAR"] || 2026).to_i
+    stats = Nflverse::SeedSchedule.new(year: year).call
+    puts ""
+    puts "Done. Season: #{stats[:season]}"
+    puts "  Slates:  #{stats[:slates]}"
+    puts "  Games:   #{stats[:games]} created/found"
+    puts "  Skipped: #{stats[:skipped]}"
+    stats[:slate_counts].each { |type, count| puts "    #{type.ljust(15)} #{count} games" }
+  end
+
+  desc "Snapshot current DepthChart → per-slate Roster+RosterSpot. SEASON=2026-nfl WEEK=N (default: current week)."
+  task rosters_snapshot: :environment do
+    season_slug = ENV.fetch("SEASON", "2026-nfl")
+    season = Season.find_by(slug: season_slug)
+    abort "Season not found: #{season_slug}" unless season
+
+    slate = if ENV["WEEK"]
+      season.slates.where(slate_type: "regular_season").find_by(sequence: ENV["WEEK"].to_i)
+    else
+      today = Date.current
+      season.slates.where(slate_type: "regular_season")
+                   .where("ends_at >= ?", today)
+                   .order(:sequence)
+                   .first ||
+        season.slates.where(slate_type: "regular_season").order(:sequence).first
+    end
+    abort "No regular_season slate found for #{season_slug}#{ENV["WEEK"] ? " WEEK=#{ENV["WEEK"]}" : ""}" unless slate
+
+    puts "Snapshotting DepthChart → Roster for #{slate.slug} (Week #{slate.sequence})..."
+    stats = Rosters::SnapshotFromDepthChart.new(slate_slug: slate.slug, verbose: ENV["VERBOSE"] == "1").call
+    puts "Done: #{stats[:teams_snapshotted]} teams, #{stats[:teams_without_chart]} skipped, #{stats[:spots_created]} spots created, #{stats[:spots_updated]} updated"
+  end
 end

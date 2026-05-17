@@ -5,15 +5,28 @@
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <%= link_to games_week_path(2025, 1), class: "card-hover p-6 block" do %>
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-2xl">📅</span>
-        <% if @game_count > 0 %>
-          <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @game_count %> games</span>
-        <% end %>
-      </div>
-      <h2 class="text-heading font-bold text-lg mb-1">Schedule</h2>
-      <p class="text-secondary text-sm">Week 1 games and matchups</p>
+    <% if @current_nfl_season %>
+      <%= link_to games_season_path(@current_nfl_season.year), class: "card-hover p-6 block" do %>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">📅</span>
+          <% if @current_season_game_count > 0 %>
+            <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @current_season_game_count %> games</span>
+          <% end %>
+        </div>
+        <h2 class="text-heading font-bold text-lg mb-1"><%= @current_nfl_season.year %> Season</h2>
+        <p class="text-secondary text-sm">All 18 weeks with primetime + bye-week overview</p>
+      <% end %>
+    <% else %>
+      <%= link_to games_week_path(2025, 1), class: "card-hover p-6 block" do %>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">📅</span>
+          <% if @game_count > 0 %>
+            <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= @game_count %> games</span>
+          <% end %>
+        </div>
+        <h2 class="text-heading font-bold text-lg mb-1">Schedule</h2>
+        <p class="text-secondary text-sm">Week 1 games and matchups</p>
+      <% end %>
     <% end %>
 
     <%= link_to nfl_rosters_path, class: "card-hover p-6 block" do %>

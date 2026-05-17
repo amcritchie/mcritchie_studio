@@ -19,6 +19,7 @@
     <a href="/people/duplicates" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Duplicates</a>
     <a href="/people/merge" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Merge People</a>
     <%= link_to "NFL Hub", nfl_hub_path, class: "block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition" %>
+    <%= link_to "2026 NFL Season", games_season_path(2026), class: "block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition" %>
     <div class="border-t border-subtle my-1"></div>
     <% turf_url = Rails.env.production? ? "https://turf.mcritchie.studio" : "http://localhost:3001" %>
     <a href="<%= turf_url + (logged_in? ? "/sso_login" : "") %>" target="_blank" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Turf Monster</a>

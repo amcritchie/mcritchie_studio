@@ -6,6 +6,16 @@ class NflController < ApplicationController
     @team_count = Team.nfl.count
     @person_count = Person.count
     @game_count = @season ? Game.joins(slate: :season).where(seasons: { slug: @season.slug }, slates: { sequence: 1 }).count : 0
+
+    # Newest NFL season with a populated schedule — drives the "current season"
+    # card. Falls back gracefully if no schedule has been seeded yet.
+    @current_nfl_season = Season.where(league: "nfl")
+                                .joins(:slates)
+                                .where(slates: { slate_type: "regular_season" })
+                                .order(year: :desc)
+                                .distinct
+                                .first
+    @current_season_game_count = @current_nfl_season ? Game.joins(:slate).where(slates: { season_slug: @current_nfl_season.slug, slate_type: "regular_season" }).count : 0
     @qb_count = Athlete.where(position: "QB").joins(:grades).distinct.count
     @oline_count = Athlete.where(position: %w[LT LG C RG RT OT OG]).joins(:grades).distinct.count
     @wr_count = Athlete.where(position: %w[WR TE]).joins(:grades).distinct.count
