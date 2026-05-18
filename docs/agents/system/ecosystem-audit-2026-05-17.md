@@ -1,6 +1,8 @@
 # McRitchie Ecosystem Audit — 2026-05-17
 
-> **Correction (added 2026-05-17 during Tier 1 execution):** The audit's claim that "ErrorLog is public by default — no auth check" was wrong. The engine's `ErrorLogsController` already has `before_action :require_admin` (line 2), and `Studio::ErrorHandling` provides `require_authentication` as a global default plus `require_admin` for elevated routes. Neither consumer app overrides this. Tier 1 #1 is therefore a no-op — the state was already correct. The Explore subagent missed it during the original survey.
+> **Corrections (added 2026-05-17 during Tier 1 execution):**
+> - **Tier 1 #1 was a no-op.** The audit's claim that "ErrorLog is public by default — no auth check" was wrong. The engine's `ErrorLogsController` already has `before_action :require_admin` (line 2), and `Studio::ErrorHandling` provides `require_authentication` as a global default plus `require_admin` for elevated routes. Neither consumer app overrides this. The Explore subagent missed it during the original survey.
+> - **Tier 1 #4 renamed `draft → pending`, not `draft → new`.** Rails 7 refuses `:new` as an enum value because it would collide with the `Contest.new` constructor scope. `:pending` was chosen as the smallest-change alternative that still moves away from `:draft` (the inconsistent term the audit flagged). Operator approved the substitution during execution.
 
 **Scope:** 5 repos under `~/projects/` — `mcritchie_studio` (flagship), `turf_monster` (satellite), `studio` (engine), `solana_studio` (gem), `turf_vault` (Anchor program).
 
