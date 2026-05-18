@@ -47,6 +47,7 @@ SIBLING_REPOS=(studio solana_studio turf_vault)
 RAILS_APPS=(mcritchie_studio)
 HEROKU_APPS=(mcritchie-studio)
 RAILS_PORTS=(3000)
+DEPLOY_PROVIDERS=(heroku)  # index-aligned with RAILS_APPS — drives provider-specific behavior
 
 # Read active satellites from mcritchie_studio/config/satellites.yml.
 # Appends each to RAILS_APPS / HEROKU_APPS / RAILS_PORTS / SIBLING_REPOS.
@@ -57,16 +58,17 @@ load_satellites() {
   [ -f "$yaml" ] || return 0
   command -v ruby >/dev/null 2>&1 || return 0
 
-  while IFS=$'\t' read -r slug port heroku; do
+  while IFS=$'\t' read -r slug port heroku provider; do
     [ -z "$slug" ] && continue
     RAILS_APPS+=("$slug")
     RAILS_PORTS+=("$port")
     HEROKU_APPS+=("$heroku")
+    DEPLOY_PROVIDERS+=("$provider")
     SIBLING_REPOS+=("$slug")
   done < <(ruby -r yaml -e '
     YAML.load_file(ARGV[0]).fetch("satellites", []).each do |s|
       next unless s["status"] == "active"
-      puts "#{s["slug"]}\t#{s["port"]}\t#{s["heroku_app"]}"
+      puts "#{s["slug"]}\t#{s["port"]}\t#{s["heroku_app"]}\t#{s["deploy_provider"] || "heroku"}"
     end
   ' "$yaml" 2>/dev/null)
 }
@@ -302,11 +304,19 @@ phase_secrets() {
     fi
 
     if [ ! -f "$env_path" ] || [ ! -s "$env_path" ]; then
-      log_act "restoring $app/.env from $heroku_app config"
-      heroku config --app "$heroku_app" --shell 2>/dev/null \
-        | grep -vE "^DATABASE_URL=|^RAILS_SERVE_STATIC_FILES=|^REDIS_URL=" \
-        > "$env_path"
-      chmod 600 "$env_path"
+      local provider="${DEPLOY_PROVIDERS[$i]:-heroku}"
+      if [ "$provider" = "heroku" ]; then
+        log_act "restoring $app/.env from $heroku_app config (heroku)"
+        heroku config --app "$heroku_app" --shell 2>/dev/null \
+          | grep -vE "^DATABASE_URL=|^RAILS_SERVE_STATIC_FILES=|^REDIS_URL=" \
+          > "$env_path"
+        chmod 600 "$env_path"
+      else
+        log_act "$app uses deploy_provider=$provider — skipping auto-.env restore"
+        echo "# Hand-populate .env for $app (deploy_provider: $provider)" > "$env_path"
+        echo "# See mcritchie_studio/config/satellites.yml + provider-specific docs." >> "$env_path"
+        chmod 600 "$env_path"
+      fi
     fi
     local count
     count=$(grep -cE "^[A-Z_]+=" "$env_path" || echo 0)

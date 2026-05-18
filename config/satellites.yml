@@ -21,8 +21,13 @@
 #   production_url   — Public URL
 #   role             — SSO default role assigned via Studio.configure_sso_user
 #   description      — One-line summary
-#   deploy_provider  — heroku | fly | render | other (for future portability;
-#                      see ecosystem-audit-2026-05-17.md Tier 3 #25)
+#   deploy_provider  — heroku | fly | render | other
+#                      Drives bin/ecosystem-build's .env auto-restore behavior:
+#                      * heroku → `heroku config --shell --app <heroku_app>` populates .env
+#                      * anything else → bin/ecosystem-build writes a placeholder .env;
+#                                        operator hand-populates (or extends the script with
+#                                        a Fly/Render provider-specific block)
+#                      See ecosystem-audit-2026-05-17.md Tier 3 #25.
 #   status           — active | planned
 #                      Only `active` satellites are touched by bin/ecosystem-build
 #                      and appear in the navbar.
