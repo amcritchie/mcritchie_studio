@@ -1,16 +1,16 @@
-# turf_vault External Audit — RFP, Firm Comparison, Outreach Draft
+# turf-vault External Audit — RFP, Firm Comparison, Outreach Draft
 
 > **When to read this:** You're ready to start the conversation with a Solana audit firm. This doc bundles the scope summary you'd send, a comparison of the four firms worth contacting, and a draft email template.
 
 ## TL;DR
 
-`turf_vault` is a focused Anchor program (12 instructions, 4 account structs, 2-of-3 multisig). External audit budget realistic range: **$20k–$60k**, lead time **4–8 weeks**. Recommended order of outreach: **Neodyme → Halborn → OtterSec → Zellic**, picking whichever delivers the earliest realistic start date with quoted scope coverage.
+`turf-vault` is a focused Anchor program (12 instructions, 4 account structs, 2-of-3 multisig). External audit budget realistic range: **$20k–$60k**, lead time **4–8 weeks**. Recommended order of outreach: **Neodyme → Halborn → OtterSec → Zellic**, picking whichever delivers the earliest realistic start date with quoted scope coverage.
 
 ## Scope Summary (paste into RFP form)
 
-**Project**: turf_vault — Anchor escrow program for sports-pick'em contests on Solana.
+**Project**: turf-vault — Anchor escrow program for sports-pick'em contests on Solana.
 
-**Repo**: https://github.com/amcritchie/turf_vault
+**Repo**: https://github.com/amcritchie/turf-vault
 
 **Current status**: Deployed to devnet at `7Hy8GmJWPMdt6bx3VG4BLFnpNX9TBwkPt87W6bkHgr2J`. Pre-mainnet. v0.8.0.
 
@@ -20,7 +20,7 @@
 - Solana / Agave 3.x
 - ts-mocha tests (29 cases against local validator)
 
-**Code size**: ~12 instruction handlers in `programs/turf_vault/src/instructions/`, 4 account structs in `state.rs`, 13 error codes, single program — no cross-program invocations beyond SPL Token CPIs (deposit, withdraw, transfer).
+**Code size**: ~12 instruction handlers in `programs/turf-vault/src/instructions/`, 4 account structs in `state.rs`, 13 error codes, single program — no cross-program invocations beyond SPL Token CPIs (deposit, withdraw, transfer).
 
 **Sensitive surface**:
 - 2-of-3 multisig (Squads-style inline) gates settlement, force-close, and signer rotation. Multisig logic is in `state.rs::validate_multisig`.
@@ -48,7 +48,7 @@
 - Public report (optional — we may publish to build trust with creators/users)
 
 **Out of scope**:
-- Off-chain Rails app (turf_monster)
+- Off-chain Rails app (turf-monster)
 - IDL parsing on the Rails side (we own that risk via Tier 3 #22 IDL pinning)
 - Web frontend (Phantom integration)
 
@@ -97,11 +97,11 @@ Updated 2026-05-17. Cross-check pricing directly with each firm — these are ro
 Send the same email to 2-3 firms simultaneously to compare quotes + start dates.
 
 ```
-Subject: Anchor program audit — turf_vault (~12 instructions, 2-of-3 multisig)
+Subject: Anchor program audit — turf-vault (~12 instructions, 2-of-3 multisig)
 
 Hi <Firm name> team,
 
-I'm looking to schedule an external audit for turf_vault, a Solana
+I'm looking to schedule an external audit for turf-vault, a Solana
 escrow program currently deployed on devnet. Targeting mainnet
 launch in the next 1-2 quarters; the audit is a hard prerequisite.
 
@@ -110,7 +110,7 @@ Quick scope:
   - 2-of-3 multisig gates settlement, force-close, signer rotation
   - SPL Token CPIs for deposit/withdraw/transfer (USDC + USDT)
   - Two contest-entry modes (managed PDA + Phantom direct)
-  - Full repo: https://github.com/amcritchie/turf_vault
+  - Full repo: https://github.com/amcritchie/turf-vault
   - Detailed scope summary attached / link below
 
 We're particularly interested in your review of:
@@ -147,7 +147,7 @@ Avoid firms that quote $5-10k for "a quick review" — that's a price signal tha
 
 After the report lands:
 1. Triage findings by severity (Critical/High immediately; Medium/Low schedule).
-2. Fix in turf_vault repo, push, re-run all tests.
+2. Fix in turf-vault repo, push, re-run all tests.
 3. Re-audit pass.
 4. Final public report (if going that route).
 5. Then proceed to ecosystem-audit Tier 3 #20 (Squads upgrade authority) if not already done.

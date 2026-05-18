@@ -1,10 +1,10 @@
 # Squads Upgrade-Authority Migration Runbook
 
-> **When to read this:** You're about to move `turf_vault`'s program upgrade authority from a single keypair to a Squads multisig. Do this BEFORE mainnet launch.
+> **When to read this:** You're about to move `turf-vault`'s program upgrade authority from a single keypair to a Squads multisig. Do this BEFORE mainnet launch.
 
 ## Why this matters
 
-`turf_vault` already has a **transaction-level** 2-of-3 multisig — settlement, force-close, and signer rotation all require two distinct signers from `VaultState.signers[]`. Good.
+`turf-vault` already has a **transaction-level** 2-of-3 multisig — settlement, force-close, and signer rotation all require two distinct signers from `VaultState.signers[]`. Good.
 
 But the **program upgrade authority** is still a single keypair (`~/.config/solana/id.json`). Whoever holds that one key can ship a malicious program upgrade with zero cosign. That's the single biggest risk surface left on the program.
 
@@ -152,7 +152,7 @@ solana program write-buffer target/deploy/turf_vault.so   # any signer can do th
 # → submit upgrade IX via Squad UI → cosigner approves → execute
 ```
 
-Update `turf_vault/CLAUDE.md`'s "Build & Deploy" section to reference this runbook rather than the current `anchor deploy --provider.cluster mainnet-beta` (which won't work post-migration).
+Update `turf-vault/CLAUDE.md`'s "Build & Deploy" section to reference this runbook rather than the current `anchor deploy --provider.cluster mainnet-beta` (which won't work post-migration).
 
 ## Open questions to resolve before mainnet
 

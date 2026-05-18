@@ -19,7 +19,7 @@ All sensitive credentials are stored as environment variables, never in code.
 
 ## Development Defaults
 
-- Database: `mcritchie_studio_development` (local PostgreSQL, no password)
+- Database: `mcritchie-studio_development` (local PostgreSQL, no password)
 - Admin login: `alex@mcritchie.studio` / `password`
 - API: No authentication required (add token auth later)
 

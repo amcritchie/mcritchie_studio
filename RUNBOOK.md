@@ -24,7 +24,7 @@ Troubleshooting guide for autonomous agents. Format: problem, diagnosis, fix.
 
 **Missing gems after branch switch**
 - Diagnosis: `Could not find gem '...'` or `Bundler::GemNotFound`.
-- Fix: `bundle install`. If the studio gem fails, check GitHub connectivity: `git ls-remote https://github.com/amcritchie/studio.git`.
+- Fix: `bundle install`. If the studio gem fails, check GitHub connectivity: `git ls-remote https://github.com/amcritchie/studio-engine.git`.
 
 **Database connection refused**
 - Diagnosis: `PG::ConnectionBad: could not connect to server`.
@@ -76,13 +76,13 @@ Troubleshooting guide for autonomous agents. Format: problem, diagnosis, fix.
 
 ## Studio Engine Update Issues
 
-**`bundle update studio` fails**
+**`bundle update studio-engine` fails**
 - Diagnosis: Git authentication or network issue fetching from GitHub.
-- Fix: `git ls-remote https://github.com/amcritchie/studio.git` to test connectivity. If it works, try `bundle update studio --verbose` for detailed output. Clear bundler cache: `rm -rf vendor/cache/studio-*`.
+- Fix: `git ls-remote https://github.com/amcritchie/studio-engine.git` to test connectivity. If it works, try `bundle update studio-engine --verbose` for detailed output. Clear bundler cache: `rm -rf vendor/cache/studio-*`.
 
 **Breaking change after engine update**
-- Diagnosis: App crashes on boot after `bundle update studio`. Usually a renamed method or missing config option.
-- Fix: Check the studio repo's recent commits: `cd /Users/alex/projects/studio && git log --oneline -10`. Look for config changes in `lib/studio.rb`. Pin to a known-good commit in Gemfile if needed: `gem "studio", git: "...", ref: "abc123"`.
+- Diagnosis: App crashes on boot after `bundle update studio-engine`. Usually a renamed method or missing config option.
+- Fix: Check the studio-engine repo's recent commits: `cd /Users/alex/projects/studio-engine && git log --oneline -10`. Look for config changes in `lib/studio.rb`. Pin to a known-good tag in Gemfile if needed: `gem "studio-engine", git: "...", tag: "v0.X.Y"`.
 
 ## Common Rails Errors
 

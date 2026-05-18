@@ -7,7 +7,7 @@
 ## First-Time Setup
 
 ```bash
-cd mcritchie_studio
+cd mcritchie-studio
 bundle install
 bin/rails db:create db:migrate db:seed
 bin/rails server

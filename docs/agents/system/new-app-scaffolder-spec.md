@@ -11,19 +11,19 @@ Single interactive script that:
 4. Provisions the Heroku app and writes a starter set of config vars
 5. Adds the `RAILS_MASTER_KEY` to 1Password
 6. Prints DNS-setup instructions (operator runs in Google Domains)
-7. Cross-links the new repo into `mcritchie_studio/docs/ECOSYSTEM.md` + `house-burn-down.md`
+7. Cross-links the new repo into `mcritchie-studio/docs/ECOSYSTEM.md` + `house-burn-down.md`
 
 End state: operator can answer the prompts, then visit `http://localhost:<port>` and see the branded Rails app's login screen, ready to consume the engine + accept SSO from the hub.
 
 ## Location
 
-`mcritchie_studio/bin/new-app` (alongside `bin/ecosystem-build`, `bin/setup-1pass-token`).
+`mcritchie-studio/bin/new-app` (alongside `bin/ecosystem-build`, `bin/setup-1pass-token`).
 
 ## Interactive prompts
 
 ```
 $ bin/new-app
-Slug (lowercase, snake_case, will be the GitHub repo name): tax_studio
+Slug (lowercase, snake_case, will be the GitHub repo name): tax-studio
 Display name: Tax Studio
 Emoji (optional): 📊
 Local dev port: 3003
@@ -42,7 +42,7 @@ After prompts, confirm summary and proceed.
 2. **Add to satellites.yml** (status: `planned` initially; flipped to `active` at end of run if everything succeeds).
 3. **Generate Rails app** from template:
    ```bash
-   rails new ~/projects/<slug> --skip-test --skip-system-test --database=postgresql --template=mcritchie_studio/bin/templates/satellite.rb
+   rails new ~/projects/<slug> --skip-test --skip-system-test --database=postgresql --template=mcritchie-studio/bin/templates/satellite.rb
    ```
    Template (also new file, `bin/templates/satellite.rb`) does:
    - Adds gems: `tailwindcss-rails`, `studio` (pinned to current tag), `sentry-ruby`, `sentry-rails`
@@ -50,7 +50,7 @@ After prompts, confirm summary and proceed.
    - Generates `config/initializers/sentry.rb`
    - Adds `User` model satisfying the engine contract (see `studio/docs/USER_CONTRACT.md`)
    - Adds `_navbar.html.erb` override pointing back at the hub
-   - Adds `gem "solana_studio"` only if `--with-solana` flag is set
+   - Adds `gem "solana-studio"` only if `--with-solana` flag is set
    - Runs `db:create db:migrate db:seed`
    - Creates the GitHub repo via `gh repo create amcritchie/<slug> --private`
    - Initial commit + push to main
@@ -108,4 +108,4 @@ Estimated 4-6 hours of focused work. Most of the complexity is in:
 
 Better to do in one focused session with the time to test on a throwaway slug (`bin/new-app` against `test_studio_temp`) and tear down.
 
-When picking up: start by reading `mcritchie_studio/Gemfile` + `config/initializers/studio.rb` + `app/models/user.rb` to extract what the template needs to generate. Then write `bin/templates/satellite.rb` first (smallest scope, tests by `rails new --template=path/to/it`). Then wrap with `bin/new-app`.
+When picking up: start by reading `mcritchie-studio/Gemfile` + `config/initializers/studio.rb` + `app/models/user.rb` to extract what the template needs to generate. Then write `bin/templates/satellite.rb` first (smallest scope, tests by `rails new --template=path/to/it`). Then wrap with `bin/new-app`.

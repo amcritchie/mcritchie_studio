@@ -4,7 +4,7 @@
 
 ## Studio Engine Integration
 
-Shared code lives in the [studio engine](https://github.com/amcritchie/studio). This app includes it via `config/initializers/studio.rb`:
+Shared code lives in the [studio engine](https://github.com/amcritchie/studio-engine). This app includes it via `config/initializers/studio.rb`:
 
 ```ruby
 Studio.configure do |config|
@@ -28,4 +28,4 @@ end
 
 This app is the central auth hub. On login, `set_app_session` stores `sso_*` fields (including `sso_logo`) in the shared session. Admin gear dropdown has "Turf Monster" and "Tax Studio" links pointing to `/sso_login` on each satellite app for one-click SSO. Login page does NOT show "Continue as" (one-way flow — hub only sends, never receives). SSO-created users on satellite apps get `role = "viewer"` via `configure_sso_user`. Requires shared `SECRET_KEY_BASE`.
 
-**Updating:** After changes to the studio repo, run `bundle update studio` here.
+**Updating:** After changes to the studio repo, run `bundle update studio-engine` here.

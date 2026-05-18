@@ -16,7 +16,7 @@ The 1Password account is `alex@mcritchie.studio` (account ID `MWOV5OT5BRHATI4EGM
 1. https://start.1password.com → Developer Tools → Service Accounts.
 2. Find the existing service account row. Click "Rotate token" (or delete + recreate with read on `agents`).
 3. Copy the new `ops_...` token to clipboard.
-4. From `~/projects/mcritchie_studio`: `bin/setup-1pass-token`. The script reads from `pbpaste`, validates the prefix, replaces the existing line in `~/.zprofile`, chmods 600, and verifies with `op vault list`.
+4. From `~/projects/mcritchie-studio`: `bin/setup-1pass-token`. The script reads from `pbpaste`, validates the prefix, replaces the existing line in `~/.zprofile`, chmods 600, and verifies with `op vault list`.
 5. `source ~/.zprofile` (or open a new terminal).
 
 **Verify:** `op vault list` lists `agents`. `bin/ecosystem-build` reaches Phase 4 cleanly.
@@ -74,7 +74,7 @@ The 1Password account is `alex@mcritchie.studio` (account ID `MWOV5OT5BRHATI4EGM
 1. Generate a new keypair: `solana-keygen new --no-bip39-passphrase --silent --outfile /tmp/new-admin.json`.
 2. Get the base58 secret: `cat /tmp/new-admin.json | jq -r '. | map(.) | @json'` (the JSON array IS the secret), then convert with `bin/rails runner "puts Solana::Keypair.from_bytes(JSON.parse(File.read('/tmp/new-admin.json'))).secret_key_base58"`.
 3. Get the public address: `solana-keygen pubkey /tmp/new-admin.json`.
-4. **Before rotating**, run the on-chain `update_signers` instruction to swap the new pubkey into `VaultState.signers`. This requires 2-of-3 cosign. See `turf_vault/CLAUDE.md` for the multisig flow.
+4. **Before rotating**, run the on-chain `update_signers` instruction to swap the new pubkey into `VaultState.signers`. This requires 2-of-3 cosign. See `turf-vault/CLAUDE.md` for the multisig flow.
 5. Update 1Password `agent.solana` → field `private key` → paste the new base58 secret. Save.
 6. `heroku config:set SOLANA_ADMIN_KEY=<new_base58> --app turf-monster`.
 7. Re-run `bin/ecosystem-build` → Phase 4 re-fetches from 1P and writes to local `.env`.
@@ -115,7 +115,7 @@ The 1Password account is `alex@mcritchie.studio` (account ID `MWOV5OT5BRHATI4EGM
 - `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET` — OAuth 1.0a user credentials (for posting as @turfmonstershow)
 
 **Procedure:**
-1. https://developer.x.com/en/portal/projects → the `mcritchie_studio` project → app keys & tokens.
+1. https://developer.x.com/en/portal/projects → the `mcritchie-studio` project → app keys & tokens.
 2. For each of the 5 values, click "Regenerate" → copy → save to 1Password `x.api`.
 3. The app MUST have "Read and Write" permission — verify on the User authentication settings page. If not, the post will silently 401.
 4. `heroku config:set X_BEARER_TOKEN=... X_API_KEY=... X_API_SECRET=... X_ACCESS_TOKEN=... X_ACCESS_TOKEN_SECRET=... --app mcritchie-studio`.

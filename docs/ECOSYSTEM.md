@@ -6,22 +6,22 @@ Single orientation surface for the 5-repo McRitchie stack. Fresh contributors, f
 
 | Repo | Role | Stack | Port |
 |------|------|-------|------|
-| [`mcritchie_studio`](https://github.com/amcritchie/mcritchie_studio) | Flagship hub. Task/News/Content pipelines, NFL data, SSO hub. Owns the ecosystem recovery scripts. | Rails 7.2 / Postgres | 3000 |
-| [`turf_monster`](https://github.com/amcritchie/turf_monster) | Sports pick'em (World Cup 2026). SSO satellite. Solana onchain via turf_vault. | Rails 7.2 / Postgres / Redis | 3001 |
-| [`studio`](https://github.com/amcritchie/studio) | Shared Rails engine: auth, SSO, error logging, theme, ImageCache. | Ruby gem | — |
-| [`solana_studio`](https://github.com/amcritchie/solana_studio) | Ruby Solana client: RPC, ed25519, borsh, tx builder. | Ruby gem | — |
-| [`turf_vault`](https://github.com/amcritchie/turf_vault) | Onchain escrow vault. 2-of-3 multisig. Consumed by turf_monster. | Anchor / Rust / Solana | — |
+| [`mcritchie-studio`](https://github.com/amcritchie/mcritchie-studio) | Flagship hub. Task/News/Content pipelines, NFL data, SSO hub. Owns the ecosystem recovery scripts. | Rails 7.2 / Postgres | 3000 |
+| [`turf-monster`](https://github.com/amcritchie/turf-monster) | Sports pick'em (World Cup 2026). SSO satellite. Solana onchain via turf-vault. | Rails 7.2 / Postgres / Redis | 3001 |
+| [`studio`](https://github.com/amcritchie/studio-engine) | Shared Rails engine: auth, SSO, error logging, theme, ImageCache. | Ruby gem | — |
+| [`solana-studio`](https://github.com/amcritchie/solana-studio) | Ruby Solana client: RPC, ed25519, borsh, tx builder. | Ruby gem | — |
+| [`turf-vault`](https://github.com/amcritchie/turf-vault) | Onchain escrow vault. 2-of-3 multisig. Consumed by turf-monster. | Anchor / Rust / Solana | — |
 
 ## Dependency graph
 
 ```
 studio gem ──┐
-             ├──> mcritchie_studio (flagship)
-             └──> turf_monster ──> solana_studio gem
-                                ──> turf_vault (devnet, already deployed)
+             ├──> mcritchie-studio (flagship)
+             └──> turf-monster ──> solana-studio gem
+                                ──> turf-vault (devnet, already deployed)
 ```
 
-Both Rails apps `bundle install` the `studio` + `solana_studio` gems direct from GitHub — no local clone of the engine repos is required for bringup, only for editing them.
+Both Rails apps `bundle install` the `studio` + `solana-studio` gems direct from GitHub — no local clone of the engine repos is required for bringup, only for editing them.
 
 ## Where to start
 
@@ -30,16 +30,16 @@ Both Rails apps `bundle install` the `studio` + `solana_studio` gems direct from
 | Setting up a fresh Mac | [`bin/ecosystem-build`](../bin/ecosystem-build) + [`docs/agents/system/house-burn-down.md`](agents/system/house-burn-down.md) |
 | Onboarding to the codebase | [`CLAUDE.md`](../CLAUDE.md) (flagship) and the per-repo CLAUDE.md in any app you'll touch |
 | Hardening for production | [`docs/agents/system/ecosystem-audit-2026-05-17.md`](agents/system/ecosystem-audit-2026-05-17.md) — current audit + tiered roadmap |
-| Working on Solana | `turf_monster/docs/SOLANA.md` and `turf_vault/README.md` |
-| Working on auth/SSO | `studio/CLAUDE.md` (auth section) and `turf_monster/docs/AUTH.md` |
+| Working on Solana | `turf-monster/docs/SOLANA.md` and `turf-vault/README.md` |
+| Working on auth/SSO | `studio/CLAUDE.md` (auth section) and `turf-monster/docs/AUTH.md` |
 
 ## Per-repo summary
 
-- **mcritchie_studio** — The hub. Hosts the SSO entry point that satellites consume. Runs the NFL data ingest pipeline (Nflverse → Spotrac → ESPN → PFF → depth chart), News pipeline (intake → review → process → refine → conclude), and Content pipeline (idea → hook → script → assets → assembly → posted). Owns `bin/ecosystem-build` and the recovery protocol. Read: `CLAUDE.md` for orientation, `docs/agents/system/house-burn-down.md` for recovery.
-- **turf_monster** — Satellite. Sports pick'em UI + contest grading + Solana onchain settlement against `turf_vault`. Read: `CLAUDE.md` + the topic files in `docs/` (`AUTH.md`, `SOLANA.md`, `FORMULAS.md`, `UI_PATTERNS.md`, `world_cup_2026.md`).
-- **studio** — Engine. Provides `Studio::ErrorHandling` concern, ErrorLog model, SSO contract, theme system (7 role colors → CSS vars), ImageCache, badge component (with shared stage-* palette). Consumed by mcritchie_studio + turf_monster + future apps. Read: `CLAUDE.md`.
-- **solana_studio** — Gem. Primitives only: `Solana::Client` (JSON-RPC), `Solana::Borsh`, `Solana::Transaction` (Anchor discriminators + PDA derivation), `Solana::SplToken`, `Solana::Keypair`. Pure Ruby, ed25519 the only external dep. Consumed by turf_monster (which extends `Solana::Keypair` locally for encryption). Read: `CLAUDE.md` + `README.md`.
-- **turf_vault** — Anchor program. 12 instructions (deposit/withdraw, create/enter/settle/close contest, multisig signer rotation), 4 account structs, 2-of-3 multisig on all sensitive ops. Deployed to devnet at `7Hy8GmJWPMdt6bx3VG4BLFnpNX9TBwkPt87W6bkHgr2J`. Read: `README.md` + `RUNBOOK.md`.
+- **mcritchie-studio** — The hub. Hosts the SSO entry point that satellites consume. Runs the NFL data ingest pipeline (Nflverse → Spotrac → ESPN → PFF → depth chart), News pipeline (intake → review → process → refine → conclude), and Content pipeline (idea → hook → script → assets → assembly → posted). Owns `bin/ecosystem-build` and the recovery protocol. Read: `CLAUDE.md` for orientation, `docs/agents/system/house-burn-down.md` for recovery.
+- **turf-monster** — Satellite. Sports pick'em UI + contest grading + Solana onchain settlement against `turf-vault`. Read: `CLAUDE.md` + the topic files in `docs/` (`AUTH.md`, `SOLANA.md`, `FORMULAS.md`, `UI_PATTERNS.md`, `world_cup_2026.md`).
+- **studio** — Engine. Provides `Studio::ErrorHandling` concern, ErrorLog model, SSO contract, theme system (7 role colors → CSS vars), ImageCache, badge component (with shared stage-* palette). Consumed by mcritchie-studio + turf-monster + future apps. Read: `CLAUDE.md`.
+- **solana-studio** — Gem. Primitives only: `Solana::Client` (JSON-RPC), `Solana::Borsh`, `Solana::Transaction` (Anchor discriminators + PDA derivation), `Solana::SplToken`, `Solana::Keypair`. Pure Ruby, ed25519 the only external dep. Consumed by turf-monster (which extends `Solana::Keypair` locally for encryption). Read: `CLAUDE.md` + `README.md`.
+- **turf-vault** — Anchor program. 12 instructions (deposit/withdraw, create/enter/settle/close contest, multisig signer rotation), 4 account structs, 2-of-3 multisig on all sensitive ops. Deployed to devnet at `7Hy8GmJWPMdt6bx3VG4BLFnpNX9TBwkPt87W6bkHgr2J`. Read: `README.md` + `RUNBOOK.md`.
 
 ## Secret + service surface
 
@@ -53,8 +53,8 @@ Both Rails apps `bundle install` the `studio` + `solana_studio` gems direct from
 On a fresh Mac with Homebrew installed:
 
 ```bash
-git clone https://github.com/amcritchie/mcritchie_studio.git ~/projects/mcritchie_studio
-cd ~/projects/mcritchie_studio
+git clone https://github.com/amcritchie/mcritchie-studio.git ~/projects/mcritchie-studio
+cd ~/projects/mcritchie-studio
 bin/ecosystem-build       # Phase 1-3: installs toolchain, bails at Phase 4 needing 1P token
 bin/setup-1pass-token     # paste 1P token to clipboard first
 bin/ecosystem-build       # Phase 4+: pulls .env from Heroku, clones siblings, bounces servers

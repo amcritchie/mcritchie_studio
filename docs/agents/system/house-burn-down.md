@@ -8,22 +8,22 @@ How to rebuild the entire McRitchie dev environment from a freshly-reset Mac. Co
 
 | Repo | Role | Stack | Port |
 |------|------|-------|------|
-| [`mcritchie_studio`](https://github.com/amcritchie/mcritchie_studio) | Flagship hub. Task/News/Content pipelines, NFL data, SSO hub | Rails 7.2 / Postgres | 3000 |
-| [`turf_monster`](https://github.com/amcritchie/turf_monster) | Sports pick'em (World Cup 2026). SSO satellite of the hub. Solana onchain | Rails 7.2 / Postgres / Redis | 3001 |
-| [`studio`](https://github.com/amcritchie/studio) | Shared Rails engine: auth, SSO, error logging, theme, ImageCache | Ruby gem | — |
-| [`solana_studio`](https://github.com/amcritchie/solana_studio) | Ruby Solana client (RPC, ed25519, borsh, txns) | Ruby gem | — |
-| [`turf_vault`](https://github.com/amcritchie/turf_vault) | Onchain escrow vault. 2-of-3 multisig. Consumed by Turf Monster | Anchor / Rust / Solana | — |
+| [`mcritchie-studio`](https://github.com/amcritchie/mcritchie-studio) | Flagship hub. Task/News/Content pipelines, NFL data, SSO hub | Rails 7.2 / Postgres | 3000 |
+| [`turf-monster`](https://github.com/amcritchie/turf-monster) | Sports pick'em (World Cup 2026). SSO satellite of the hub. Solana onchain | Rails 7.2 / Postgres / Redis | 3001 |
+| [`studio`](https://github.com/amcritchie/studio-engine) | Shared Rails engine: auth, SSO, error logging, theme, ImageCache | Ruby gem | — |
+| [`solana-studio`](https://github.com/amcritchie/solana-studio) | Ruby Solana client (RPC, ed25519, borsh, txns) | Ruby gem | — |
+| [`turf-vault`](https://github.com/amcritchie/turf-vault) | Onchain escrow vault. 2-of-3 multisig. Consumed by Turf Monster | Anchor / Rust / Solana | — |
 
 **Dependency graph (build order):**
 
 ```
 studio gem ──┐
-             ├──> mcritchie_studio (flagship)
-             └──> turf_monster ──> solana_studio gem
-                                ──> turf_vault (devnet, already deployed)
+             ├──> mcritchie-studio (flagship)
+             └──> turf-monster ──> solana-studio gem
+                                ──> turf-vault (devnet, already deployed)
 ```
 
-Both Rails apps `bundle install` the studio + solana_studio gems direct from GitHub — no local clone of the engine repos is required for bringup, only for editing them.
+Both Rails apps `bundle install` the studio + solana-studio gems direct from GitHub — no local clone of the engine repos is required for bringup, only for editing them.
 
 ---
 
@@ -33,8 +33,8 @@ On a fresh Mac with Homebrew already installed:
 
 ```bash
 # 1. Clone the flagship — every other repo + script lives downstream of this one
-git clone https://github.com/amcritchie/mcritchie_studio.git ~/projects/mcritchie_studio
-cd ~/projects/mcritchie_studio
+git clone https://github.com/amcritchie/mcritchie-studio.git ~/projects/mcritchie-studio
+cd ~/projects/mcritchie-studio
 
 # 2. First pass — installs all brew packages (incl. 1Password CLI), Rust, Solana,
 #    Anchor, etc. Bails at Phase 4 once it needs your 1Password service token.
@@ -148,7 +148,7 @@ mise use --global node@20
 npm install -g yarn
 ```
 
-~30s. Node 20 (not 18) is required — `turf_vault`'s TypeScript test deps (`@solana/codecs-numbers`) need Node ≥ 20.18.0. Both Rails apps' Playwright deps are fine on either, but pinning to 20 keeps everything consistent.
+~30s. Node 20 (not 18) is required — `turf-vault`'s TypeScript test deps (`@solana/codecs-numbers`) need Node ≥ 20.18.0. Both Rails apps' Playwright deps are fine on either, but pinning to 20 keeps everything consistent.
 
 ### Ruby — already installed in Phase 1
 
@@ -205,11 +205,11 @@ This is a **local dev keypair**, NOT one of the agent vault wallets. The agent w
 
 ```bash
 mkdir -p ~/projects && cd ~/projects
-gh repo clone amcritchie/mcritchie_studio
-gh repo clone amcritchie/turf_monster
-gh repo clone amcritchie/studio
-gh repo clone amcritchie/solana_studio
-gh repo clone amcritchie/turf_vault
+gh repo clone amcritchie/mcritchie-studio
+gh repo clone amcritchie/turf-monster
+gh repo clone amcritchie/studio-engine
+gh repo clone amcritchie/solana-studio
+gh repo clone amcritchie/turf-vault
 ```
 
 (`gh auth login` first if not authenticated.)
@@ -229,7 +229,7 @@ Use a **service account token** rather than the desktop app integration — it a
 3. Grant **read** access to the `agents` vault (and `🧱 Blockchain` if you'll need it)
 4. Copy the token (`ops_...` — only shown once)
 5. Copy that token to your clipboard (Cmd+C)
-6. From the `mcritchie_studio` repo, run:
+6. From the `mcritchie-studio` repo, run:
 
 ```bash
 bin/setup-1pass-token
@@ -245,7 +245,7 @@ After it succeeds, `source ~/.zprofile` (or open a new terminal) to load the exp
 
 The Rails apps read `.env` via Rails' default dotenv (or the `dotenv-rails` gem). Restore each:
 
-**`/Users/alex/projects/mcritchie_studio/.env`** — see `docs/agents/system/credentials.md` for the canonical list. Minimum to boot:
+**`/Users/alex/projects/mcritchie-studio/.env`** — see `docs/agents/system/credentials.md` for the canonical list. Minimum to boot:
 
 ```bash
 RAILS_MASTER_KEY=$(heroku config:get RAILS_MASTER_KEY --app mcritchie-studio)
@@ -267,11 +267,11 @@ AWS_ACCESS_KEY_ID=...                 # S3 ImageCache bucket
 AWS_SECRET_ACCESS_KEY=...
 ```
 
-**`/Users/alex/projects/turf_monster/.env`** — see `turf_monster/docs/SOLANA.md` for full list. **`RAILS_MASTER_KEY` is not optional** — `db:seed` calls `User#generate_managed_wallet!` which reads `Rails.application.credentials.secret_key_base` to encrypt the wallet. Without the key, seed crashes mid-run with `undefined method '[]' for nil:NilClass`.
+**`/Users/alex/projects/turf-monster/.env`** — see `turf-monster/docs/SOLANA.md` for full list. **`RAILS_MASTER_KEY` is not optional** — `db:seed` calls `User#generate_managed_wallet!` which reads `Rails.application.credentials.secret_key_base` to encrypt the wallet. Without the key, seed crashes mid-run with `undefined method '[]' for nil:NilClass`.
 
 ```bash
 RAILS_MASTER_KEY=$(heroku config:get RAILS_MASTER_KEY --app turf-monster)
-GOOGLE_CLIENT_ID=...                  # may differ from mcritchie_studio
+GOOGLE_CLIENT_ID=...                  # may differ from mcritchie-studio
 GOOGLE_CLIENT_SECRET=...
 SOLANA_ADMIN_KEY=$(op item get "agent.solana" --vault agents --fields "private key")
 SOLANA_RPC_URL=https://api.devnet.solana.com   # or paid provider if rate-limited
@@ -294,10 +294,10 @@ This is what unlocks the `heroku config:get` commands above.
 
 ## Phase 6 — Per-app bringup
 
-### 6a. mcritchie_studio (flagship — bring this up first)
+### 6a. mcritchie-studio (flagship — bring this up first)
 
 ```bash
-cd ~/projects/mcritchie_studio
+cd ~/projects/mcritchie-studio
 bundle install
 bin/rails db:create db:migrate db:seed
 bin/rails server                   # port 3000
@@ -315,10 +315,10 @@ npm install              # installs Playwright + Chromium
 npm test                 # 13 e2e smoke tests
 ```
 
-### 6b. turf_monster
+### 6b. turf-monster
 
 ```bash
-cd ~/projects/turf_monster
+cd ~/projects/turf-monster
 bundle install
 bin/rails db:create db:migrate db:seed
 bin/dev                  # starts web (3001) + Tailwind watcher + Sidekiq worker
@@ -328,10 +328,10 @@ Visit http://localhost:3001. Login same admin.
 
 `bin/dev` (vs `bin/rails server`) is the right command — it launches the Procfile.dev which includes Sidekiq. If Sidekiq dies, check Redis: `brew services list | grep redis`.
 
-### 6c. solana_studio (gem, no bringup)
+### 6c. solana-studio (gem, no bringup)
 
 ```bash
-cd ~/projects/solana_studio
+cd ~/projects/solana-studio
 bundle install
 ruby -Itest test/keypair_test.rb test/borsh_test.rb test/transaction_test.rb
 ```
@@ -341,7 +341,7 @@ Library only — no server. Only clone locally if editing.
 ### 6d. studio (gem, no bringup)
 
 ```bash
-cd ~/projects/studio
+cd ~/projects/studio-engine
 bundle install
 ```
 
@@ -349,14 +349,14 @@ Engine only — no DB, no server, no tests of its own. Test it via the consuming
 
 After editing the engine and pushing to GitHub:
 ```bash
-cd ~/projects/mcritchie_studio && bundle update studio
-cd ~/projects/turf_monster && bundle update studio
+cd ~/projects/mcritchie-studio && bundle update studio-engine
+cd ~/projects/turf-monster && bundle update studio-engine
 ```
 
-### 6e. turf_vault (Anchor smart contract)
+### 6e. turf-vault (Anchor smart contract)
 
 ```bash
-cd ~/projects/turf_vault
+cd ~/projects/turf-vault
 yarn install                                 # TypeScript test deps (ts-mocha, @solana/codecs-*)
 anchor build                                 # ~3-5 min on first build
 anchor test                                  # spins up local validator, runs 25 ts tests
@@ -378,9 +378,9 @@ anchor deploy --provider.cluster devnet
 
 1. **Hub running**: http://localhost:3000 → dashboard renders, can log in
 2. **Satellite running**: http://localhost:3001 → contests list renders
-3. **SSO**: Click "Turf Monster" link in mcritchie_studio admin gear → should land logged-in on turf_monster (requires shared `SECRET_KEY_BASE`, i.e. same `RAILS_MASTER_KEY`)
+3. **SSO**: Click "Turf Monster" link in mcritchie-studio admin gear → should land logged-in on turf-monster (requires shared `SECRET_KEY_BASE`, i.e. same `RAILS_MASTER_KEY`)
 4. **Solana keypair**: `solana address` returns your pubkey
-5. **Anchor local test**: `cd ~/projects/turf_vault && anchor test` — all 25 tests pass
+5. **Anchor local test**: `cd ~/projects/turf-vault && anchor test` — all 25 tests pass
 
 ---
 
@@ -398,7 +398,7 @@ These are the surprises from the last burn-down. Pre-baked into the steps above;
 
 5. **System Ruby 2.6 is unusable** — macOS ships with ancient Ruby. Don't run `bundle` against it. mise's shims (`~/.local/share/mise/shims`) must be earlier on PATH than `/usr/bin`.
 
-6. **Heroku LFS gotcha** — `mcritchie_studio` repo has LFS pointers in history (retired 2026-04-30) but Heroku's git remote doesn't speak LFS. Push with `git push heroku main --no-verify` to skip the LFS pre-push hook.
+6. **Heroku LFS gotcha** — `mcritchie-studio` repo has LFS pointers in history (retired 2026-04-30) but Heroku's git remote doesn't speak LFS. Push with `git push heroku main --no-verify` to skip the LFS pre-push hook.
 
 7. **Public devnet RPC is rate-limited** — `SOLANA_RPC_URL` defaults to public devnet which 429s under load. Use a paid provider (QuickNode, Helius) for serious work.
 
@@ -406,7 +406,7 @@ These are the surprises from the last burn-down. Pre-baked into the steps above;
 
 9. **TikTok app is in review** (submitted 2026-05-04) — only sandbox + manual posting paths work until Content Posting API approval. Don't expect API-direct posts to publish.
 
-10. **`RAILS_MASTER_KEY` is a hard prerequisite for `turf_monster db:seed`** — not just for booting. `db/seeds/users.rb` calls `User#generate_managed_wallet!`, which encrypts the wallet's private key via `Rails.application.credentials.secret_key_base[0, 32]`. Without the master key, that returns nil and the seed dies. Restore the key **before** running `db:create db:migrate db:seed`.
+10. **`RAILS_MASTER_KEY` is a hard prerequisite for `turf-monster db:seed`** — not just for booting. `db/seeds/users.rb` calls `User#generate_managed_wallet!`, which encrypts the wallet's private key via `Rails.application.credentials.secret_key_base[0, 32]`. Without the master key, that returns nil and the seed dies. Restore the key **before** running `db:create db:migrate db:seed`.
 
 11. **Don't tail-pipe `bin/rails db:seed`** — `bin/rails db:seed | tail -30` returns `tail`'s exit code (0), masking seed failures. Use `set -o pipefail` or run the seed without piping when verifying it ran clean.
 
@@ -428,13 +428,13 @@ Eight phases, executed in order. Each phase: detect current state → install/co
 | 2. Languages | Node 20 + yarn (via mise), Rust 1.89.0 (via rustup), Solana CLI (via Anza), Anchor 0.32.1 (via cargo), local Solana devnet keypair |
 | 3. Shell config | `~/.zshrc` PATH lines (brew Ruby, mise activation, Solana, Cargo), `~/.zprofile` chmod 600 |
 | 4. Secrets | Verifies `OP_SERVICE_ACCOUNT_TOKEN` works; pulls `agent.heroku` from 1Password into `HEROKU_API_KEY`; restores `.env` for both Rails apps from `heroku config` |
-| 5. Sibling repos | `gh repo clone` for `turf_monster`, `studio`, `solana_studio`, `turf_vault` (skips ones already present) |
-| 6. Bundles + DBs | `bundle install` + `db:create db:migrate db:seed` for each Rails app; bundle for `solana_studio` |
+| 5. Sibling repos | `gh repo clone` for `turf-monster`, `studio`, `solana-studio`, `turf-vault` (skips ones already present) |
+| 6. Bundles + DBs | `bundle install` + `db:create db:migrate db:seed` for each Rails app; bundle for `solana-studio` |
 | 6b. NFL data (default) | Always runs. Chains `nfl:schedule_seed YEAR=2026` (real schedule from nflverse) + `espn:scrape_depth_charts` (live depth charts from ESPN JSON API) + `nfl:rosters_snapshot SEASON=2026-nfl` (snapshot fresh depth charts → current-week Rosters) + `nfl:rankings_compute SEASON=2026-nfl GRADES_FROM=2025-nfl` (preseason TeamRanking snapshot using last year's PFF grades, so `/games/2026/week/N/...` show pages render rank pills). ~3-5 min, network only — no AWS creds needed. |
 | 6c. NFL headshots (opt-in) | Only runs when `WITH_NFL_HEADSHOTS=1`. Chains `nfl:players_seed` (nflverse master CSV ~24k rows + S3 headshot cache ~1100 athletes) + `nfl:upload_headshots`. ~10-15 min, requires AWS creds in `.env`. Without this, `/nfl-rosters` shows position-labeled placeholder circles instead of player photos. |
-| 7. Anchor + e2e | `yarn install` + `anchor build` for `turf_vault`; `npm install` for both Rails apps; `npx playwright install chromium` (~90 MB cached for e2e tests) |
+| 7. Anchor + e2e | `yarn install` + `anchor build` for `turf-vault`; `npm install` for both Rails apps; `npx playwright install chromium` (~90 MB cached for e2e tests) |
 | 8. Servers | Always kills + restarts: bounces both Rails apps on :3000 and :3001, curls each to verify HTTP 2xx/3xx |
-| 9. Env snapshot | Writes `mcritchie_studio/tmp/env-snapshot-YYYY-MM-DD.json` containing both apps' `.env` contents (raw, faithfully). Heroku-independent fallback for secret recovery. Gitignored, chmod 600. Skipped silently if no `.env` files exist yet. |
+| 9. Env snapshot | Writes `mcritchie-studio/tmp/env-snapshot-YYYY-MM-DD.json` containing both apps' `.env` contents (raw, faithfully). Heroku-independent fallback for secret recovery. Gitignored, chmod 600. Skipped silently if no `.env` files exist yet. |
 
 If any phase fails, the script prints what to do and exits. Re-running picks up where it left off.
 
@@ -470,5 +470,5 @@ What this protocol installed last successful run:
 - `docs/agents/system/credentials.md` — full env var + 1Password reference
 - `docs/agents/system/news-pipeline.md` — News pipeline + X API setup
 - `RUNBOOK.md` (top-level) — production troubleshooting (Heroku deploys, theme cache, SSO, OAuth)
-- `turf_monster/docs/SOLANA.md` — Solana integration deep dive
-- `turf_vault/README.md` — Anchor program structure + multisig
+- `turf-monster/docs/SOLANA.md` — Solana integration deep dive
+- `turf-vault/README.md` — Anchor program structure + multisig

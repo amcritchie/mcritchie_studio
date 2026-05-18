@@ -1,13 +1,13 @@
-# turf_vault Mainnet Rollout — 3-Phase Checklist
+# turf-vault Mainnet Rollout — 3-Phase Checklist
 
-> **When to read this:** You're ready to ship `turf_vault` to mainnet. Don't skip phases. Each gate exists because the previous one's success isn't yet proven.
+> **When to read this:** You're ready to ship `turf-vault` to mainnet. Don't skip phases. Each gate exists because the previous one's success isn't yet proven.
 
 ## Pre-flight (do all of these BEFORE Phase A)
 
 - [ ] External audit completed (see [`turf-vault-audit-rfp.md`](./turf-vault-audit-rfp.md))
 - [ ] All Critical + High findings fixed and re-audited
 - [ ] Squads multisig upgrade authority transferred and rehearsed (see [`squads-upgrade-authority-migration.md`](./squads-upgrade-authority-migration.md))
-- [ ] IDL hash pinning live in production turf_monster (ecosystem audit Tier 3 #22). `EXPECTED_IDL_HASH` set in Heroku.
+- [ ] IDL hash pinning live in production turf-monster (ecosystem audit Tier 3 #22). `EXPECTED_IDL_HASH` set in Heroku.
 - [ ] Devnet integration suite green for at least 7 consecutive nights (ecosystem audit Tier 3 #21 — nightly Playwright @devnet job)
 - [ ] Sentry wired up + receiving events (ecosystem audit Tier 2 #15)
 - [ ] Reconciler cron running + alert webhook validated (ecosystem audit Tier 2 #17)
@@ -25,7 +25,7 @@
 - Mainnet account funding from a dedicated low-balance wallet — not from significant treasury
 
 **Steps:**
-1. Deploy `turf_vault` to mainnet (audit-signed-off version) with single key as initial upgrade authority.
+1. Deploy `turf-vault` to mainnet (audit-signed-off version) with single key as initial upgrade authority.
 2. Run the full Phase 4 Squads upgrade-authority migration (see runbook).
 3. Initialize VaultState with the 3 mainnet multisig signers + threshold 2.
 4. Create a USDC ATA for the vault.
@@ -116,7 +116,7 @@
 If a critical bug surfaces and you need to communicate publicly:
 
 ```
-Hi everyone — we discovered <brief description of issue> in turf_monster
+Hi everyone — we discovered <brief description of issue> in turf-monster
 at <time>.
 
 What happened: <facts only; no speculation>

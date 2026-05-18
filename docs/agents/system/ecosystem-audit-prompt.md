@@ -20,24 +20,24 @@ Five repos under ~/projects/ (already cloned on this machine):
 
 | Repo | Role |
 |------|------|
-| mcritchie_studio | Flagship Rails app (port 3000). SSO hub. NFL/News/Content/Task pipelines. Owns the ecosystem recovery scripts. |
-| turf_monster | Rails satellite (port 3001). Sports pick'em with Solana onchain. |
+| mcritchie-studio | Flagship Rails app (port 3000). SSO hub. NFL/News/Content/Task pipelines. Owns the ecosystem recovery scripts. |
+| turf-monster | Rails satellite (port 3001). Sports pick'em with Solana onchain. |
 | studio | Shared Rails engine (gem). Auth, SSO, error logging, theme, ImageCache. |
-| solana_studio | Ruby gem. Solana RPC + ed25519 + borsh + tx builder. |
-| turf_vault | Anchor/Rust smart contract. Onchain escrow for Turf Monster. |
+| solana-studio | Ruby gem. Solana RPC + ed25519 + borsh + tx builder. |
+| turf-vault | Anchor/Rust smart contract. Onchain escrow for Turf Monster. |
 
 ## Where to start reading (do this BEFORE asking questions)
 
-1. mcritchie_studio/README.md — has the canonical recovery flow
-2. mcritchie_studio/docs/agents/system/house-burn-down.md — 8-phase recovery protocol + 12 gotchas
-3. mcritchie_studio/bin/ecosystem-build — 470-line idempotent installer/verifier
-4. mcritchie_studio/bin/setup-1pass-token — pasteboard-based 1P token install
-5. mcritchie_studio/CLAUDE.md — big; covers data model, routes, conventions
-6. turf_monster/CLAUDE.md — also big; covers Solana flows, contest lifecycle
-7. turf_monster/README.md — satellite README
+1. mcritchie-studio/README.md — has the canonical recovery flow
+2. mcritchie-studio/docs/agents/system/house-burn-down.md — 8-phase recovery protocol + 12 gotchas
+3. mcritchie-studio/bin/ecosystem-build — 470-line idempotent installer/verifier
+4. mcritchie-studio/bin/setup-1pass-token — pasteboard-based 1P token install
+5. mcritchie-studio/CLAUDE.md — big; covers data model, routes, conventions
+6. turf-monster/CLAUDE.md — also big; covers Solana flows, contest lifecycle
+7. turf-monster/README.md — satellite README
 8. studio/lib/studio.rb + studio/app/ — what the engine exposes
-9. solana_studio/lib/ — what the gem exposes
-10. turf_vault/Anchor.toml + programs/turf_vault/src/lib.rs — the smart contract surface
+9. solana-studio/lib/ — what the gem exposes
+10. turf-vault/Anchor.toml + programs/turf-vault/src/lib.rs — the smart contract surface
 
 ## Specific concerns to audit
 
@@ -55,13 +55,13 @@ Five repos under ~/projects/ (already cloned on this machine):
 - The "flagship hub + satellites" model — does it scale to 5 more apps?
   10? Or do we need a different topology (e.g. a meta-repo, a shared
   "platform" gem, a workspace tool like Bazel/Nx)?
-- Studio engine is consumed by mcritchie_studio + turf_monster via Gemfile
+- Studio engine is consumed by mcritchie-studio + turf-monster via Gemfile
   git refs. When we add app #3, does that pattern hold or do we need
   release tags + a Gemfury?
 - SSO flow goes hub → satellite (one-way). Should auth eventually move to
   a dedicated service rather than living in the hub?
-- Solana code is split across solana_studio (gem) and Solana::* classes
-  in turf_monster (app-local). Where's the right line? Should more move
+- Solana code is split across solana-studio (gem) and Solana::* classes
+  in turf-monster (app-local). Where's the right line? Should more move
   to the gem?
 
 ### Naming consistency (look for the same concept named differently)
@@ -83,36 +83,36 @@ Known examples to start from — find more:
 ### Test infrastructure
 - Two Rails apps + Anchor program. Three test frameworks (minitest +
   Playwright + ts-mocha). Any shared patterns worth extracting?
-- The turf_monster test_solana_stubs.rb initializer is a recent addition.
-  Should similar test stubs exist in mcritchie_studio? Pattern for app-
+- The turf-monster test_solana_stubs.rb initializer is a recent addition.
+  Should similar test stubs exist in mcritchie-studio? Pattern for app-
   level stubs in test env?
 - Playwright e2e has @devnet tests that need SOLANA_BOT_KEY. There's no
   CI running them today. Is that acceptable? If we add CI, what's the
   shape?
-- mcritchie_studio has 504 tests, turf_monster 97. Coverage feels uneven
-  — is that real or are turf_monster's tests under-developed?
+- mcritchie-studio has 504 tests, turf-monster 97. Coverage feels uneven
+  — is that real or are turf-monster's tests under-developed?
 
 ### Documentation + agentic context
 This is high priority. I want each fresh Claude session to onboard fast.
-- CLAUDE.md in mcritchie_studio is ~27k tokens. Token-budget-aware?
+- CLAUDE.md in mcritchie-studio is ~27k tokens. Token-budget-aware?
   Should it split into focused files that load on demand?
-- turf_monster has docs/AUTH.md, SOLANA.md, FORMULAS.md, UI_PATTERNS.md
-  — a topic-file pattern. Is mcritchie_studio missing that structure?
-- The /docs route renders agent docs. Is the same pattern in turf_monster?
+- turf-monster has docs/AUTH.md, SOLANA.md, FORMULAS.md, UI_PATTERNS.md
+  — a topic-file pattern. Is mcritchie-studio missing that structure?
+- The /docs route renders agent docs. Is the same pattern in turf-monster?
 - Memory system at ~/.claude/projects/-Users-alex-projects/memory/ —
   read MEMORY.md and the individual memory files. Are they being
   written well? Used well? Missing entries?
 - Per-app CLAUDE.md vs ecosystem-wide context — is there an
   "ecosystem CLAUDE.md" that lives anywhere? Should there be?
-- The recovery doc is in mcritchie_studio. Should it be in its own
+- The recovery doc is in mcritchie-studio. Should it be in its own
   meta-repo so it survives if the flagship is rewritten?
 - README.md vs CLAUDE.md vs docs/ — what's the bright line? Is it
   consistent across both apps?
 
 ### Scalability + future-proofing
-- If we add tax_studio (planned, port 3003), apartments_studio, etc.,
+- If we add tax-studio (planned, port 3003), apartments_studio, etc.,
   what breaks? What needs to be generalized first?
-- The mcritchie_studio flagship pattern: every new app needs SSO links
+- The mcritchie-studio flagship pattern: every new app needs SSO links
   added to the hub's navbar. Manual. Should this be data-driven?
 - Heroku-as-deploy is baked into a lot of docs. If we move to Fly/Render
   later, what would need to change?
@@ -135,7 +135,7 @@ This is high priority. I want each fresh Claude session to onboard fast.
    - **Tier 1 — Quick wins** (renames, small refactors, doc fixes
      I can ship today)
    - **Tier 2 — Cleanup projects** (1-3 day efforts: e.g. extract
-     more into solana_studio, normalize stage vocabulary)
+     more into solana-studio, normalize stage vocabulary)
    - **Tier 3 — Architectural moves** (week+ efforts: e.g. introduce
      a platform gem, swap deploy target, restructure docs)
    For each, give: the concrete change, why it matters, the cost,
@@ -162,7 +162,7 @@ This is high priority. I want each fresh Claude session to onboard fast.
 ## Deliverable
 
 A single audit document (markdown, can be long) saved to
-mcritchie_studio/docs/agents/system/ecosystem-audit-{date}.md with:
+mcritchie-studio/docs/agents/system/ecosystem-audit-{date}.md with:
 - Executive summary (3-5 bullets — what's healthy, what's not, what's
   the top recommendation)
 - Findings organized by concern (build, architecture, naming, tests,

@@ -34,4 +34,4 @@
 - Montserrat font (Google Fonts CDN)
 - ERB views, import maps, no JS frameworks
 - bcrypt password auth + Google OAuth (OmniAuth)
-- **Studio engine gem** — `gem "studio", git: "https://github.com/amcritchie/studio.git"`
+- **Studio engine gem** — `gem "studio-engine", git: "https://github.com/amcritchie/studio-engine.git"`
