@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/amcritchie/studio-engine.git
-  revision: 015a10a2126489b4cb38180b855325e7fed4b2a9
-  tag: v0.4.0
+  revision: ddc2ba3dd563788b14f133c5498dc057cc5a9394
+  tag: v0.4.1
   specs:
-    studio-engine (0.4.0)
+    studio-engine (0.4.1)
       aws-sdk-s3 (~> 1.218)
       faker (>= 2.0)
       mini_magick (~> 5.0)
