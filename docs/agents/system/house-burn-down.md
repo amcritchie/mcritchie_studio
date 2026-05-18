@@ -434,6 +434,7 @@ Eight phases, executed in order. Each phase: detect current state → install/co
 | 6c. NFL headshots (opt-in) | Only runs when `WITH_NFL_HEADSHOTS=1`. Chains `nfl:players_seed` (nflverse master CSV ~24k rows + S3 headshot cache ~1100 athletes) + `nfl:upload_headshots`. ~10-15 min, requires AWS creds in `.env`. Without this, `/nfl-rosters` shows position-labeled placeholder circles instead of player photos. |
 | 7. Anchor + e2e | `yarn install` + `anchor build` for `turf_vault`; `npm install` for both Rails apps; `npx playwright install chromium` (~90 MB cached for e2e tests) |
 | 8. Servers | Always kills + restarts: bounces both Rails apps on :3000 and :3001, curls each to verify HTTP 2xx/3xx |
+| 9. Env snapshot | Writes `mcritchie_studio/tmp/env-snapshot-YYYY-MM-DD.json` containing both apps' `.env` contents (raw, faithfully). Heroku-independent fallback for secret recovery. Gitignored, chmod 600. Skipped silently if no `.env` files exist yet. |
 
 If any phase fails, the script prints what to do and exits. Re-running picks up where it left off.
 

@@ -550,6 +550,50 @@ phase_servers() {
   done
 }
 
+# ─── Phase 9: Env snapshot (Heroku-independent fallback) ────────────────────
+# Captures each Rails app's .env into mcritchie_studio/tmp/env-snapshot-YYYY-MM-DD.json
+# so the dev environment can be reconstructed even if Heroku is unavailable.
+# Stored raw (entire .env content as a string) for faithful round-trip — comments
+# and ordering are preserved. tmp/ is gitignored. chmod 600 because it contains
+# RAILS_MASTER_KEY and other secrets.
+phase_env_snapshot() {
+  log_phase "Phase 9: Env snapshot (Heroku-independent fallback)"
+
+  local snapshot_dir="$PROJECTS_DIR/mcritchie_studio/tmp"
+  local snapshot_date
+  snapshot_date=$(date -u +%Y-%m-%d)
+  local snapshot_path="$snapshot_dir/env-snapshot-${snapshot_date}.json"
+
+  [ -d "$snapshot_dir" ] || mkdir -p "$snapshot_dir"
+
+  local jq_args=(--arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)")
+  local jq_filter='{captured_at: $ts, apps: {}}'
+  local captured_count=0
+
+  for app in "${RAILS_APPS[@]}"; do
+    local env_path="$PROJECTS_DIR/$app/.env"
+    if [ -f "$env_path" ] && [ -s "$env_path" ]; then
+      jq_args+=(--rawfile "${app}_raw" "$env_path")
+      jq_filter="$jq_filter | .apps.\"${app}\" = {env_raw: \$${app}_raw}"
+      captured_count=$((captured_count+1))
+    fi
+  done
+
+  if [ "$captured_count" -eq 0 ]; then
+    log_ok "env snapshot" "skipped (no .env files found yet — re-run after Phase 4 populates them)"
+    return 0
+  fi
+
+  jq -n "${jq_args[@]}" "$jq_filter" > "$snapshot_path"
+  chmod 600 "$snapshot_path"
+
+  local var_count
+  var_count=$(jq -r '[.apps[].env_raw] | map(split("\n") | map(select(test("^[A-Z_]+=")))) | flatten | length' "$snapshot_path" 2>/dev/null || echo "?")
+  local size
+  size=$(wc -c < "$snapshot_path" | tr -d ' ')
+  log_ok "env snapshot" "$snapshot_path ($var_count vars across $captured_count apps, ${size}B, chmod 600)"
+}
+
 # ─── Main ───────────────────────────────────────────────────────────────────
 main() {
   echo "${BOLD}${YELLOW}McRitchie ecosystem build${RESET}"
@@ -565,6 +609,7 @@ main() {
   phase_nfl_headshots
   phase_anchor
   phase_servers
+  phase_env_snapshot
 
   echo
   echo "${GREEN}${BOLD}═══════════════════════════════════════════════${RESET}"
