@@ -31,13 +31,22 @@ bin/ecosystem-build
 # 3. Copy your 1Password service account token (ops_...) to clipboard, then:
 bin/setup-1pass-token
 
-# 4. Second pass — picks up at Phase 4, pulls Heroku key + .env from 1Password,
-#    clones the other 4 repos, bundles + DBs + Anchor + Playwright, and bounces
-#    both Rails servers so you end at a known-good steady state.
+# 4. Second pass — picks up at Phase 4, pulls Heroku key + .env for the flagship,
+#    clones the other 4 repos in Phase 5, bundles + DBs + Anchor + Playwright,
+#    and bounces both Rails servers. On the first time through this fails
+#    halfway because Phase 4 ran BEFORE the siblings existed on disk, so their
+#    .env files weren't populated — see step 5.
+bin/ecosystem-build
+
+# 5. Third pass (cold-boot only) — Phase 4 now sees the freshly-cloned siblings
+#    and writes their .env files. Phase 6 completes db:seed for all apps. You
+#    end at a known-good steady state.
 bin/ecosystem-build
 ```
 
-~25–30 min wall time on a fresh machine. On every later run it's ~30 s — the script just walks ✓ checkmarks and re-bounces the servers.
+~25–30 min wall time on a fresh machine. On every later run it's ~30 s — the script just walks ✓ checkmarks and re-bounces the servers, and only one invocation is needed because the siblings are already on disk and have populated `.env` files.
+
+> **Why three invocations on cold boot?** `bin/ecosystem-build` runs Phase 4 (secrets / `.env`) *before* Phase 5 (cloning siblings). On the very first time through, Phase 4 only has `mcritchie_studio` to write `.env` for — the sibling repos don't exist yet. Phase 5 clones them, but Phase 6's `db:seed` then fails for the sibling without `RAILS_MASTER_KEY`. The third invocation closes the loop. This is a known wart; the workaround is two extra seconds of CPU.
 
 **Where it puts things** (override with `PROJECTS_DIR=...`):
 - All 5 repos live under `~/projects/`
