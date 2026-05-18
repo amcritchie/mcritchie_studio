@@ -1,0 +1,51 @@
+# Satellite registry — single source of truth for all satellite apps in the
+# McRitchie ecosystem.
+#
+# Read by:
+#   * app/views/components/_admin_dropdown.html.erb (navbar SSO links)
+#   * Satellite.all (Ruby reader in app/models/satellite.rb)
+#   * bin/ecosystem-build (clone + bundle + bring-up loop)
+#
+# To add a new satellite:
+#   1. Add an entry below
+#   2. Set status: active once the repo exists + Heroku app is provisioned
+#   3. (See ecosystem-audit-2026-05-17.md Tier 3 #24 for the planned
+#      `bin/new-app` scaffolder that automates this)
+#
+# Fields:
+#   slug             — Ruby-friendly identifier; matches GitHub repo name
+#   display_name     — Human-readable label (navbar, docs)
+#   emoji            — Optional icon for navbar
+#   port             — Local dev port
+#   heroku_app       — Heroku app name (for `heroku config:get`)
+#   production_url   — Public URL
+#   role             — SSO default role assigned via Studio.configure_sso_user
+#   description      — One-line summary
+#   deploy_provider  — heroku | fly | render | other (for future portability;
+#                      see ecosystem-audit-2026-05-17.md Tier 3 #25)
+#   status           — active | planned
+#                      Only `active` satellites are touched by bin/ecosystem-build
+#                      and appear in the navbar.
+
+satellites:
+  - slug: turf_monster
+    display_name: Turf Monster
+    emoji: "🏈"
+    port: 3001
+    heroku_app: turf-monster
+    production_url: https://turf.mcritchie.studio
+    role: viewer
+    description: Sports pick'em — Solana onchain via turf_vault
+    deploy_provider: heroku
+    status: active
+
+  - slug: tax_studio
+    display_name: Tax Studio
+    emoji: "📊"
+    port: 3003
+    heroku_app: tax-studio
+    production_url: https://tax.mcritchie.studio
+    role: viewer
+    description: Tax planning workspace
+    deploy_provider: heroku
+    status: planned

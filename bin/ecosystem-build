@@ -38,11 +38,39 @@ SOLANA_PREFIX=$HOME/.local/share/solana/install/active_release
 CARGO_PREFIX=$HOME/.cargo
 MISE_SHIMS=$HOME/.local/share/mise/shims
 PROJECTS_DIR=${PROJECTS_DIR:-$HOME/projects}
-SIBLING_REPOS=(turf_monster studio solana_studio turf_vault)
 GH_OWNER=amcritchie
-RAILS_APPS=(mcritchie_studio turf_monster)
-HEROKU_APPS=(mcritchie-studio turf-monster)
-RAILS_PORTS=(3000 3001)
+
+# Hub + non-Rails sibling repos are hardcoded. Rails satellite apps come from
+# config/satellites.yml via load_satellites (populated below). Adding a new
+# satellite = add an entry to satellites.yml; no edits needed here.
+SIBLING_REPOS=(studio solana_studio turf_vault)
+RAILS_APPS=(mcritchie_studio)
+HEROKU_APPS=(mcritchie-studio)
+RAILS_PORTS=(3000)
+
+# Read active satellites from mcritchie_studio/config/satellites.yml.
+# Appends each to RAILS_APPS / HEROKU_APPS / RAILS_PORTS / SIBLING_REPOS.
+# Silently no-ops if ruby isn't installed yet (Phase 2 installs it) — first
+# pass bails at Phase 4 anyway, second pass populates correctly.
+load_satellites() {
+  local yaml="$PROJECTS_DIR/mcritchie_studio/config/satellites.yml"
+  [ -f "$yaml" ] || return 0
+  command -v ruby >/dev/null 2>&1 || return 0
+
+  while IFS=$'\t' read -r slug port heroku; do
+    [ -z "$slug" ] && continue
+    RAILS_APPS+=("$slug")
+    RAILS_PORTS+=("$port")
+    HEROKU_APPS+=("$heroku")
+    SIBLING_REPOS+=("$slug")
+  done < <(ruby -r yaml -e '
+    YAML.load_file(ARGV[0]).fetch("satellites", []).each do |s|
+      next unless s["status"] == "active"
+      puts "#{s["slug"]}\t#{s["port"]}\t#{s["heroku_app"]}"
+    end
+  ' "$yaml" 2>/dev/null)
+}
+load_satellites
 
 # ─── Logging ────────────────────────────────────────────────────────────────
 if [ -t 1 ]; then

@@ -21,10 +21,12 @@
     <%= link_to "NFL Hub", nfl_hub_path, class: "block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition" %>
     <%= link_to "2026 NFL Season", games_season_path(2026), class: "block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition" %>
     <div class="border-t border-subtle my-1"></div>
-    <% turf_url = Rails.env.production? ? "https://turf.mcritchie.studio" : "http://localhost:3001" %>
-    <a href="<%= turf_url + (logged_in? ? "/sso_login" : "") %>" target="_blank" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Turf Monster</a>
-    <% tax_url = Rails.env.production? ? "https://tax.mcritchie.studio" : "http://localhost:3003" %>
-    <a href="<%= tax_url + (logged_in? ? "/sso_login" : "") %>" target="_blank" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Tax Studio</a>
+    <%# Satellite app links — sourced from config/satellites.yml via Satellite.active %>
+    <% Satellite.active.each do |sat| %>
+      <a href="<%= sat.url_for(logged_in: logged_in?) %>" target="_blank" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">
+        <%= "#{sat.emoji} " if sat.emoji.present? %><%= sat.display_name %>
+      </a>
+    <% end %>
     <div class="border-t border-subtle my-1"></div>
     <a href="/docs" class="block px-4 py-2 text-sm text-body hover:text-heading hover:bg-surface-alt transition">Docs</a>
     <div class="border-t border-subtle my-1"></div>
