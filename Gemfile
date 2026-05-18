@@ -64,4 +64,9 @@ end
 gem "dotenv-rails", groups: [:development, :test]
 gem "redcarpet"
 gem "tailwindcss-rails", "~> 2.7"
+# Sentry — production error monitoring. ErrorLog.capture! fans out to Sentry
+# when SENTRY_DSN env var is set. No-op if absent.
+gem "sentry-ruby"
+gem "sentry-rails"
+
 gem "studio", git: "https://github.com/amcritchie/studio.git", tag: "v0.3.0"
