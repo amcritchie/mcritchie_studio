@@ -33,18 +33,18 @@
 #                      and appear in the navbar.
 
 satellites:
-  - slug: turf_monster
+  - slug: turf-monster
     display_name: Turf Monster
     emoji: "🏈"
     port: 3001
     heroku_app: turf-monster
     production_url: https://turf.mcritchie.studio
     role: viewer
-    description: Sports pick'em — Solana onchain via turf_vault
+    description: Sports pick'em — Solana onchain via turf-vault
     deploy_provider: heroku
     status: active
 
-  - slug: tax_studio
+  - slug: tax-studio
     display_name: Tax Studio
     emoji: "📊"
     port: 3003

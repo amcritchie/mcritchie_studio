@@ -21,7 +21,7 @@
 #   On a truly fresh machine you'll run this 3 times in total:
 #     1st invocation — installs toolchain, bails at Phase 4 (no OP token).
 #     [run bin/setup-1pass-token to install the OP service token]
-#     2nd invocation — Phase 4 writes mcritchie_studio/.env; Phase 5 clones
+#     2nd invocation — Phase 4 writes mcritchie-studio/.env; Phase 5 clones
 #                      siblings; Phase 6 db:seed fails for siblings because
 #                      Phase 4 ran before they existed on disk.
 #     3rd invocation — Phase 4 now sees cloned siblings + writes their .env;
@@ -43,18 +43,18 @@ GH_OWNER=amcritchie
 # Hub + non-Rails sibling repos are hardcoded. Rails satellite apps come from
 # config/satellites.yml via load_satellites (populated below). Adding a new
 # satellite = add an entry to satellites.yml; no edits needed here.
-SIBLING_REPOS=(studio solana_studio turf_vault)
-RAILS_APPS=(mcritchie_studio)
+SIBLING_REPOS=(studio-engine solana-studio turf-vault)
+RAILS_APPS=(mcritchie-studio)
 HEROKU_APPS=(mcritchie-studio)
 RAILS_PORTS=(3000)
 DEPLOY_PROVIDERS=(heroku)  # index-aligned with RAILS_APPS — drives provider-specific behavior
 
-# Read active satellites from mcritchie_studio/config/satellites.yml.
+# Read active satellites from mcritchie-studio/config/satellites.yml.
 # Appends each to RAILS_APPS / HEROKU_APPS / RAILS_PORTS / SIBLING_REPOS.
 # Silently no-ops if ruby isn't installed yet (Phase 2 installs it) — first
 # pass bails at Phase 4 anyway, second pass populates correctly.
 load_satellites() {
-  local yaml="$PROJECTS_DIR/mcritchie_studio/config/satellites.yml"
+  local yaml="$PROJECTS_DIR/mcritchie-studio/config/satellites.yml"
   [ -f "$yaml" ] || return 0
   command -v ruby >/dev/null 2>&1 || return 0
 
@@ -154,7 +154,7 @@ phase_system_tools() {
 phase_languages() {
   log_phase "Phase 2: Languages"
 
-  # Node 20 via mise (20+ required for turf_vault yarn deps — gotcha)
+  # Node 20 via mise (20+ required for turf-vault yarn deps — gotcha)
   if ! mise list 2>/dev/null | grep -qE "^node\s+20"; then
     log_act "installing node@20 via mise"
     mise use --global node@20 >/dev/null
@@ -314,7 +314,7 @@ phase_secrets() {
       else
         log_act "$app uses deploy_provider=$provider — skipping auto-.env restore"
         echo "# Hand-populate .env for $app (deploy_provider: $provider)" > "$env_path"
-        echo "# See mcritchie_studio/config/satellites.yml + provider-specific docs." >> "$env_path"
+        echo "# See mcritchie-studio/config/satellites.yml + provider-specific docs." >> "$env_path"
         chmod 600 "$env_path"
       fi
     fi
@@ -327,7 +327,7 @@ phase_secrets() {
   # functionality. Mapping: env_var_name -> "vault/item/field". Always re-fetched
   # (cheap) so rotated tokens propagate without manual intervention.
   local op_secrets=(
-    "turf_monster|SOLANA_ADMIN_KEY|agents/agent.solana/private key"
+    "turf-monster|SOLANA_ADMIN_KEY|agents/agent.solana/private key"
   )
   for entry in "${op_secrets[@]}"; do
     IFS='|' read -r app var ref <<< "$entry"
@@ -410,16 +410,16 @@ phase_bundles_dbs() {
     )
   done
 
-  # solana_studio is a library gem — bundle only, no DB
-  if [ -d "$PROJECTS_DIR/solana_studio" ]; then
+  # solana-studio is a library gem — bundle only, no DB
+  if [ -d "$PROJECTS_DIR/solana-studio" ]; then
     (
-      cd "$PROJECTS_DIR/solana_studio" || exit 1
+      cd "$PROJECTS_DIR/solana-studio" || exit 1
       if bundle check >/dev/null 2>&1; then
-        log_ok "solana_studio gems" "satisfied"
+        log_ok "solana-studio gems" "satisfied"
       else
-        log_act "solana_studio: bundle install"
+        log_act "solana-studio: bundle install"
         bundle install --quiet
-        log_ok "solana_studio gems" "installed"
+        log_ok "solana-studio gems" "installed"
       fi
     )
   fi
@@ -433,8 +433,8 @@ phase_bundles_dbs() {
 phase_nfl_data() {
   log_phase "Phase 6b: NFL data (schedule + depth chart + rosters)"
 
-  local mcr_path="$PROJECTS_DIR/mcritchie_studio"
-  [ -d "$mcr_path" ] || { log_fail "mcritchie_studio not cloned"; return; }
+  local mcr_path="$PROJECTS_DIR/mcritchie-studio"
+  [ -d "$mcr_path" ] || { log_fail "mcritchie-studio not cloned"; return; }
 
   (
     cd "$mcr_path" || exit 1
@@ -474,8 +474,8 @@ phase_nfl_headshots() {
   [ "${WITH_NFL_HEADSHOTS:-}" = "1" ] || return 0
   log_phase "Phase 6c: NFL headshots (WITH_NFL_HEADSHOTS=1)"
 
-  local mcr_path="$PROJECTS_DIR/mcritchie_studio"
-  [ -d "$mcr_path" ] || { log_fail "mcritchie_studio not cloned"; return; }
+  local mcr_path="$PROJECTS_DIR/mcritchie-studio"
+  [ -d "$mcr_path" ] || { log_fail "mcritchie-studio not cloned"; return; }
 
   (
     cd "$mcr_path" || exit 1
@@ -492,37 +492,37 @@ phase_nfl_headshots() {
   )
 }
 
-# ─── Phase 7: Anchor (turf_vault) + e2e deps (Playwright) ───────────────────
+# ─── Phase 7: Anchor (turf-vault) + e2e deps (Playwright) ───────────────────
 phase_anchor() {
   log_phase "Phase 7: Anchor build + e2e Playwright deps"
 
-  # turf_vault: yarn deps + anchor build
-  local vault_path="$PROJECTS_DIR/turf_vault"
+  # turf-vault: yarn deps + anchor build
+  local vault_path="$PROJECTS_DIR/turf-vault"
   if [ -d "$vault_path" ]; then
     (
       cd "$vault_path" || exit 1
 
       if [ ! -d node_modules ]; then
-        log_act "turf_vault: yarn install (test deps for anchor test)"
+        log_act "turf-vault: yarn install (test deps for anchor test)"
         yarn install --silent 2>/dev/null
       fi
-      log_ok "turf_vault yarn deps"
+      log_ok "turf-vault yarn deps"
 
       if [ ! -f target/deploy/turf_vault.so ]; then
-        log_act "turf_vault: anchor build (~3-5 min first time)"
+        log_act "turf-vault: anchor build (~3-5 min first time)"
         anchor build >/dev/null 2>&1
       fi
       if [ -f target/deploy/turf_vault.so ]; then
-        log_ok "turf_vault built" "target/deploy/turf_vault.so"
+        log_ok "turf-vault built" "target/deploy/turf_vault.so"
       else
         log_fail "anchor build did not produce target/deploy/turf_vault.so"
       fi
     )
   else
-    log_fail "turf_vault not cloned"
+    log_fail "turf-vault not cloned"
   fi
 
-  # turf_monster + mcritchie_studio: npm + Playwright chromium for e2e tests.
+  # turf-monster + mcritchie-studio: npm + Playwright chromium for e2e tests.
   # Skip silently if no package.json (gem apps).
   for app in "${RAILS_APPS[@]}"; do
     local app_path="$PROJECTS_DIR/$app"
@@ -539,10 +539,10 @@ phase_anchor() {
   done
 
   # Playwright Chromium download (~90 MB, one-time, cached at ~/Library/Caches/ms-playwright)
-  if [ -d "$PROJECTS_DIR/turf_monster/node_modules/@playwright/test" ] && \
+  if [ -d "$PROJECTS_DIR/turf-monster/node_modules/@playwright/test" ] && \
      [ -z "$(find "$HOME/Library/Caches/ms-playwright" -maxdepth 1 -name 'chromium*' -print -quit 2>/dev/null)" ]; then
     log_act "downloading Playwright chromium (~90 MB, one-time)"
-    (cd "$PROJECTS_DIR/turf_monster" && npx playwright install chromium >/dev/null 2>&1)
+    (cd "$PROJECTS_DIR/turf-monster" && npx playwright install chromium >/dev/null 2>&1)
   fi
   if [ -d "$HOME/Library/Caches/ms-playwright" ] && \
      [ -n "$(find "$HOME/Library/Caches/ms-playwright" -maxdepth 1 -name 'chromium*' -print -quit 2>/dev/null)" ]; then
@@ -589,7 +589,7 @@ phase_servers() {
 }
 
 # ─── Phase 9: Env snapshot (Heroku-independent fallback) ────────────────────
-# Captures each Rails app's .env into mcritchie_studio/tmp/env-snapshot-YYYY-MM-DD.json
+# Captures each Rails app's .env into mcritchie-studio/tmp/env-snapshot-YYYY-MM-DD.json
 # so the dev environment can be reconstructed even if Heroku is unavailable.
 # Stored raw (entire .env content as a string) for faithful round-trip — comments
 # and ordering are preserved. tmp/ is gitignored. chmod 600 because it contains
@@ -597,7 +597,7 @@ phase_servers() {
 phase_env_snapshot() {
   log_phase "Phase 9: Env snapshot (Heroku-independent fallback)"
 
-  local snapshot_dir="$PROJECTS_DIR/mcritchie_studio/tmp"
+  local snapshot_dir="$PROJECTS_DIR/mcritchie-studio/tmp"
   local snapshot_date
   snapshot_date=$(date -u +%Y-%m-%d)
   local snapshot_path="$snapshot_dir/env-snapshot-${snapshot_date}.json"

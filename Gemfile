@@ -69,4 +69,4 @@ gem "tailwindcss-rails", "~> 2.7"
 gem "sentry-ruby"
 gem "sentry-rails"
 
-gem "studio", git: "https://github.com/amcritchie/studio.git", tag: "v0.3.1"
+gem "studio-engine", git: "https://github.com/amcritchie/studio-engine.git", tag: "v0.4.0"

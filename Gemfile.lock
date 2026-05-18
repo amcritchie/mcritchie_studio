@@ -1,9 +1,9 @@
 GIT
-  remote: https://github.com/amcritchie/studio.git
-  revision: 7f765c0e520a0073f5c627e4d5311714daff78a3
-  tag: v0.3.1
+  remote: https://github.com/amcritchie/studio-engine.git
+  revision: 015a10a2126489b4cb38180b855325e7fed4b2a9
+  tag: v0.4.0
   specs:
-    studio (0.3.1)
+    studio-engine (0.4.0)
       aws-sdk-s3 (~> 1.218)
       faker (>= 2.0)
       mini_magick (~> 5.0)
@@ -451,7 +451,7 @@ DEPENDENCIES
   sentry-ruby
   sprockets-rails
   stimulus-rails
-  studio!
+  studio-engine!
   tailwindcss-rails (~> 2.7)
   turbo-rails
   tzinfo-data
