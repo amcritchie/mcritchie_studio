@@ -359,10 +359,10 @@ cd ~/projects/turf-monster && bundle update studio-engine
 cd ~/projects/turf-vault
 yarn install                                 # TypeScript test deps (ts-mocha, @solana/codecs-*)
 anchor build                                 # ~3-5 min on first build
-anchor test                                  # spins up local validator, runs 25 ts tests
+anchor test                                  # spins up local validator, runs 40 ts tests (v0.11.0+)
 ```
 
-Already deployed to devnet (program ID `7Hy8GmJWPMdt6bx3VG4BLFnpNX9TBwkPt87W6bkHgr2J`) — local builds are for development only.
+Already deployed to devnet (program ID `7Hy8GmJWPMdt6bx3VG4BLFnpNX9TBwkPt87W6bkHgr2J`).
 
 **Gotcha**: `anchor test` will fail with `ts-mocha: command not found` if you skip `yarn install`. The Anchor scaffold's test runner is JS, not Rust.
 
@@ -371,6 +371,15 @@ To deploy a new version (requires multisig cosign for existing vault):
 solana config set --url devnet
 anchor deploy --provider.cluster devnet
 ```
+
+**v0.11.0 (2026-05-18) — entry tokens + season schedule:**
+After deploying v0.11.0+ to devnet, the turf-monster Rails seed needs to know about the season. The `bin/rails db:seed` script in turf-monster will:
+1. Set `SeasonConfig.current_season_id = 1` in the DB (always)
+2. Try to create on-chain `Season` PDA (id=1, name "World Cup 2026", schedule `[25, 19, 14, 10, 7]`) — idempotent (skipped if it already exists)
+
+If the seed runs **before** the program is deployed at v0.11.0+, the on-chain step logs a warning and skips. Re-run `bin/rails db:seed` after deploy to complete the bootstrap. Alternatively, operators can use the admin UI at `/admin/seasons` (turf-monster) to mint/manage seasons by hand.
+
+Free entry tokens (introduced v0.10.0) are also operator-driven: `/admin/free_entries` in turf-monster shows per-user owed counts (= `floor(on_chain_seeds / 100) - already_minted`) with per-user + bulk Mint buttons.
 
 ---
 
