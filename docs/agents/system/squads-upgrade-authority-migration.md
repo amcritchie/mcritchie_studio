@@ -1,5 +1,18 @@
 # Squads Upgrade-Authority Migration Runbook
 
+> **STATUS (2026-05-19): DEVNET COMPLETE.** turf-vault's devnet program
+> `Dx8u…GaCT` upgrade authority is now the Squads V4 vault
+> `BW13kgfiG2koFn3WRkte21NW9TFygsD1ge2fNJdjH6kC` (multisig PDA
+> `7nRuVw3VZFC6z85tYVDitPnaUHZCkqLpJRSTBNtPmtZB`, 2-of-3 Alex Bot / Alex /
+> Mason). Migration was done programmatically via the Squads V4 SDK — see
+> `turf-vault/scripts/squad-upgrade.js` for the reusable upgrade tool and
+> `turf-vault/CLAUDE.md` "Deploying an upgrade" for the flow. The steps
+> below remain the canonical reference and apply verbatim to the
+> **mainnet** migration, which is still pending. Caveat carried over:
+> operating the Squad with Alex Bot + Mason keys both in 1Password makes
+> the 2-of-3 single-trust-domain until the human signers hold keys in
+> separate domains.
+
 > **When to read this:** You're about to move `turf-vault`'s program upgrade authority from a single keypair to a Squads multisig. Do this BEFORE mainnet launch.
 
 ## Why this matters
