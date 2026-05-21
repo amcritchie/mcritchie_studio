@@ -18,7 +18,7 @@
         </span>
       </div>
     <% end %>
-    <header x-data="{ scrolled: false }" @scroll.window="scrolled = window.scrollY > 20"
+    <header x-data="{ scrolled: false }" @scroll.window="scrolled = scrolled ? (window.scrollY > 5) : (window.scrollY > 60)"
             class="sticky top-0 z-50 bg-page transition-shadow duration-300"
             :class="scrolled && 'shadow-lg border-b border-subtle'">
       <div class="max-w-7xl mx-auto px-4 transition-all duration-300"
