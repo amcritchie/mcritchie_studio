@@ -305,7 +305,7 @@ bin/rails server                   # port 3000
 
 Visit http://localhost:3000. Login `alex@mcritchie.studio` / `password`.
 
-Seeds load 4 agents, 9 skills, sample tasks, 32 NFL + 71 NCAA + 48 FIFA teams, ~2400 active contracts, ~570 PFF-graded athletes. The `db:seed` phase 32 (`32_headshot_links.rb`) makes network calls — safe to let it run, or skip with `SKIP_NETWORK_SEEDS=1` if behind a firewall.
+Seeds load 9 agents (Alex, Avi, Carl, Shannon, Jasper, Steffon, Turf Monster, Mack, Mason), 35 skills, sample tasks, 32 NFL + 71 NCAA + 48 FIFA teams, ~2400 active contracts, ~570 PFF-graded athletes. The `db:seed` phase 32 (`32_headshot_links.rb`) makes network calls — safe to let it run, or skip with `SKIP_NETWORK_SEEDS=1` if behind a firewall.
 
 For full NFL data (UDFAs, depth charts, ESPN headshots cached to S3), run the `/nfl-rebuild` claude skill, which chains `db:reset` → `db:seed` → `nfl:players_seed` → `espn:scrape_depth_charts`. Requires AWS creds in `.env`.
 
@@ -362,15 +362,17 @@ anchor build                                 # ~3-5 min on first build
 anchor test                                  # spins up local validator, runs 40 ts tests (v0.11.0+)
 ```
 
-Already deployed to devnet (program ID `7Hy8GmJWPMdt6bx3VG4BLFnpNX9TBwkPt87W6bkHgr2J`).
+Already deployed to devnet (program ID `Dx8uGU5w7B9NytDSsW4kseGZuqdVVRq1KY1mGXN2GaCT`).
 
 **Gotcha**: `anchor test` will fail with `ts-mocha: command not found` if you skip `yarn install`. The Anchor scaffold's test runner is JS, not Rust.
 
-To deploy a new version (requires multisig cosign for existing vault):
+To deploy a new version: the program's upgrade authority is a Squads V4 2-of-3 multisig (squad vault PDA `BW13kgfiG2koFn3WRkte21NW9TFygsD1ge2fNJdjH6kC`), so a plain `anchor deploy` no longer works — it would be rejected by the on-chain upgrade-authority check. Build the program, then route the upgrade through the Squads multisig:
 ```bash
 solana config set --url devnet
-anchor deploy --provider.cluster devnet
+anchor build
+node turf-vault/scripts/squad-upgrade.js   # writes the buffer + proposes the upgrade to the Squad for 2-of-3 cosign
 ```
+See `docs/agents/system/squads-upgrade-authority-migration.md` for the full procedure.
 
 **v0.11.0 (2026-05-18) — entry tokens + season schedule:**
 After deploying v0.11.0+ to devnet, the turf-monster Rails seed needs to know about the season. The `bin/rails db:seed` script in turf-monster will:

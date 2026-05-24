@@ -1,17 +1,28 @@
 # Squads Upgrade-Authority Migration Runbook
 
-> **STATUS (2026-05-19): DEVNET COMPLETE.** turf-vault's devnet program
-> `Dx8u…GaCT` upgrade authority is now the Squads V4 vault
+> **STATUS (2026-05-23): DEVNET COMPLETE ✓ — MAINNET STILL PENDING (no mainnet program yet).**
+>
+> Devnet upgrade authority for turf-vault `Dx8u…GaCT` is the Squads V4 vault
 > `BW13kgfiG2koFn3WRkte21NW9TFygsD1ge2fNJdjH6kC` (multisig PDA
 > `7nRuVw3VZFC6z85tYVDitPnaUHZCkqLpJRSTBNtPmtZB`, 2-of-3 Alex Bot / Alex /
 > Mason). Migration was done programmatically via the Squads V4 SDK — see
 > `turf-vault/scripts/squad-upgrade.js` for the reusable upgrade tool and
-> `turf-vault/CLAUDE.md` "Deploying an upgrade" for the flow. The steps
-> below remain the canonical reference and apply verbatim to the
-> **mainnet** migration, which is still pending. Caveat carried over:
-> operating the Squad with Alex Bot + Mason keys both in 1Password makes
-> the 2-of-3 single-trust-domain until the human signers hold keys in
-> separate domains.
+> `turf-vault/CLAUDE.md` "Deploying an upgrade" for the flow. Since the
+> devnet migration, multiple upgrades have shipped through this path
+> (turf-vault v0.13.0 → v0.14.0 → v0.15.0), so the workflow is now
+> rehearsed and reusable.
+>
+> Related shipped work on the turf-monster side:
+> - MANAGED_WALLET_ENCRYPTION_KEY (OPSEC-015) deployed to prod v80; reencrypt ran clean.
+> - turf-monster verifies `EXPECTED_IDL_HASH` at boot + during `assets:precompile` (OPSEC-014).
+>
+> Remaining work (the **mainnet** migration) is **still pending** because
+> there is no mainnet program yet — see Step 4 below. The steps in this doc
+> apply verbatim once the mainnet deploy is ready.
+>
+> **Carried-over caveat:** operating the Squad with Alex Bot + Mason keys
+> both in 1Password makes the 2-of-3 single-trust-domain until the human
+> signers hold keys in separate domains.
 
 > **When to read this:** You're about to move `turf-vault`'s program upgrade authority from a single keypair to a Squads multisig. Do this BEFORE mainnet launch.
 

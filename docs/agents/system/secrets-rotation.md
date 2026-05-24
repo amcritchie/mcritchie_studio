@@ -64,6 +64,43 @@ The 1Password account is `alex@mcritchie.studio` (account ID `MWOV5OT5BRHATI4EGM
 
 ---
 
+## Managed-wallet encryption key (`MANAGED_WALLET_ENCRYPTION_KEY`)
+
+**Store:** 1Password item `agent.managed_wallet` (field `encryption key`) + Heroku config on `turf-monster` + `.env` locally. Shipped as OPSEC-015 (`KeyGenerator`-derived KDF for managed-wallet keypair encryption).
+
+**What it does:** Every managed wallet (`web2_solana_address`) has its Ed25519 secret encrypted at rest with a key derived from `MANAGED_WALLET_ENCRYPTION_KEY` via `ActiveSupport::KeyGenerator`. Rotating the key requires re-encrypting every managed-wallet secret column — a controlled, online operation but disruptive enough to be its own runbook.
+
+**Symptoms of rotation needed:** Suspected key compromise (committed accidentally, leaked from logs). Routine quarterly hygiene tied to the Solana admin-key cadence. Required after any incident affecting the `RAILS_MASTER_KEY` (which seeds the key derivation salt).
+
+**Procedure (turf-monster only — managed wallets don't exist in mcritchie-studio):**
+1. Generate a fresh 32-byte key: `bin/rails runner 'puts SecureRandom.hex(32)'`. Copy the value.
+2. Update 1Password `agent.managed_wallet` → field `encryption key` → paste the new value. Save.
+3. Set the new key on Heroku as `MANAGED_WALLET_ENCRYPTION_KEY_NEW` (NOT yet replacing the live one):
+   ```bash
+   heroku config:set MANAGED_WALLET_ENCRYPTION_KEY_NEW=<new_value> --app turf-monster
+   ```
+4. Run the reencrypt rake task — this reads each `User.web2_solana_address` row, decrypts with the OLD key, re-encrypts with the NEW key, and writes the row back. Runs in batches with a row-lock per user:
+   ```bash
+   heroku run --app turf-monster bin/rails managed_wallets:reencrypt
+   ```
+   The task is idempotent — safe to re-run if it crashes mid-stream. It tracks progress in `OutboundRequest`-style audit rows.
+5. Promote the new key to primary on Heroku (atomic swap):
+   ```bash
+   heroku config:set MANAGED_WALLET_ENCRYPTION_KEY=<new_value> --app turf-monster
+   heroku config:unset MANAGED_WALLET_ENCRYPTION_KEY_NEW --app turf-monster
+   ```
+6. Restart dynos: `heroku ps:restart --app turf-monster`.
+7. Update dev `.env` files via `bin/ecosystem-build` (re-fetches from Heroku).
+8. Verify a managed-wallet user can sign a transaction (a contest entry, faucet claim, or any flow that exercises `User#solana_keypair`).
+
+**Verify:** `heroku run --app turf-monster bin/rails runner 'puts User.where.not(web2_solana_secret_encrypted: nil).first.solana_keypair.address'` returns the correct base58 address (no decrypt errors). A test contest entry from a managed wallet completes.
+
+**Last rotation (2026-05-20, prod v80):** Reencrypt ran clean against ~all managed-wallet users. Memory ref: `project_managed_wallet_encryption_key`.
+
+**Warning:** If `MANAGED_WALLET_ENCRYPTION_KEY` is lost while the wallets are still in use, every managed wallet becomes unrecoverable. Treat it with the same care as `RAILS_MASTER_KEY` — 1Password + cold backup.
+
+---
+
 ## Solana admin key (`SOLANA_ADMIN_KEY` / `agent.solana`)
 
 **Store:** 1Password item `agent.solana` (field `private key`, base58-encoded Ed25519 secret) + Heroku config on `turf-monster` + `.env` locally.

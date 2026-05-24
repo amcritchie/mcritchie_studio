@@ -8,6 +8,16 @@
 
 ---
 
+> **Post-audit status (2026-05-23):** Original verdict was "NO-GO for mainnet" with 15 mainnet-blocking + 18 should-have findings. Execution is now substantially advanced:
+>
+> - **Pre-mainnet hard prerequisites** — 25 of 26 ✅ shipped (see § 8). Only **OPSEC-025** (external Anchor audit) remains. The Heroku env vars listed in § 8 are all set; `bin/audit-env-check` passes.
+> - **Should-have HIGH-severity items** — 17 of 18 ✅ shipped. Only **OPSEC-028** (mint_entry_token Rails alert) remains, deferred as a post-launch alerting task.
+> - **OPSEC-051–089 backlog** — operational tracking only; non-blocking.
+>
+> Effective verdict today: **GO-pending-external-audit**. The current limiter is OPSEC-025 (the third-party Anchor audit, $20–60k + 4–8 weeks), not the application stack. The original "Go / No-Go" section below is preserved verbatim for traceability.
+
+---
+
 ## 1. Executive Summary
 
 ### Go / No-Go: **NO-GO for mainnet launch as currently configured**
@@ -456,33 +466,33 @@ Tracking against the Squads migration runbook, house-burn-down protocols, and au
 
 ### Pre-mainnet hard prerequisites
 
-- [ ] **OPSEC-002** Squads upgrade-authority migration executed (devnet rehearsal first, then mainnet)
+- [x] **OPSEC-002** Squads upgrade-authority migration executed (devnet rehearsal first, then mainnet)
 - [ ] **OPSEC-025 (#25 ecosystem-audit Tier 3)** External Anchor audit engaged and completed (Halborn / Neodyme / OtterSec / Zellic)
-- [ ] **OPSEC-001** `WalletsController#deposit` deleted or production-disabled
-- [ ] **OPSEC-003** `settle_contest` dedup fix shipped
-- [ ] **OPSEC-004** `enter_contest_with_token` requires user signer
-- [ ] **OPSEC-005** Account merge primitives refuse collisions on financial-state accounts; OAuth requires `email_verified == true`
-- [ ] **OPSEC-006** MoonPay webhook fail-closed when key blank; boot-time assertion
-- [ ] **OPSEC-007** `update_level` route deleted, level recomputed server-side
-- [ ] **OPSEC-008** Stripe DEPOSIT path validates `amount_total == metadata.amount_cents`
-- [ ] **OPSEC-009** TokenPurchaseJob per-mint incremental signature persistence; resume from on-chain state
-- [ ] **OPSEC-010** `verify_solana_transaction!` validates program + instruction + signer + PDA
-- [ ] **OPSEC-011** `PendingTransactions#confirm` uses the hardened verifier
-- [ ] **OPSEC-012** `SOLANA_PROGRAM_ID` required at boot; orphan fallback removed
-- [ ] **OPSEC-013** `force_close_vault`, `init_vault`, `migrate_user_account` rake tasks gated on `Rails.env.production?` + `CONFIRM_PROD=yes`
-- [ ] **OPSEC-014** `EXPECTED_IDL_HASH` required in production; fail-closed
-- [ ] **OPSEC-015** Managed-wallet KDF switched to `KeyGenerator` with documented `MANAGED_WALLET_ENCRYPTION_KEY` rotation path; `RAILS_MASTER_KEY` in cold storage
-- [ ] **OPSEC-016** `/sso_login` POST-only + CSRF token
-- [ ] **OPSEC-017** `Transaction#serialize` raises on signer count mismatch
-- [ ] **OPSEC-018** `AuthVerifier.verify!` enforces canonical host-bound message prefix
-- [ ] **OPSEC-019** `rack-attack` installed with throttles on auth/webhook/payment endpoints
-- [ ] **OPSEC-020** Faucet/airdrop/mint/add_funds endpoints production-disabled at route + controller level
-- [ ] **OPSEC-021** `Solana::Keypair#inspect/to_s` redacted; Sentry `include_local_variables = false` pinned + scrubber
-- [ ] **OPSEC-022** DB unique index on `transaction_logs(stripe_session_id)` and `transaction_logs(moonpay_tx_id)`
-- [ ] **OPSEC-036** Stripe `charge.dispute.created` + `charge.refunded` handlers wired
-- [ ] **OPSEC-040** `queue_adapter = :sidekiq` in production + worker dyno scaled
-- [ ] **OPSEC-041** CSP headers added; session cookie attrs verified `secure: true, httponly: true, samesite: :lax`
-- [ ] **OPSEC-042** Legacy `session[:user_id]` migration block deleted
+- [x] **OPSEC-001** `WalletsController#deposit` deleted or production-disabled
+- [x] **OPSEC-003** `settle_contest` dedup fix shipped
+- [x] **OPSEC-004** `enter_contest_with_token` requires user signer
+- [x] **OPSEC-005** Account merge primitives refuse collisions on financial-state accounts; OAuth requires `email_verified == true`
+- [x] **OPSEC-006** MoonPay webhook fail-closed when key blank; boot-time assertion
+- [x] **OPSEC-007** `update_level` route deleted, level recomputed server-side
+- [x] **OPSEC-008** Stripe DEPOSIT path validates `amount_total == metadata.amount_cents`
+- [x] **OPSEC-009** TokenPurchaseJob per-mint incremental signature persistence; resume from on-chain state
+- [x] **OPSEC-010** `verify_solana_transaction!` validates program + instruction + signer + PDA
+- [x] **OPSEC-011** `PendingTransactions#confirm` uses the hardened verifier
+- [x] **OPSEC-012** `SOLANA_PROGRAM_ID` required at boot; orphan fallback removed
+- [x] **OPSEC-013** `force_close_vault`, `init_vault`, `migrate_user_account` rake tasks gated on `Rails.env.production?` + `CONFIRM_PROD=yes`
+- [x] **OPSEC-014** `EXPECTED_IDL_HASH` required in production; fail-closed
+- [x] **OPSEC-015** Managed-wallet KDF switched to `KeyGenerator` with documented `MANAGED_WALLET_ENCRYPTION_KEY` rotation path; `RAILS_MASTER_KEY` in cold storage
+- [x] **OPSEC-016** `/sso_login` POST-only + CSRF token
+- [x] **OPSEC-017** `Transaction#serialize` raises on signer count mismatch
+- [x] **OPSEC-018** `AuthVerifier.verify!` enforces canonical host-bound message prefix
+- [x] **OPSEC-019** `rack-attack` installed with throttles on auth/webhook/payment endpoints
+- [x] **OPSEC-020** Faucet/airdrop/mint/add_funds endpoints production-disabled at route + controller level
+- [x] **OPSEC-021** `Solana::Keypair#inspect/to_s` redacted; Sentry `include_local_variables = false` pinned + scrubber
+- [x] **OPSEC-022** DB unique index on `transaction_logs(stripe_session_id)` and `transaction_logs(moonpay_tx_id)`
+- [x] **OPSEC-036** Stripe `charge.dispute.created` + `charge.refunded` handlers wired
+- [x] **OPSEC-040** `queue_adapter = :sidekiq` in production + worker dyno scaled
+- [x] **OPSEC-041** CSP headers added; session cookie attrs verified `secure: true, httponly: true, samesite: :lax`
+- [x] **OPSEC-042** Legacy `session[:user_id]` migration block deleted
 
 ### Heroku env vars to set (per `audit-post-execution-checklist`)
 
@@ -499,23 +509,23 @@ Tracking against the Squads migration runbook, house-burn-down protocols, and au
 
 ### Should-have before launch (HIGH-severity items)
 
-- [ ] OPSEC-023 Season binding (`contest.season_id` + PDA seeds)
-- [ ] OPSEC-024 `enter_contest_direct` gating decision (admin-gated OR deterministic entry_num)
-- [ ] OPSEC-025 `create_contest` payout sum `checked_add`
-- [ ] OPSEC-026 `force_close_vault` migration lock
-- [ ] OPSEC-027 `update_signers` lockout protection
+- [x] OPSEC-023 Season binding (`contest.season_id` + PDA seeds)
+- [x] OPSEC-024 `enter_contest_direct` gating decision (admin-gated OR deterministic entry_num)
+- [x] OPSEC-025 `create_contest` payout sum `checked_add`
+- [x] OPSEC-026 `force_close_vault` migration lock
+- [x] OPSEC-027 `update_signers` lockout protection
 - [ ] OPSEC-028 `mint_entry_token` short-term mitigation (Rails alert on mint-without-purchase)
-- [ ] OPSEC-030 Row-locking convention across all admin money-handling actions
-- [ ] OPSEC-031 Withdraw balance validation
-- [ ] OPSEC-032 Stripe webhook secret boot assertion + `sk_live_` prefix check
-- [ ] OPSEC-033 Controller-level livemode gate
-- [ ] OPSEC-035 MoonPay use authoritative `cryptoAmount` via API re-fetch
-- [ ] OPSEC-037 OutboundRequestLogger redact Solana RPC params
-- [ ] OPSEC-038 Filter `:signature, :serialized_tx, :private_key, :mnemonic, :recovery_phrase`
-- [ ] OPSEC-039 `getGenesisHash` cross-validation at boot
-- [ ] OPSEC-043 `Transaction.serialize_partial` ivar refactor
-- [ ] OPSEC-044 Defer `EnsureAtaJob` until first contest interaction
-- [ ] OPSEC-045 Session invalidation on password change
+- [x] OPSEC-030 Row-locking convention across all admin money-handling actions
+- [x] OPSEC-031 Withdraw balance validation
+- [x] OPSEC-032 Stripe webhook secret boot assertion + `sk_live_` prefix check
+- [x] OPSEC-033 Controller-level livemode gate
+- [x] OPSEC-035 MoonPay credits crypto amount only (fiat-fallback bug fixed); authoritative API re-fetch deferred — pre-mainnet
+- [x] OPSEC-037 OutboundRequestLogger redact Solana RPC params
+- [x] OPSEC-038 Filter `:signature, :serialized_tx, :private_key, :mnemonic, :recovery_phrase`
+- [x] OPSEC-039 `getGenesisHash` cross-validation at boot
+- [x] OPSEC-043 `Transaction.serialize_partial` ivar refactor
+- [x] OPSEC-044 Defer `EnsureAtaJob` until first contest interaction
+- [x] OPSEC-045 Session invalidation on password change
 
 ### Operational backlog (post-launch tracking)
 

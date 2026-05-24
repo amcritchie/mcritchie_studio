@@ -1,5 +1,7 @@
 # Multi-Auth Identity Design — Eliminating the Merge Hijack Primitive
 
+**Status (2026-05-23):** ✅ **SHIPPED to turf-monster prod (v80).** OPSEC-005 is checked off in `opsec-audit-pre-prod-2026-05-19.md`. `merge_users!` was replaced by the Identity-per-User design described below: each auth method (`email+password`, `google`, `phantom`) proves independently, collisions refuse instead of session-swapping, and OAuth requires `email_verified == true`. Backfill landed cleanly. **Still pending:** porting the design to mcritchie-studio (lower priority since the hub holds no money).
+
 **Audit ref:** OPSEC-005 in `opsec-audit-pre-prod-2026-05-19.md`. Mainnet-blocking.
 **Goal:** Let a single super-user safely hold password + Google + Phantom — and any future auth method — without `merge_users!` becoming an account-takeover surface.
 **Scope:** turf-monster (where the user actually has money). The same design should land in mcritchie-studio later for consistency.

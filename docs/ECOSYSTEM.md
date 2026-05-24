@@ -39,7 +39,7 @@ Both Rails apps `bundle install` the `studio` + `solana-studio` gems direct from
 - **turf-monster** — Satellite. Sports pick'em UI + contest grading + Solana onchain settlement against `turf-vault`. Read: `CLAUDE.md` + the topic files in `docs/` (`AUTH.md`, `SOLANA.md`, `FORMULAS.md`, `UI_PATTERNS.md`, `world_cup_2026.md`).
 - **studio** — Engine. Provides `Studio::ErrorHandling` concern, ErrorLog model, SSO contract, theme system (7 role colors → CSS vars), ImageCache, badge component (with shared stage-* palette). Consumed by mcritchie-studio + turf-monster + future apps. Read: `CLAUDE.md`.
 - **solana-studio** — Gem. Primitives only: `Solana::Client` (JSON-RPC), `Solana::Borsh`, `Solana::Transaction` (Anchor discriminators + PDA derivation), `Solana::SplToken`, `Solana::Keypair`. Pure Ruby, ed25519 the only external dep. Consumed by turf-monster (which extends `Solana::Keypair` locally for encryption). Read: `CLAUDE.md` + `README.md`.
-- **turf-vault** — Anchor program. 12 instructions (deposit/withdraw, create/enter/settle/close contest, multisig signer rotation), 4 account structs, 2-of-3 multisig on all sensitive ops. Deployed to devnet at `7Hy8GmJWPMdt6bx3VG4BLFnpNX9TBwkPt87W6bkHgr2J`. Read: `README.md` + `RUNBOOK.md`.
+- **turf-vault** — Anchor program. 12 instructions (deposit/withdraw, create/enter/settle/close contest, multisig signer rotation), 4 account structs, 2-of-3 multisig on all sensitive ops. Deployed to devnet at `Dx8uGU5w7B9NytDSsW4kseGZuqdVVRq1KY1mGXN2GaCT`. Read: `README.md` + `RUNBOOK.md`.
 
 ## Secret + service surface
 

@@ -293,45 +293,47 @@ After the split, document the rule in `solana-studio/CLAUDE.md`: *"If it talks t
 
 ## Recommendations (Tiered)
 
+> **Post-execution status (2026-05-23):** Each item below is annotated with ✅ (shipped) or ⏳ (open) based on current repo state and memory. Use this as the live progress tracker; remove the markers only when the underlying check has been re-verified.
+
 ### Tier 1 — Quick Wins (ship today, ~half-day each)
 
-| # | Change | Why | Cost | Risk if skipped |
-|---|--------|-----|------|----|
-| 1 | Lock down `/error_logs` to admin-only (engine change) | Prevents backtrace leakage in prod | 30 min | High — production data exposure |
-| 2 | Add stage-color CSS variables to `studio` engine + use in News + Content badges | Unifies stage vocabulary; cheap aesthetic win | 1 hr | Low — visual drift only |
-| 3 | Cross-link `house-burn-down.md` from every repo's README | Recovery doc findable from any clone | 15 min | Low — onboarding friction |
-| 4 | Rename `Contest` stage `draft` → `new` (turf-monster) | Unifies first-stage vocab across apps | 1 hr + migration | Low — internal only |
-| 5 | Write `mcritchie-studio/docs/ECOSYSTEM.md` (~50 lines) | One canonical orientation surface | 1 hr | Medium — every Claude session pays it |
-| 6 | Cross-link existing memory files (`mcritchie-ecosystem`, `mac-dev-setup`) to ECOSYSTEM.md | Memory ↔ repo coherence | 10 min | Low |
-| 7 | Document "first pass clones, second pass populates `.env`" in `bin/ecosystem-build` header + README | Removes a first-time-user surprise | 10 min | Low |
-| 8 | Add `tmp/env-snapshot-YYYY-MM-DD.json` write at end of `bin/ecosystem-build` (gitignored) | Heroku-independent secret fallback | 30 min | Medium — single point of failure on Heroku |
+| # | Status | Change | Why | Cost | Risk if skipped |
+|---|---|--------|-----|------|----|
+| 1 | ✅ | Lock down `/error_logs` to admin-only (engine change) | Original "claim" was wrong — engine already enforced `require_admin`. Verified during Tier 1 execution; see correction note at top of this doc. | — | — |
+| 2 | ✅ | Add stage-color CSS variables to `studio` engine + use in News + Content badges | Unifies stage vocabulary; cheap aesthetic win | 1 hr | — |
+| 3 | ✅ | Cross-link `house-burn-down.md` from every repo's README | Recovery doc findable from any clone | 15 min | — |
+| 4 | ✅ | Rename `Contest` stage `draft` → `new` (turf-monster) — landed as `draft` → `pending` (Rails 7 reserves `:new`). | Unifies first-stage vocab across apps | 1 hr + migration | — |
+| 5 | ✅ | Write `mcritchie-studio/docs/ECOSYSTEM.md` (~50 lines) | One canonical orientation surface | 1 hr | — |
+| 6 | ✅ | Cross-link existing memory files (`mcritchie-ecosystem`, `mac-dev-setup`) to ECOSYSTEM.md | Memory ↔ repo coherence | 10 min | — |
+| 7 | ⏳ | Document "first pass clones, second pass populates `.env`" in `bin/ecosystem-build` header + README | Removes a first-time-user surprise | 10 min | Low |
+| 8 | ⏳ | Add `tmp/env-snapshot-YYYY-MM-DD.json` write at end of `bin/ecosystem-build` (gitignored) | Heroku-independent secret fallback | 30 min | Medium — single point of failure on Heroku |
 
 ### Tier 2 — Cleanup Projects (1-3 days each)
 
-| # | Change | Why | Cost | Risk if skipped |
-|---|--------|-----|------|----|
-| 9 | Split `mcritchie-studio/CLAUDE.md` into `docs/topics/*.md` per the plan above | Every Claude session loads only what's relevant; CLAUDE.md becomes stable orientation surface | 1 day | High — token tax compounds with every session |
-| 10 | Extract `Solana::AuthVerifier` to gem; document gem/app split rule | Reduces duplication; clarifies boundary | 1 day | Medium — drift risk |
-| 11 | Build `config/satellites.yml` + consume in navbar + `bin/ecosystem-build` + engine helper | Adding apps becomes data change | 1-2 days | Medium — manual churn per new app |
-| 12 | Tag `studio` engine releases + pin Gemfile to tag in both apps + add CHANGELOG | Prevents engine `main` from silently breaking 2+ apps | 1 day | High once 3rd app exists |
-| 13 | Add GH Actions CI for both Rails apps (rails test + Playwright excluding @devnet) + `studio` engine consumer-CI | Catches regressions before merge | 1-2 days | High |
-| 14 | Add ~100 turf-monster tests focused on Solana boundary (per §4) | Production-readiness; multisig confidence | 2-3 days | High for mainnet timing |
-| 15 | Sentry integration in both Rails apps; ErrorLog calls fan out | Operational visibility beyond local triage | 1 day | High in production |
-| 16 | Lock down engine `User` contract — write `studio/docs/USER_CONTRACT.md`; add boot-time validation in engine that raises clear errors if host's User is missing required methods | Removes a class of NoMethodError debugging | 1 day | Medium — bites at every new-app setup |
-| 17 | Move `Solana::Reconciler` to a Sidekiq cron + alert on divergence | Catches drift before users notice | 1 day | High in production |
-| 18 | Write secrets-rotation runbook (`docs/agents/system/secrets-rotation.md`) | First rotation event won't be a fire drill | 1 day | Medium |
+| # | Status | Change | Why | Cost | Risk if skipped |
+|---|---|--------|-----|------|----|
+| 9 | ✅ | Split `mcritchie-studio/CLAUDE.md` into `docs/topics/*.md` per the plan above | Token-tax-per-session minimized; index lives at `docs/topics/`. 13 topic files now. | 1 day | — |
+| 10 | ⏳ | Extract `Solana::AuthVerifier` to gem; document gem/app split rule | Reduces duplication; clarifies boundary | 1 day | Medium — drift risk |
+| 11 | ✅ | Build `config/satellites.yml` + consume in navbar + `bin/ecosystem-build` + engine helper | `Satellite` YAML helper landed (see `docs/topics/data-model.md` § Non-AR helpers). | 1-2 days | — |
+| 12 | ✅ | Tag `studio` engine releases + pin Gemfile to tag in both apps + add CHANGELOG | Engine on RubyGems since 2026-05-17, consumer Gemfiles use plain `gem "studio-engine", "~> 0.4.0"`. Current: 0.4.10. | 1 day | — |
+| 13 | ⏳ | Add GH Actions CI for both Rails apps (rails test + Playwright excluding @devnet) + `studio` engine consumer-CI | Catches regressions before merge | 1-2 days | High |
+| 14 | ⏳ | Add ~100 turf-monster tests focused on Solana boundary (per §4) | Production-readiness; multisig confidence. `e2e/devnet-smoke.spec.js` (890+ lines) partially closes — Rails unit tests for Vault + Reconciler still pending. See `turf-monster/docs/TESTS_TO_ADD.md`. | 2-3 days | High for mainnet timing |
+| 15 | ⏳ | Sentry integration in both Rails apps; ErrorLog calls fan out | Operational visibility beyond local triage | 1 day | High in production |
+| 16 | ⏳ | Lock down engine `User` contract — write `studio/docs/USER_CONTRACT.md`; add boot-time validation in engine that raises clear errors if host's User is missing required methods | Removes a class of NoMethodError debugging | 1 day | Medium |
+| 17 | ✅ | Move `Solana::Reconciler` to a Sidekiq cron + alert on divergence | Sidekiq-cron schedule in `config/schedule.yml`; alerts via `RECONCILER_ALERT_WEBHOOK`. | 1 day | — |
+| 18 | ✅ | Write secrets-rotation runbook (`docs/agents/system/secrets-rotation.md`) | Shipped — covers 1P / Heroku / Rails / Solana / Anthropic / X / Higgsfield / TikTok / AWS / Google OAuth. MANAGED_WALLET_ENCRYPTION_KEY procedure still pending — see Wave 4 follow-up. | 1 day | — |
 
 ### Tier 3 — Architectural Moves (week+ each)
 
-| # | Change | Why | Cost | Risk if skipped |
-|---|--------|-----|------|----|
-| 19 | External `turf-vault` audit (Halborn/Neodyme/Zellic) | Mainnet prerequisite | 4-8 weeks + $20-60k | Critical — no mainnet without this |
-| 20 | `turf-vault` upgrade authority → Squads 2-of-3 | Eliminates single-keypair upgrade risk | 3-5 days | Critical for mainnet |
-| 21 | Devnet integration test suite for turf-vault (Rails ↔ deployed devnet) + nightly CI | Catches integration drift between Rails and program | 1 week | High for mainnet |
-| 22 | IDL hash pinning in turf-monster + boot-time verification | Detects program/client drift, supply chain attacks | 2-3 days | Medium-High |
-| 23 | Mainnet rollout in 3 phases (smoke → capped → uncapped) | Limits blast radius if anything is wrong | 6-8 weeks elapsed | Critical |
-| 24 | `bin/new-app <name>` scaffolder (per Q9) | Tax Studio + beyond ships in minutes, not hours | 3-5 days | Medium — manual cost compounds |
-| 25 | Abstract deploy provider as `satellites.yml` field; doc Heroku alternatives | Future portability away from Heroku | 1 week | Low (until you actually want to move) |
+| # | Status | Change | Why | Cost | Risk if skipped |
+|---|---|--------|-----|------|----|
+| 19 | ⏳ | External `turf-vault` audit (Halborn/Neodyme/Zellic) | Mainnet prerequisite. Tracked as OPSEC-025. | 4-8 weeks + $20-60k | Critical — no mainnet without this |
+| 20 | ✅ | `turf-vault` upgrade authority → Squads 2-of-3 (devnet) | Devnet shipped 2026-05-19. Mainnet pending — see `squads-upgrade-authority-migration.md`. | 3-5 days | — (devnet) |
+| 21 | ⏳ | Devnet integration test suite for turf-vault (Rails ↔ deployed devnet) + nightly CI | Catches integration drift between Rails and program. Smoke spec exists locally; nightly CI not yet. | 1 week | High for mainnet |
+| 22 | ✅ | IDL hash pinning in turf-monster + boot-time verification | `Solana::Config#verify_idl!` gates boot + `assets:precompile` in prod (OPSEC-014). | 2-3 days | — |
+| 23 | ⏳ | Mainnet rollout in 3 phases (smoke → capped → uncapped) | Limits blast radius if anything is wrong | 6-8 weeks elapsed | Critical |
+| 24 | ⏳ | `bin/new-app <name>` scaffolder (per Q9) | Tax Studio + beyond ships in minutes, not hours. Spec written at `new-app-scaffolder-spec.md`. | 3-5 days | Medium |
+| 25 | ⏳ | Abstract deploy provider as `satellites.yml` field; doc Heroku alternatives | Future portability away from Heroku. `Satellite#deploy_provider` field exists in the YAML schema. | 1 week | Low |
 
 ---
 

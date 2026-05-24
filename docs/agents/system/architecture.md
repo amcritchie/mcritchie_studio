@@ -1,5 +1,7 @@
 # Architecture
 
+> **Looking for the current agent roster?** See [`mission.md`](mission.md) — 9 agents as of 2026-05-23 (Alex, Avi, Carl, Shannon, Jasper, Steffon, Turf Monster, Mack, Mason). This doc covers the data + API surface; `mission.md` covers who does what.
+
 ## Stack
 
 - Ruby 3.1+ / Rails 7.2 / PostgreSQL

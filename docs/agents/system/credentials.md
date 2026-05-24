@@ -37,9 +37,16 @@ Each agent has a dedicated email that forwards to the shared `bot@mcritchie.stud
 | Agent | Email | Purpose |
 |-------|-------|---------|
 | Alex | `admin@mcritchie.studio` | Orchestrator, admin notifications |
-| Mack | `mack@mcritchie.studio` | Worker agent comms |
-| Mason | `mason@mcritchie.studio` | Infrastructure alerts, deploy notifications |
+| Avi | `avi@mcritchie.studio` | Product Owner — PR review, release sign-off, ticket grooming |
+| Carl | `carl@mcritchie.studio` | Dev Backend Expert — Rails, ActiveRecord, jobs |
+| Shannon | `shannon@mcritchie.studio` | Dev UI Expert — frontend, Tailwind, Alpine, theme |
+| Jasper | `jasper@mcritchie.studio` | Dev Blockchain Expert — turf-vault, solana-studio, Phantom |
+| Steffon | `steffon@mcritchie.studio` | Infrastructure Expert — Heroku, deploys, CI, OPSEC |
 | Turf Monster | `turf@mcritchie.studio` | Sports data, Turf Monster app notifications |
+| Mack | `mack@mcritchie.studio` | Worker agent comms — scraping, processing, bulk ops |
+| Mason | `mason@mcritchie.studio` | Marketing — brand voice, launch comms, social, funnels (was Infrastructure pre 2026-05-23 — see `mission.md`) |
+
+> The 5 new agents (Avi/Carl/Shannon/Jasper/Steffon) were added 2026-05-23 alongside Mason's pivot from Infrastructure to Marketing. Forwarding addresses still need to be created on the `mcritchie.studio` domain — operator action — but the persona definitions live at `docs/agents/agents/<slug>/`.
 
 ## Solana Wallets
 
@@ -91,7 +98,7 @@ export SOLANA_ADMIN_KEY=$(op item get "agent.solana" --vault "agents" --account 
 
 ### Onchain Admin
 
-Alex Bot is the primary admin for the TurfVault smart contract (program `7Hy8GmJWPMdt6bx3VG4BLFnpNX9TBwkPt87W6bkHgr2J`). Alex Human is the backup admin. Both can perform admin actions (create/settle/close contests). The `SOLANA_ADMIN_KEY` env var in Turf Monster's `.env` holds Alex Bot's private key.
+Alex Bot is the primary admin for the TurfVault smart contract (program `Dx8uGU5w7B9NytDSsW4kseGZuqdVVRq1KY1mGXN2GaCT`). Alex Human is the backup admin. Both can perform admin actions (create/settle/close contests). The `SOLANA_ADMIN_KEY` env var in Turf Monster's `.env` holds Alex Bot's private key.
 
 ## Security Notes
 
