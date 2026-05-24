@@ -1,4 +1,10 @@
 <%# locals: (agent:, size: "md") %>
+<%#
+  Renders the agent's avatar as a circle. Pattern: the deterministic
+  initial-bubble is always rendered underneath; the <img> (when avatar is
+  present) is positioned absolutely on top. If the file 404s, onerror
+  removes the <img>, exposing the bubble — no broken-image icon, no flicker.
+%>
 <%
   sizes = {
     "sm" => { container: "w-10 h-10", text: "text-sm" },
@@ -7,10 +13,14 @@
   }
   s = sizes[size] || sizes["md"]
 %>
-<% if agent.avatar.present? %>
-  <img src="<%= agent.avatar %>" alt="<%= agent.name %>" class="<%= s[:container] %> rounded-full object-cover">
-<% else %>
-  <div class="<%= s[:container] %> rounded-full bg-primary/20 flex items-center justify-center">
-    <span class="text-primary font-bold <%= s[:text] %>"><%= agent.name.first.upcase %></span>
-  </div>
-<% end %>
+<span class="<%= s[:container] %> rounded-full flex items-center justify-center relative overflow-hidden flex-shrink-0"
+      style="background-color: <%= agent.avatar_color %>;">
+  <span class="text-white font-bold <%= s[:text] %>"><%= agent.avatar_initials %></span>
+  <% if agent.avatar.present? %>
+    <img src="<%= agent.avatar %>"
+         alt="<%= agent.name %>"
+         class="absolute inset-0 w-full h-full rounded-full object-cover"
+         loading="lazy"
+         onerror="this.remove()">
+  <% end %>
+</span>
