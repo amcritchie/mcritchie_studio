@@ -37,6 +37,23 @@
 - `/contents/starter_post_x` — POST creates a starter_post_x Content from `/nfl-rosters` button (admin-only). `team_slug` required.
 - `/contents/:slug/generate_lineup_assets` — POST captures lineup graphic + uploads PNG/MP4 to S3 + advances to assets stage (admin-only, starter_post_x only)
 - `/contents/:slug/post_to_x` — POST programmatically posts the video to X via API (admin-only, starter_post_x only, requires X_API_KEY/SECRET/ACCESS_TOKEN/ACCESS_TOKEN_SECRET)
+
+### Content Pipeline — TikTok workflows
+
+Parallel surface to the X workflow above; entry points create TikTok-flavored Content drafts that flow through the AI agent pipeline.
+
+- `/contents/starter_post_tiktok_offense` — POST creates a TikTok offense-breakdown starter post Content for a team (admin-only). `team_slug` required.
+- `/contents/starter_post_tiktok_defense` — POST creates a TikTok defense-breakdown starter post Content for a team (admin-only). `team_slug` required.
+- `/contents/:slug/script_agent_step` — POST AI-generate script from hook (hook → script).
+- `/contents/:slug/assets_agent_step` — POST AI-generate scene assets from script (script → assets).
+- `/contents/:slug/assemble_agent_step` — POST AI-assemble final video from assets (assets → assembly).
+- `/contents/:slug/finalize_step` — POST add watermark + finalize the video; stays in `assembly` stage but marks finalized. (FFmpeg watermark step — pending buildpack.)
+- `/contents/:slug/metadata_step` — POST AI-generate captions, hashtags, and music suggestions; updates `caption_variants`.
+- `/contents/:slug/use_caption_variant` — POST select one caption variant from the generated set; writes to the `captions` field.
+- `/contents/:slug/prep_for_tiktok` — POST prepare content for posting (generate caption variants); moves assets → ready-to-post.
+- `/contents/:slug/post_to_tiktok` — POST programmatically post the assembled video to TikTok via API (admin-only; requires TikTok OAuth credentials).
+- `/contents/:slug/studio_upload_to_tiktok` — POST open TikTok Studio in a browser with the pre-filled video + caption for manual posting (operator-driven fallback).
+- `/contents/:slug/mark_posted` — POST record post URL + ID and move Content to `posted` stage. Accepts optional `platform` + `post_url` + `post_id` overrides.
 - `/teams/:slug/lineup-graphic` — Public 1200×1500 social-asset render. JS reveals one random photo every 200ms. Used as the screencap target.
 - `/nfl` — NFL hub index
 - `/nfl-rosters` — Per-team headshot grid: O (12 offense) / D (12 defense) / S (4 special teams: K, P, LS, top returner by `return_grade_pff`) / C (4 coaches: HC, OC, DC, STC). Hover to enlarge image (1.6× → 2.8× scale, with name label below) and swap `src` from 100w to 400w cached variant. Team header links to `/teams/:slug/depth-chart`. Eager-loads `image_caches` via `Roster#pick_starters`. Coaches load via `@coaches_by_team` preload (no headshots → initials circle). Each team header has 3 action buttons: **🆚 Week 1** (links to that team's week-1 game on `/games/:year/week/1/:slug`), **👀 Preview** (opens lineup graphic page in new tab), **🐦 New X Post** (creates a Starter Post X Content draft). Week 1 games are preloaded once in `NflController#rosters` as `@week1_games_by_team`.
@@ -52,6 +69,8 @@
 - `/nfl-contracts` — Contract index
 - `/people` — Card grid of all Person records with sport filter + JS search. Each card shows Athlete headshot (400w cached variant via `Athlete#headshot_url`) or initials fallback if no cached image. Eager-loads `athlete_profile: :image_caches`.
 - `/people/search` — GET JSON people search (ILIKE on first_name, last_name, slug, aliases). Used by News edit sidebar.
+- `/people/duplicates` — GET admin UI listing detected duplicate Person groups (Levenshtein distance scoring).
+- `/people/merge` — GET render the person-merge form (pick keep/merge slugs). `POST /people/merge` → `PeopleController#merge_execute` consolidates contracts, roster spots, coaches, and athlete grades from source → keep person, then deletes source.
 - `/activities` — Activity feed
 - `/usages` — Usage table
 - `/toast_test` — Toast notification test page (all variants, server-side flash test)
