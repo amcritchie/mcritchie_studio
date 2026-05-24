@@ -15,7 +15,7 @@
 - `Content::ScriptAgent` — Claude Opus generates script/scenes from player context → delegates to `Content::Script`
 - `Content::AssetsAgent` — Higgsfield (Nano Banana) generates scene images → delegates to `Content::Assets`
 - `Content::AssembleAgent` — Higgsfield (Kling 3) generates video from scene images → delegates to `Content::Assemble`
-- `Content::Finalize` — FFmpeg watermark overlay (stub pending buildpack). Updates logo_overlay.
+- `Content::Finalize` — FFmpeg watermark overlay (stub pending buildpack). Updates `logo_overlay`. **Note:** despite the `_agent` suffix on its rake task (`content:finalize_agent`) and route (`POST /contents/:slug/finalize_step`), this is NOT an AI agent — it's a deterministic FFmpeg post-processing step that runs after `assemble_agent`. Sits in the `assembly` stage but marks the video finalized.
 - `Content::MetadataAgent` — Claude Haiku generates TikTok captions, hashtags, music suggestions. Can run at any stage.
 - `Higgsfield::Client` — Shared HTTP client (`app/services/higgsfield/client.rb`). Auth via `hf-api-key`/`hf-secret` headers. Submit + poll pattern with 5-min timeout.
 
