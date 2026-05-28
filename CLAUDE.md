@@ -7,7 +7,7 @@ Central task management and orchestration hub for the McRitchie AI agent system 
 ## Quick Reference
 
 - **Dev server**: `bin/rails server` (port 3000). Turf Monster on 3001, Tax Studio on 3003.
-- **Tests**: `bin/rails test` (~418 runs). See [`docs/topics/testing.md`](docs/topics/testing.md) for invocation gotchas.
+- **Tests**: `bin/rails test` (~521 runs). See [`docs/topics/testing.md`](docs/topics/testing.md) for invocation gotchas.
 - **Deploy**: `git push heroku main` to `mcritchie-studio` (https://app.mcritchie.studio). See [`docs/topics/deployment.md`](docs/topics/deployment.md).
 - **Recovery**: [`docs/agents/system/house-burn-down.md`](docs/agents/system/house-burn-down.md) — full fresh-Mac protocol.
 - **Current roadmap**: [`docs/agents/system/ecosystem-audit-2026-05-17.md`](docs/agents/system/ecosystem-audit-2026-05-17.md) — tiered audit.

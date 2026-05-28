@@ -14,7 +14,8 @@
 - `/agents/:slug` — Agent detail (tasks, skills, activity)
 - `/tasks` — Filterable task list with stage tabs
 - `/tasks/new` — Create task (auth required)
-- `/tasks/:slug` — Task detail with transition buttons
+- `/tasks/:slug` — Task detail with transition buttons. Includes a Sealed-bid sizing summary card and an "Edit →" link to the sizing sub-page.
+- `/tasks/:slug/sizing` — Sealed-bid sizing sub-page (admin update, public read). Form for `pm_size` / `po_size` / `dev_size` / `actual_size` + `requires_migration` toggle. See `docs/agents/system/sizing-rubric.md` and `exclusive-lanes.md`.
 - `/news` — News pipeline Kanban board (6 columns: new→reviewed→processed→refined→concluded→archived). SortableJS drag-and-drop. Inline `newsBoard()` Alpine function. Column focus: click header to expand single column full-width (hides others, click again to unfocus).
 - `/news/new` — Create news article (admin required)
 - `/news/:slug` — News detail (two-column: content + sidebar with timeline). Shows green/red dots next to slug fields indicating whether Person/Team records exist.
@@ -108,6 +109,7 @@ Every write action MUST use `rescue_and_log` with target/parent context.
 - HTML NewsController: all write actions (create, update, destroy, archive, reorder, review, process_step, refine, conclude, create_content) wrapped with `target: @news`
 - HTML ContentsController: all write actions (create, update, destroy, reorder, hook_step, script_step, assets_step, assemble_step, post_step, review_step) wrapped with `target: @content`
 - HTML TasksController: all 8 write actions wrapped with `target: @task`
+- HTML SizingsController: `update` wrapped with `target: @task` (nested under tasks at `/tasks/:slug/sizing`)
 - API TasksController: all 8 write actions wrapped with `target: task`
 - API AgentsController#update, ActivitiesController#create, UsagesController#create: all wrapped
 - RankingsController#confirm_draft_pick: wrapped with `target: contract`
