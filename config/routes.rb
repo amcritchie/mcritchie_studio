@@ -37,6 +37,7 @@ Rails.application.routes.draw do
       post :fail_task
       post :archive
     end
+    resource :sizing, only: [:show, :update]
   end
   resources :news, param: :slug do
     collection do

@@ -1,9 +1,12 @@
 <section>
   <div class="mb-6 flex items-center justify-between">
     <%= link_to "&larr; All Tasks".html_safe, tasks_path, class: "text-secondary hover:text-heading text-sm transition" %>
-    <% if logged_in? %>
-      <%= link_to "Edit", edit_task_path(@task.slug), class: "btn btn-outline btn-sm" %>
-    <% end %>
+    <div class="flex items-center gap-2">
+      <%= link_to "Sizing", task_sizing_path(@task), class: "btn btn-outline btn-sm" %>
+      <% if logged_in? %>
+        <%= link_to "Edit", edit_task_path(@task.slug), class: "btn btn-outline btn-sm" %>
+      <% end %>
+    </div>
   </div>
 
   <div class="card p-6 mb-6">
@@ -61,6 +64,33 @@
         <p class="text-red-300 text-sm"><%= @task.error_message %></p>
       </div>
     <% end %>
+
+    <!-- Sizing -->
+    <div class="bg-surface-alt rounded-lg p-3">
+      <div class="flex items-center justify-between mb-3">
+        <p class="label-upper">Sealed-bid sizing</p>
+        <%= link_to "Edit →", task_sizing_path(@task), class: "text-xs text-primary hover:text-primary-300" %>
+      </div>
+      <div class="grid grid-cols-4 gap-2">
+        <% [
+          ["Alex (PM)", @task.pm_size],
+          ["Avi (PO)",  @task.po_size],
+          ["Dev",       @task.dev_size],
+          ["Actual",    @task.actual_size]
+        ].each do |label, size| %>
+          <div class="bg-surface rounded p-2 text-center">
+            <p class="text-[10px] text-muted uppercase tracking-wide"><%= label %></p>
+            <p class="<%= size.present? ? 'text-heading font-bold' : 'text-muted' %> text-sm mt-0.5"><%= size&.upcase || "—" %></p>
+          </div>
+        <% end %>
+      </div>
+      <% if @task.requires_migration %>
+        <div class="flex items-center gap-2 mt-3 pt-3 border-t border-subtle">
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-900/50 text-orange-300 border border-orange-700/50">MIG</span>
+          <span class="text-xs text-secondary">Requires <code class="text-xs">backend_migration</code> lane</span>
+        </div>
+      <% end %>
+    </div>
   </div>
 
   <!-- Stage Transition Buttons -->

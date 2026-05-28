@@ -17,7 +17,7 @@ agents_data = [
     title: "Product Owner",
     description: "Reviews PRs, tickets, and release candidates before production. Friendly, sharp, and a capable dev — the last set of eyes before Steffon ships.",
     avatar: "/agents/avi.png",
-    position: 1
+    position: 3
   },
   {
     name: "Carl",
@@ -27,7 +27,7 @@ agents_data = [
     title: "Dev Backend Expert",
     description: "Crack Rails dev. Owns controllers, models, migrations, background jobs, ActiveRecord performance, and the studio-engine internals.",
     avatar: "/agents/carl.png",
-    position: 2
+    position: 4
   },
   {
     name: "Shannon",
@@ -37,7 +37,7 @@ agents_data = [
     title: "Dev UI Expert",
     description: "UI specialist. Owns frontend development across the ecosystem — ERB views, Tailwind, Alpine.js, theme system, and studio-engine UI primitives.",
     avatar: "/agents/shannon.png",
-    position: 3
+    position: 5
   },
   {
     name: "Jasper",
@@ -47,17 +47,17 @@ agents_data = [
     title: "Dev Blockchain Expert",
     description: "Blockchain specialist. Owns the Solana surface: turf-vault Anchor program, solana-studio Ruby client, and all on-chain integration.",
     avatar: "/agents/jasper.png",
-    position: 4
+    position: 6
   },
   {
     name: "Steffon",
     slug: "steffon",
     status: "active",
     agent_type: "specialist",
-    title: "Infrastructure Expert",
-    description: "Owns the DevOps surface — Heroku, deploys, env vars, CI, observability, recovery protocol. The agent who runs bin/deploy.",
+    title: "QA & Infrastructure Expert",
+    description: "Owns the quality gate AND the deploy surface — QA pass/fail on every PR, then Heroku releases, env vars, CI, observability, recovery protocol. The agent who signs off on what ships and ships it.",
     avatar: "/agents/steffon.png",
-    position: 5
+    position: 7
   },
   {
     name: "Turf Monster",
@@ -67,7 +67,7 @@ agents_data = [
     title: "Sports Domain Specialist",
     description: "Specializes in sports data, pick'em games, and the Turf Monster app. Expert in World Cup props and player stats.",
     avatar: "/agents/turf-monster.png",
-    position: 6
+    position: 1
   },
   {
     name: "Mack",
@@ -77,7 +77,7 @@ agents_data = [
     title: "General Worker",
     description: "Versatile worker agent handling data scraping, processing, and general-purpose tasks. Reliable and efficient.",
     avatar: "/agents/mack.png",
-    position: 7
+    position: 8
   },
   {
     name: "Mason",
@@ -87,7 +87,7 @@ agents_data = [
     title: "Marketing",
     description: "Runs marketing — brand voice, launch comms, social, funnels, copy. (Previously held Infrastructure; that surface now belongs to Steffon.)",
     avatar: "/agents/mason.png",
-    position: 8
+    position: 2
   }
 ]
 

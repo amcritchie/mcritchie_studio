@@ -118,4 +118,54 @@ class TaskTest < ActiveSupport::TestCase
     t2 = Task.create!(title: "Second", stage: "new")
     assert t2.position > t1.position
   end
+
+  # --- Sizing (sealed-bid) ---
+
+  test "size columns accept all valid t-shirt sizes" do
+    task = Task.create!(title: "Sizing test")
+    Task::SIZES.each do |size|
+      %i[pm_size po_size dev_size actual_size].each do |col|
+        task.update!(col => size)
+        assert_equal size, task.public_send(col)
+      end
+    end
+  end
+
+  test "size columns reject invalid sizes" do
+    task = Task.new(title: "Bad size", pm_size: "huge")
+    assert_not task.valid?
+    assert_includes task.errors[:pm_size], "is not included in the list"
+  end
+
+  test "size columns allow nil" do
+    task = Task.create!(title: "No sizes")
+    assert_nil task.pm_size
+    assert_nil task.po_size
+    assert_nil task.dev_size
+    assert_nil task.actual_size
+    assert task.valid?
+  end
+
+  # --- requires_migration ---
+
+  test "requires_migration scope returns only flagged tasks" do
+    flagged = Task.create!(title: "Needs migration", requires_migration: true)
+    Task.create!(title: "No migration")
+    assert_includes Task.requires_migration, flagged
+    assert_equal 1, Task.requires_migration.where(title: ["Needs migration", "No migration"]).count
+  end
+
+  test "requires_migration defaults to false" do
+    task = Task.create!(title: "Default flag")
+    assert_equal false, task.requires_migration
+  end
+
+  # --- Migration lane (advisory lock) ---
+
+  test "migration lane helpers return booleans and execute cleanly" do
+    acquired = Task.try_acquire_migration_lane
+    assert_includes [true, false], acquired
+    released = Task.release_migration_lane
+    assert_includes [true, false], released
+  end
 end

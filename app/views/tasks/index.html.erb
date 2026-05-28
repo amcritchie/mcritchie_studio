@@ -284,6 +284,14 @@ function kanbanBoard() {
                     <span class="text-xs text-muted"><%= task.agent_slug %></span>
                   </div>
                 <% end %>
+                <div class="ml-auto flex items-center gap-1">
+                  <% if task.po_size.present? %>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-surface-alt text-secondary border border-subtle" title="po_size (official planning size)"><%= task.po_size == "xl" ? "XL" : task.po_size[0].upcase %></span>
+                  <% end %>
+                  <% if task.requires_migration %>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-900/50 text-orange-300 border border-orange-700/50" title="Requires backend_migration lane">MIG</span>
+                  <% end %>
+                </div>
               </div>
 
               <% if task.stage == 'failed' && task.error_message.present? %>

@@ -1,0 +1,52 @@
+<section>
+  <div class="mb-4 flex items-center gap-3">
+    <%= link_to "&larr;".html_safe, task_path(@task.slug), class: "text-secondary hover:text-heading text-xl transition" %>
+    <h2 class="text-2xl font-bold text-heading"><%= @task.title %></h2>
+  </div>
+  <div class="flex items-center gap-3 text-xs text-muted mb-6">
+    <%= render "components/badge", text: @task.stage.humanize, scheme: stage_scheme(@task.stage) %>
+    <% if @task.agent_slug.present? %>
+      <span aria-hidden="true">·</span>
+      <span>assigned: <%= @task.agent_slug %></span>
+    <% end %>
+    <span aria-hidden="true">·</span>
+    <span class="font-mono"><%= @task.slug %></span>
+  </div>
+
+  <div class="card p-6">
+    <h3 class="text-lg font-bold text-heading mb-2">Sealed-bid sizing</h3>
+    <p class="text-secondary text-sm mb-6">
+      Per the sizing rubric: each role submits independently. Honor system — don't peek before you submit. <code class="text-xs text-muted">actual_size</code> is set post-release.
+    </p>
+
+    <%= form_with model: @task, url: task_sizing_path(@task), method: :patch, local: true do |f| %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <% [
+          [:pm_size,     "Alex (PM)",         "Business-value gut, blind to spec"],
+          [:po_size,     "Avi (PO)",          "After refinement, blind to Alex"],
+          [:dev_size,    "Dev",               "After assignment, blind to both"],
+          [:actual_size, "Steffon (actual)",  "Post-release truth"]
+        ].each do |field, label, hint| %>
+          <div>
+            <%= f.label field, label, class: "label-upper mb-1 block" %>
+            <%= f.select field, Task::SIZES.map { |s| [s.upcase, s] }, { include_blank: "—" }, class: "input-field" %>
+            <p class="text-xs text-muted mt-1"><%= hint %></p>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="flex items-center gap-2 mb-6 pt-4 border-t border-subtle">
+        <%= f.check_box :requires_migration, class: "rounded border-strong" %>
+        <%= f.label :requires_migration, "Requires migration (acquires the backend_migration lane)", class: "text-sm text-body" %>
+      </div>
+
+      <% if logged_in? %>
+        <div class="flex justify-end">
+          <%= f.submit "Save sizes", class: "btn btn-primary" %>
+        </div>
+      <% else %>
+        <p class="text-xs text-muted text-right">Sign in to edit sizes.</p>
+      <% end %>
+    <% end %>
+  </div>
+</section>

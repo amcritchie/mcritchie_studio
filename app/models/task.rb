@@ -1,10 +1,17 @@
 class Task < ApplicationRecord
+  SIZES = %w[small medium large xl].freeze
+  MIGRATION_LANE = "backend_migration".freeze
+
   belongs_to :agent, foreign_key: :agent_slug, primary_key: :slug, optional: true
 
   validates :title, presence: true
   validates :slug, presence: true, uniqueness: true
   validates :stage, inclusion: { in: %w[new queued in_progress done failed archived] }
   validates :priority, inclusion: { in: [0, 1, 2] }
+  validates :pm_size,     inclusion: { in: SIZES }, allow_nil: true
+  validates :po_size,     inclusion: { in: SIZES }, allow_nil: true
+  validates :dev_size,    inclusion: { in: SIZES }, allow_nil: true
+  validates :actual_size, inclusion: { in: SIZES }, allow_nil: true
 
   before_validation :generate_slug, on: :create
   before_create :set_initial_position
@@ -17,6 +24,18 @@ class Task < ApplicationRecord
   scope :by_stage, ->(stage) { where(stage: stage) }
   scope :recent, -> { order(created_at: :desc) }
   scope :ordered, -> { order(Arel.sql("position ASC NULLS LAST, created_at DESC")) }
+  scope :requires_migration, -> { where(requires_migration: true) }
+
+  # Postgres advisory locks are session-scoped — try_acquire and release
+  # must run on the same DB connection. Designed for long-lived agent
+  # processes, not Rails request cycles. See exclusive-lanes.md.
+  def self.try_acquire_migration_lane
+    connection.select_value("SELECT pg_try_advisory_lock(hashtext('#{MIGRATION_LANE}'))")
+  end
+
+  def self.release_migration_lane
+    connection.select_value("SELECT pg_advisory_unlock(hashtext('#{MIGRATION_LANE}'))")
+  end
 
   def queue!
     update!(stage: "queued")

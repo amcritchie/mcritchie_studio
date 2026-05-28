@@ -1,27 +1,41 @@
 <section>
   <h2 class="text-2xl font-bold text-heading mb-6">Agents</h2>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     <% @agents.each do |agent| %>
-      <%= link_to agent_path(agent.slug), class: "block card p-6 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition" do %>
-        <div class="flex items-center gap-4 mb-4">
-          <%= render "components/agent_avatar", agent: agent, size: "md" %>
-          <div>
-            <h3 class="text-heading font-bold text-lg"><%= agent.name %></h3>
-            <p class="text-secondary text-sm"><%= agent.title %></p>
-          </div>
-          <div class="ml-auto flex items-center gap-2">
-            <%= render "components/agent_status", agent: agent %>
-          </div>
-        </div>
-        <% if agent.description.present? %>
-          <p class="text-secondary text-sm mb-4"><%= agent.description %></p>
-        <% end %>
-        <div class="flex items-center gap-4 text-xs text-muted">
-          <span><%= agent.agent_type %></span>
-          <span><%= agent.tasks.size %> tasks</span>
-          <% if agent.last_active_at %>
-            <span>Active <%= time_ago_in_words(agent.last_active_at) %> ago</span>
+      <%= link_to agent_path(agent.slug), class: "card overflow-hidden block hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition" do %>
+        <div class="relative aspect-[5/3] flex items-center justify-center"
+             style="background-color: <%= agent.avatar_color %>;">
+          <span class="text-white font-bold text-5xl"><%= agent.avatar_initials %></span>
+          <% if agent.avatar.present? %>
+            <img src="<%= agent.avatar %>"
+                 alt="<%= agent.name %>"
+                 class="absolute inset-0 w-full h-full object-cover"
+                 loading="lazy"
+                 onerror="this.remove()">
           <% end %>
+        </div>
+        <div class="p-4">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <h3 class="text-heading font-bold text-base leading-tight truncate"><%= agent.name %></h3>
+              <p class="text-secondary text-xs mt-0.5"><%= agent.title %></p>
+            </div>
+            <div class="flex items-center gap-1.5 flex-shrink-0 mt-1">
+              <%= render "components/agent_status", agent: agent %>
+            </div>
+          </div>
+          <% if agent.description.present? %>
+            <p class="text-secondary text-xs mt-2 line-clamp-2"><%= agent.description %></p>
+          <% end %>
+          <div class="flex items-center gap-2 text-xs text-muted mt-3">
+            <span><%= agent.agent_type %></span>
+            <span aria-hidden="true">·</span>
+            <span><%= agent.tasks.size %> tasks</span>
+            <% if agent.last_active_at %>
+              <span aria-hidden="true">·</span>
+              <span><%= time_ago_in_words(agent.last_active_at) %></span>
+            <% end %>
+          </div>
         </div>
       <% end %>
     <% end %>

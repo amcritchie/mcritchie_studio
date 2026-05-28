@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_17_192804) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_28_061834) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -516,8 +516,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_17_192804) do
     t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "pm_size"
+    t.string "po_size"
+    t.string "dev_size"
+    t.string "actual_size"
+    t.datetime "sizes_revealed_at"
+    t.boolean "requires_migration", default: false, null: false
     t.index ["agent_slug"], name: "index_tasks_on_agent_slug"
     t.index ["priority"], name: "index_tasks_on_priority"
+    t.index ["requires_migration"], name: "index_tasks_on_requires_migration"
     t.index ["slug"], name: "index_tasks_on_slug", unique: true
     t.index ["stage", "created_at"], name: "index_tasks_on_stage_and_created_at"
     t.index ["stage", "position"], name: "index_tasks_on_stage_and_position"
